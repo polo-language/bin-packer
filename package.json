@@ -1,0 +1,21 @@
+{
+  "name": "bin-pack",
+  "version": "0.0.1",
+  "description": "bin-packing algorithms",
+  "author": {
+    "name": "Angelo Polo",
+    "email": "polo.language@gmail.com"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://polo-language@bitbucket.org/polo-language/bin-pack.git"
+  },
+  "main": "bin-pack.js",
+  "keywords": [
+    "bin",
+    "pack",
+    "packing",
+    "sort"
+  ]
+}
