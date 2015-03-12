@@ -1,3 +1,8 @@
+module.exports = binPacker = {
+  nextFit: nextFit,
+  firstFit: firstFit,
+}
+
 function nextFit(obj, measure, max, addOversize) {
   var bins = []
     , total = 0
@@ -36,32 +41,27 @@ function firstFit(obj, measure, max /*, addOversize*/) {
     , remaining = []
     , placed
 
-  openNewBin(0)
+  bins[0] = {}
+  remaining[0] = max
   for (var key in obj) {
     placed = false
     for (var bin in bins) {
       if (obj[key][measure] < remaining[bin]) {
-        place(key, bin)
+        bins[bin][key] = obj[key]
+        remaining[bin] -= obj[key][measure]
+        placed = true
       }
     }
     if (placed === false) {
-      openNewBin(bins.length)
-      place(key, bins.length)
+      bins[bins.length] = {}
+      remaining[bins.length] = max
+
+      bins[bin][key] = obj[key]
+      remaining[bin] -= obj[key][measure]
     }
   }
 
   return bins
-
-  function place(key, bin) {
-    bins[bin][key] = obj[key]
-    remaining[bin] -= obj[key][measure]
-    placed = true
-  }
-
-  function openNewBin(i) {
-    bins[i] = {}
-    remaining[i] = max
-  }
 }
 
 

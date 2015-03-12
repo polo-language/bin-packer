@@ -1,6 +1,6 @@
-/* global describe, it, expect */
+/* global describe, it, expect, beforeEach */
 'use strict'
-var data = {
+var data_02 = {
   'a': {
     color: 'red',
     value: '#f00',
@@ -37,17 +37,25 @@ var data = {
     size: 75
   }
 }
+
+var fs = require('fs')
+  , dataFilePath = './test/data/data_01.json'
+  , data = JSON.parse(fs.readFileSync(dataFilePath))
+  , binPacker = require('../bin-packer')
+
 describe('bin-packer', function () {
   describe('nextFit', function () {
     var max = 85
-    var addOversize = false
+    var addOversize = true
     var count
-    var bins = nextFit(data, 'size', max, addOversize);
+
     it('should return as many keys as it was passed', function () {
+      var bins = binPacker.nextFit(data, 'size', max, addOversize);
       count = bins.reduce(function (previous, currentBin) {
-        return previous + currentBin.keys.length
-      })
-      expect(count).toEqual(data.keys.length)
+        return previous + Object.keys(currentBin).length
+      }, 0)
+
+      expect(count).toEqual(Object.keys(data).length)
     })
   })
 
@@ -55,12 +63,14 @@ describe('bin-packer', function () {
     var max = 85
     var addOversize = false
     var count
-    var bins = firstFit(data, 'size', max, addOversize);
+
     it('should return as many keys as it was passed', function () {
+      var bins = binPacker.firstFit(data, 'size', max, addOversize);
       count = bins.reduce(function (previous, currentBin) {
-        return previous + currentBin.keys.length
-      })
+        return previous + Object.keys(currentBin).length
+      }, 0)
+
+      expect(count).toEqual(Object.keys(data).length)
     })
-    expect(count).toEqual(data.keys.length)
   })
 })
