@@ -1,5 +1,5 @@
 {
-  "name": "bin-pack",
+  "name": "bin-packer",
   "version": "0.0.1",
   "description": "bin-packing algorithms",
   "author": {
@@ -9,9 +9,9 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://polo-language@bitbucket.org/polo-language/bin-pack.git"
+    "url": "https://github.com/polo-language/bin-packer.git"
   },
-  "main": "bin-pack.js",
+  "main": "bin-packer.js",
   "keywords": [
     "bin",
     "pack",

@@ -1,17 +1,18 @@
-module.exports = binPacker = {
+module.exports = {
   nextFit: nextFit,
   firstFit: firstFit,
 }
 
-function nextFit(obj, measure, max, addOversize) {
+function nextFit(obj, measure, max, addOversized, callback) {
   var bins = []
+    , oversized = {}
     , total = 0
     , blockNum = 0
 
   bins[blockNum] = {}
   for (var key in obj) {
     if (obj[key][measure] > max) {
-      if (addOversize) {
+      /*if (addOversize) {
         // adds new bin with single item larger than max
         bins[blockNum + 1] = bins[blockNum]
         bins[blockNum] = {}
@@ -20,7 +21,8 @@ function nextFit(obj, measure, max, addOversize) {
       } else {
         // TODO: handle error
         // this.emit('error', new Error(key + ' is too big for any bin - file skipped.'));
-      }
+      }*/
+      oversized[key] = obj[key]
       continue
     }
 
@@ -33,10 +35,12 @@ function nextFit(obj, measure, max, addOversize) {
     }
     bins[blockNum][key] = obj[key]
   }
-  return bins
+
+  handleOversized(bins, oversized, addOversized, callback)
+  //return bins
 }
 
-function firstFit(obj, measure, max /*, addOversize*/) {
+function firstFit(obj, measure, max /*, addOversize, callback*/) {
   var bins = []
     , remaining = []
     , placed
@@ -64,23 +68,15 @@ function firstFit(obj, measure, max /*, addOversize*/) {
   return bins
 }
 
+function handleOversized(bins, oversized, addOversized, callback) {
+  if (addOversized) {
+    for (var key in oversized) {
+      bins[bins.length] = {}
+      bins[bins.length - 1][key] = oversized[key]
+    }
+    callback(null, bins)
+  } else {
+    callback(oversized, bins)
+  }
+}
 
-/*
-To implement:
-  Sort algorithm on objects into an array (array will be sorted with keys from object as values)
-  First-Fit-Decreasing
-  Modified-First-Fit-Decreasing
-*/
-
-
-/*FFD:
-sort objects by size
-then first fit
-
-// sort files by size:
-files.sort(compareBySize);
-function compareBySize(a, b) {
-  if (a.size < b.size) return -1;
-  if (a.size > b.size) return 1;
-  return 0;
-}*/
