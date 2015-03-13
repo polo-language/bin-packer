@@ -2,7 +2,7 @@
 
 Collection of methods to pack an object's properties into an array of uniform sized bins.
 
-Each property of the object must have a numeric sub-property with the a uniform name that identifies the property's "size".
+Each property of the object must have a uniformly named numeric sub-property with that gives the property's "size".
 
 ## Install
 
@@ -36,11 +36,11 @@ An array of objects of the binned properties.
 ## Example
 
 ```json
-var data = {
+{
   "alpha": { "size": 58, "anotherProperty": 0.35 },
   "beta": { "size": 36, "anotherProperty": 0.33, "stuff": "note" },
   "gamma": { "size": 31, "anotherProperty": 0.49, "arr": [0, 1, 42] }
-  // ...
+  "etc": { "size": 71.623 }
 }
 ```
 
