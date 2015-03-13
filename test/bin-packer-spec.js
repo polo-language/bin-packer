@@ -1,4 +1,4 @@
-/* global describe, it, expect, beforeEach */
+/* global describe, it, expect, beforeEach, jasmine */
 'use strict'
 
 var fs = require('fs')
@@ -123,19 +123,58 @@ describe('bin-packer', function () {
   })
 })
 
-describe('getMedianOfThree', function () {
-  var perms = [ [{'0': {idem: '0'}}, {'1': {idem: '1'}}, {'2': {idem: '2'}}],
-                [{'0': {idem: '0'}}, {'2': {idem: '2'}}, {'1': {idem: '1'}}],
-                [{'1': {idem: '1'}}, {'0': {idem: '0'}}, {'2': {idem: '2'}}],
-                [{'1': {idem: '1'}}, {'2': {idem: '2'}}, {'0': {idem: '0'}}],
-                [{'2': {idem: '2'}}, {'0': {idem: '0'}}, {'1': {idem: '1'}}],
-                [{'2': {idem: '2'}}, {'1': {idem: '1'}}, {'0': {idem: '0'}}] ]
-    , correctAnswers = [1, 2, 0, 0, 2, 1]
+describe('quicksort-obj', function () {
+  describe('getMedianOfThree', function () {
+    var perms = [ [{'0': {idem: '0'}}, {'1': {idem: '1'}}, {'2': {idem: '2'}}],
+                  [{'0': {idem: '0'}}, {'2': {idem: '2'}}, {'1': {idem: '1'}}],
+                  [{'1': {idem: '1'}}, {'0': {idem: '0'}}, {'2': {idem: '2'}}],
+                  [{'1': {idem: '1'}}, {'2': {idem: '2'}}, {'0': {idem: '0'}}],
+                  [{'2': {idem: '2'}}, {'0': {idem: '0'}}, {'1': {idem: '1'}}],
+                  [{'2': {idem: '2'}}, {'1': {idem: '1'}}, {'0': {idem: '0'}}] ]
+      , correctAnswers = [1, 2, 0, 0, 2, 1]
 
-  it('should find the location of 1 each time', function () {
-    for (var i in perms) {
-      var foundMedian = quicksortObj.getMedianOfThree(perms[i], 'idem', 0, perms[i].length - 1)
-      expect(foundMedian).toEqual(correctAnswers[i])
-    }
+    it('should find the location of 1 each time', function () {
+      for (var i in perms) {
+        var foundMedian = quicksortObj.getMedianOfThree(perms[i], 'idem', 0, perms[i].length - 1)
+        expect(foundMedian).toEqual(correctAnswers[i])
+      }
+    })
+  })
+
+  describe('getArrayOfObjSingletons', function () {
+    var array = quicksortObj.getArrayOfObjSingletons(data)
+
+    it('should have length equal to number of keys in data', function () {
+      expect(array.length).toEqual(Object.keys(data).length)
+    })
+
+    it('should contain an object in each cell', function () {
+      var failedType = false
+
+      for (var i in array) {
+        if (Object.prototype.toString.call(array[i]) !== '[object Object]') {
+          failedType = true
+          break
+        }
+      }
+      expect(failedType).toBeFalsy()
+    })
+
+    it('should contain an exactly one key in each cell', function () {
+      var failedCount = false
+
+      for (var i in array) {
+        if (Object.keys(array[i]).length !== 1) {
+          failedCount = true
+          break
+        }
+      }
+      expect(failedCount).toBeFalsy()
+    })
+  })
+
+  xdescribe('quicksortObj', function () {
+    var sorted = quicksortObj.quickSortObj(data, measure)
+    console.log(sorted)
   })
 })

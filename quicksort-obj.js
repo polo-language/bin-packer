@@ -1,4 +1,6 @@
 module.exports = {
+  quickSortObj: quickSortObj,
+  quickSortObjSingletons: quickSortObjSingletons,
   getArrayOfObjSingletons: getArrayOfObjSingletons,
   getMedianOfThree: getMedianOfThree,
 }
@@ -18,9 +20,19 @@ function quickSortObjSingletons(array, measure, low, high) {
 }
 
 function partition(array, measure, low, high) {
-  var initialPivot = getMedianOfThree(array, measure, low, high)
-  // TODO:
-  //
+  var pivot = getMedianOfThree(array, measure, low, high)
+    , pivotValue = getSize(array[pivot])
+    , tempIndex = low
+
+  swap(array, pivot, high)
+  for (var i = low; i < high; ++i) {
+    if (getSize(array[i]) < pivotValue) {
+      swap(array, i, tempIndex)
+      ;++tempIndex
+    }
+  }
+  swap(array, tempIndex, high)
+  return tempIndex
 }
 
 function getMedianOfThree(array, measure, low, high) {
@@ -53,11 +65,11 @@ function getMedianOfThree(array, measure, low, high) {
   }
 }
 
-/*function swap(array, i, j) {
+function swap(array, i, j) {
   var temp = array[i]
   array[i] = array[j]
   array[j] = temp
-}*/
+}
 
 function getSingleKey(obj) {
   return Object.keys(obj)[0]
@@ -70,7 +82,9 @@ function getSize(obj, measure) {
 function getArrayOfObjSingletons(obj) {
   var array = []
   for (var key in obj) {
-    array.push({ key: obj[key] })
+    var newObj = {}
+    newObj[key] = obj[key]
+    array.push(newObj)
   }
   return array
 }
