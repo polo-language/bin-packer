@@ -3,7 +3,7 @@ module.exports = {
   firstFit: firstFit,
 }
 
-function nextFit(obj, measure, max, addOversized, callback) {
+function nextFit(obj, measure, max, addOversize) {
   var bins = []
     , oversized = {}
     , total = 0
@@ -12,16 +12,6 @@ function nextFit(obj, measure, max, addOversized, callback) {
   bins[blockNum] = {}
   for (var key in obj) {
     if (obj[key][measure] > max) {
-      /*if (addOversize) {
-        // adds new bin with single item larger than max
-        bins[blockNum + 1] = bins[blockNum]
-        bins[blockNum] = {}
-        bins[blockNum][key] = obj[key]
-        ;++blockNum
-      } else {
-        // TODO: handle error
-        // this.emit('error', new Error(key + ' is too big for any bin - file skipped.'));
-      }*/
       oversized[key] = obj[key]
       continue
     }
@@ -36,24 +26,30 @@ function nextFit(obj, measure, max, addOversized, callback) {
     bins[blockNum][key] = obj[key]
   }
 
-  handleOversized(bins, oversized, addOversized, callback)
-  //return bins
+  return getReturn(bins, oversized, addOversize)
 }
 
-function firstFit(obj, measure, max /*, addOversize, callback*/) {
+function firstFit(obj, measure, max, addOversize) {
   var bins = []
     , remaining = []
+    , oversized = {}
     , placed
 
   bins[0] = {}
   remaining[0] = max
   for (var key in obj) {
+    if (obj[key][measure] > max) {
+      oversized[key] = obj[key]
+      continue
+    }
+
     placed = false
     for (var bin in bins) {
       if (obj[key][measure] < remaining[bin]) {
         bins[bin][key] = obj[key]
         remaining[bin] -= obj[key][measure]
         placed = true
+        break
       }
     }
     if (placed === false) {
@@ -65,18 +61,18 @@ function firstFit(obj, measure, max /*, addOversize, callback*/) {
     }
   }
 
-  return bins
+  return getReturn(bins, oversized, addOversize)
 }
 
-function handleOversized(bins, oversized, addOversized, callback) {
-  if (addOversized) {
+function getReturn(bins, oversized, addOversize) {
+  if (addOversize) {
     for (var key in oversized) {
       bins[bins.length] = {}
       bins[bins.length - 1][key] = oversized[key]
     }
-    callback(null, bins)
+    return bins
   } else {
-    callback(oversized, bins)
+    bins.push(oversized)
+    return bins
   }
 }
-

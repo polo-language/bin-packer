@@ -17,11 +17,11 @@ function anyTooBig(testBins, maximum) {
 }
 
 describe('bin-packer', function () {
-  describe('nextFit', function () {
-    var max = 85
-      , addOversize = true
-    
-    binPacker.nextFit(data, 'size', max, addOversize, function (oversized, bins) {
+  describe('without oversized', function () {
+    describe('nextFit', function () {
+      var max = 85
+        , addOversize = false
+        , bins = binPacker.nextFit(data, 'size', max, addOversize)
 
       it('should return as many keys as it was passed', function () {
         var count = bins.reduce(function (previous, currentBin) {
@@ -34,42 +34,36 @@ describe('bin-packer', function () {
       it('should not have any bins larger than max', function () {
         expect(anyTooBig(bins, max)).toBeFalsy()
       })
+    })
 
-      it('should have no oversized', function (){
-        expect(oversized).toBeNull()
+    describe('firstFit', function () {
+      var max = 85
+        , addOversize = false
+        , bins = binPacker.firstFit(data, 'size', max, addOversize)
+
+      it('should return as many keys as it was passed', function () {
+        var count = bins.reduce(function (previous, currentBin) {
+          return previous + Object.keys(currentBin).length
+        }, 0)
+
+        expect(count).toEqual(Object.keys(data).length)
+      })
+
+      it('should not have any bins larger than max', function () {
+        expect(anyTooBig(bins, max)).toBeFalsy()
       })
     })
-  })
 
-  xdescribe('firstFit', function () {
-    var max = 85
-      , addOversize = false
-      , count
-      , bins = binPacker.firstFit(data, 'size', max, addOversize)
+    describe('relative number of bins', function () {
+      var max = 85
+        , addOversize = false
+        , binsNext = binPacker.nextFit(data, 'size', max, addOversize)
+        , binsFirst = binPacker.firstFit(data, 'size', max, addOversize)
 
-    it('should return as many keys as it was passed', function () {
-      count = bins.reduce(function (previous, currentBin) {
-        return previous + Object.keys(currentBin).length
-      }, 0)
+      it('nextFit >= firstFit', function () {
+        expect(binsNext.length >= binsFirst.length).toBeTruthy()
+      })
 
-      expect(count).toEqual(Object.keys(data).length)
     })
-
-    it('should not have any bins larger than max', function () {
-      expect(anyTooBig(bins, max)).toBeFalsy()
-    })
-  })
-
-  xdescribe('relative number of bins', function () {
-    var max = 85
-      , addOversize = false
-      , count
-      , binsNext = binPacker.nextFit(data, 'size', max, addOversize)
-      , binsFirst = binPacker.firstFit(data, 'size', max, addOversize)
-
-    it('nextFit >= firstFit', function () {
-      expect(binsNext.length >= binsFirst.length).toBeTruthy()
-    })
-
   })
 })
