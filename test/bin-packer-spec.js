@@ -23,7 +23,7 @@ function numOversized(obj, maximum) {
 
   for (var key in obj) {
     if (obj[key][measure] > maximum) {
-      ;++count
+      ++count
     }
   }
   return count
@@ -71,7 +71,6 @@ describe('bin-packer', function () {
 
       it('all keys in the last bin should be oversized', function () {
         var oversized = first.pop()
-
         expect(numOversized(oversized, max) === Object.keys(oversized).length).toBeTruthy()
       })
     })
@@ -83,7 +82,7 @@ describe('bin-packer', function () {
     })
   })
 
-  xdescribe('with oversized', function () {
+  describe('with oversized', function () {
       var max = 85
         , addOversize = true
         , next
@@ -100,8 +99,24 @@ describe('bin-packer', function () {
         expect(getKeyCount(next)).toEqual(Object.keys(data).length)
       })
 
-      it('should have oversized only and exactly in last bin', function () {
-        expect(anyTooBig(next, max)).toBeFalsy()
+      it('should some oversized', function () {
+        expect(anyTooBig(next, max)).toBeTruthy()
+      })
+    })
+
+    describe('firstFit', function () {
+      it('should return as many keys as it was passed', function () {
+        expect(getKeyCount(first)).toEqual(Object.keys(data).length)
+      })
+
+      it('should some oversized', function () {
+        expect(anyTooBig(first, max)).toBeTruthy()
+      })
+    })
+
+    describe('relative number of bins', function () {
+      it('nextFit >= firstFit', function () {
+        expect(next.length >= first.length).toBeTruthy()
       })
     })
   })
