@@ -39,7 +39,7 @@ An array of objects of the binned properties.
 {
   "alpha": { "size": 58, "anotherProperty": 0.35 },
   "beta": { "size": 36, "anotherProperty": 0.33, "stuff": "note" },
-  "gamma": { "size": 31, "anotherProperty": 0.49, "arr": [0, 1, 42] }
+  "gamma": { "size": 31, "anotherProperty": 0.49, "arr": [0, 1, 42] },
   "etc": { "size": 71.623 }
 }
 ```
