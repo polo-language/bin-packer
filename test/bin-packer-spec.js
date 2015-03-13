@@ -5,6 +5,7 @@ var fs = require('fs')
   , dataFilePath = './test/data/data_01.json'
   , data = JSON.parse(fs.readFileSync(dataFilePath))
   , binPacker = require('../bin-packer')
+  , quicksortObj = require('../quicksort-obj')
   , measure = 'size'
 
 function anyTooBig(testBins, maximum) {
@@ -119,5 +120,22 @@ describe('bin-packer', function () {
         expect(next.length >= first.length).toBeTruthy()
       })
     })
+  })
+})
+
+describe('getMedianOfThree', function () {
+  var perms = [ [{'0': {idem: '0'}}, {'1': {idem: '1'}}, {'2': {idem: '2'}}],
+                [{'0': {idem: '0'}}, {'2': {idem: '2'}}, {'1': {idem: '1'}}],
+                [{'1': {idem: '1'}}, {'0': {idem: '0'}}, {'2': {idem: '2'}}],
+                [{'1': {idem: '1'}}, {'2': {idem: '2'}}, {'0': {idem: '0'}}],
+                [{'2': {idem: '2'}}, {'0': {idem: '0'}}, {'1': {idem: '1'}}],
+                [{'2': {idem: '2'}}, {'1': {idem: '1'}}, {'0': {idem: '0'}}] ]
+    , correctAnswers = [1, 2, 0, 0, 2, 1]
+
+  it('should find the location of 1 each time', function () {
+    for (var i in perms) {
+      var foundMedian = quicksortObj.getMedianOfThree(perms[i], 'idem', 0, perms[i].length - 1)
+      expect(foundMedian).toEqual(correctAnswers[i])
+    }
   })
 })
