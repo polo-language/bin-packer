@@ -21,12 +21,12 @@ function quickSortObjSingletons(array, measure, low, high) {
 
 function partition(array, measure, low, high) {
   var pivot = getMedianOfThree(array, measure, low, high)
-    , pivotValue = getSize(array[pivot])
+    , pivotValue = getSize(array[pivot], measure)
     , tempIndex = low
 
   swap(array, pivot, high)
   for (var i = low; i < high; ++i) {
-    if (getSize(array[i]) < pivotValue) {
+    if (getSize(array[i], measure) < pivotValue) {
       swap(array, i, tempIndex)
       ;++tempIndex
     }

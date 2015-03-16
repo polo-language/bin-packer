@@ -7,6 +7,7 @@ var fs = require('fs')
   , binPacker = require('../bin-packer')
   , quicksortObj = require('../quicksort-obj')
   , measure = 'size'
+  , oversizedInData = true
 
 function anyTooBig(testBins, maximum) {
   for (var i in testBins) {
@@ -100,8 +101,11 @@ describe('bin-packer', function () {
         expect(getKeyCount(next)).toEqual(Object.keys(data).length)
       })
 
-      it('should some oversized', function () {
-        expect(anyTooBig(next, max)).toBeTruthy()
+      it('should contain some oversized', function () {
+        if (oversizedInData)
+          expect(anyTooBig(next, max)).toBeTruthy()
+        else
+          expect(anyTooBig(next, max)).toBeFalsy()
       })
     })
 
@@ -110,8 +114,11 @@ describe('bin-packer', function () {
         expect(getKeyCount(first)).toEqual(Object.keys(data).length)
       })
 
-      it('should some oversized', function () {
-        expect(anyTooBig(first, max)).toBeTruthy()
+      it('should contain some oversized', function () {
+        if (oversizedInData)
+          expect(anyTooBig(first, max)).toBeTruthy()
+        else
+          expect(anyTooBig(first, max)).toBeFalsy()
       })
     })
 
@@ -173,8 +180,15 @@ describe('quicksort-obj', function () {
     })
   })
 
-  xdescribe('quicksortObj', function () {
+  describe('quicksortObj', function () {
     var sorted = quicksortObj.quickSortObj(data, measure)
-    console.log(sorted)
+    var outOfPlace = false
+    for (var i = 0; i < sorted.lengh - 1; ++i) {
+      if (sorted[i] > sorted[i + 1]) {
+        outOfPlace = true
+        break
+      }
+    }
+    expect(outOfPlace).toBeFalsy()
   })
 })
