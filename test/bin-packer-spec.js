@@ -1,4 +1,4 @@
-/* global describe, it, expect, beforeEach, jasmine */
+/* global describe, it, expect, beforeEach */
 'use strict'
 
 var fs = require('fs')
@@ -43,10 +43,12 @@ describe('bin-packer', function () {
         , addOversize = false
         , next
         , first
+        , firstDec
 
     beforeEach(function (done) {
       next = binPacker.nextFit(data, measure, max, addOversize)
       first = binPacker.firstFit(data, measure, max, addOversize)
+      firstDec = binPacker.firstFitDecreasing(data, measure, max, addOversize)
       done()
     })
 
@@ -58,6 +60,11 @@ describe('bin-packer', function () {
       it('should not have any bins larger than max', function () {
         next.pop() // remove last bin with the oversized
         expect(anyTooBig(next, max)).toBeFalsy()
+      })
+
+      it('all keys in the last bin should be oversized', function () {
+        var oversized = next.pop()
+        expect(numOversized(oversized, max) === Object.keys(oversized).length).toBeTruthy()
       })
     })
 
@@ -77,9 +84,29 @@ describe('bin-packer', function () {
       })
     })
 
+    describe('firstFitDecreasing', function () {
+      it('should return as many keys as it was passed', function () {
+        expect(getKeyCount(firstDec)).toEqual(Object.keys(data).length)
+      })
+
+      it('should not have any bins larger than max', function () {
+        firstDec.pop() // remove last bin with the oversized
+        expect(anyTooBig(firstDec, max)).toBeFalsy()
+      })
+
+      it('all keys in the last bin should be oversized', function () {
+        var oversized = firstDec.pop()
+        expect(numOversized(oversized, max) === Object.keys(oversized).length).toBeTruthy()
+      })
+    })
+
     describe('relative number of bins', function () {
       it('nextFit >= firstFit', function () {
         expect(next.length >= first.length).toBeTruthy()
+      })
+
+      it('firstFit >= firstFitDecreasing', function () {
+        expect(first.length >= firstDec.length).toBeTruthy()
       })
     })
   })
@@ -142,14 +169,14 @@ describe('quicksort-obj', function () {
 
     it('should find the location of 1 each time', function () {
       for (var i in perms) {
-        var foundMedian = quicksortObj.getMedianOfThree(perms[i], 'idem', 0, perms[i].length - 1)
+        var foundMedian = quicksortObj._getMedianOfThree(perms[i], 'idem', 0, perms[i].length - 1)
         expect(foundMedian).toEqual(correctAnswers[i])
       }
     })
   })
 
   describe('getArrayOfObjSingletons', function () {
-    var array = quicksortObj.getArrayOfObjSingletons(data)
+    var array = quicksortObj._getArrayOfObjSingletons(data)
 
     it('should have length equal to number of keys in data', function () {
       expect(array.length).toEqual(Object.keys(data).length)

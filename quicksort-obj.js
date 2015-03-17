@@ -1,8 +1,9 @@
 module.exports = {
   quickSortObj: quickSortObj,
   quickSortObjSingletons: quickSortObjSingletons,
-  getArrayOfObjSingletons: getArrayOfObjSingletons,
-  getMedianOfThree: getMedianOfThree,
+  _getArrayOfObjSingletons: getArrayOfObjSingletons,
+  _getMedianOfThree: getMedianOfThree,
+  _getSingleKey: getSingleKey,
 }
 
 function quickSortObj(obj, measure) {
