@@ -10,7 +10,7 @@ function nextFit(obj, measure, max, addOversize) {
     , total = 0
     , blockNum = 0
 
-  bins[blockNum] = {}
+  bins[0] = {}
   for (var key in obj) {
     if (obj[key][measure] > max) {
       oversized[key] = obj[key]
@@ -27,7 +27,9 @@ function nextFit(obj, measure, max, addOversize) {
     bins[blockNum][key] = obj[key]
   }
 
-  return getReturn(bins, oversized, addOversize)
+  placeOversized(bins, oversized, addOversize)
+
+  return bins
 }
 
 function firstFit(obj, measure, max, addOversize) {
@@ -42,7 +44,9 @@ function firstFit(obj, measure, max, addOversize) {
     place(key)
   }
 
-  return getReturn(bins, oversized, addOversize)
+  placeOversized(bins, oversized, addOversize)
+
+  return bins
 }
 
 function firstFitDecreasing(obj, measure, max, addOversize) {
@@ -60,7 +64,9 @@ function firstFitDecreasing(obj, measure, max, addOversize) {
     placeKey(array[item], measure, max, bins, remaining, oversized, key)
   }
 
-  return getReturn(bins, oversized, addOversize)
+  placeOversized(bins, oversized, addOversize)
+
+  return bins
 }
 
 function placeKey(obj, measure, max, bins, remaining, oversized, key) {
@@ -71,6 +77,7 @@ function placeKey(obj, measure, max, bins, remaining, oversized, key) {
 
   var placed = false
   for (var bin in bins) {
+
     if (obj[key][measure] <= remaining[bin]) {
       bins[bin][key] = obj[key]
       remaining[bin] -= obj[key][measure]
@@ -86,15 +93,18 @@ function placeKey(obj, measure, max, bins, remaining, oversized, key) {
   }
 }
 
-function getReturn(bins, oversized, addOversize) {
+function placeOversized(bins, oversized, addOversize) {
   if (addOversize) {
     for (var key in oversized) {
       bins[bins.length] = {}
       bins[bins.length - 1][key] = oversized[key]
     }
-    return bins
   } else {
-    bins.push(oversized)
-    return bins
+    if (Object.keys(oversized).length !== 0) {
+      if (Object.keys(bins[bins.length - 1]).length === 0)
+        bins[bins.length - 1] = oversized
+      else
+        bins.push(oversized)
+    }
   }
 }

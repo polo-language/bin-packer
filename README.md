@@ -30,7 +30,15 @@ An array of objects of the binned properties.
 
 #### nextFit(obj, measure, max, addOversize)
 
+Naive algorithm :/
+
 #### firstFit(obj, measure, max, addOversize)
+
+Better ...
+
+#### firstFitDecreasing(obj, measure, max, addOversize)
+
+Even better; runs a sort first.
 
 
 ## Example
@@ -46,6 +54,8 @@ An array of objects of the binned properties.
 
 ```js
 var bp = require('bin-packer')
-  , bins = bp.firstFit(JSON.parse(data), 'size', 75, false)
+//, data = ...
+  , max = 75
+  , bins = bp.firstFitDecreasing(JSON.parse(data), 'size', 75, false)
   , oversized = bins.pop()
 ```

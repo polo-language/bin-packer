@@ -6,7 +6,9 @@ var fs = require('fs')
   , data = JSON.parse(fs.readFileSync(dataFilePath))
   , binPacker = require('../bin-packer')
   , quicksortObj = require('../quicksort-obj')
-  , measure = 'size'
+  //, measure = 'size'
+  , measure = 'att'
+  , max = 0.15
   , oversizedInData = true
 
 function anyTooBig(testBins, maximum) {
@@ -48,8 +50,7 @@ function getKeyCount(testBins) {
 
 describe('bin-packer', function () {
   describe('without oversized', function () {
-      var max = 85
-        , addOversize = false
+      var addOversize = false
         , next
         , first
         , firstDec
@@ -133,14 +134,15 @@ describe('bin-packer', function () {
   })
 
   describe('with oversized', function () {
-      var max = 85
-        , addOversize = true
+      var addOversize = true
         , next
         , first
+        , firstDec
 
     beforeEach(function (done) {
       next = binPacker.nextFit(data, measure, max, addOversize)
       first = binPacker.firstFit(data, measure, max, addOversize)
+      firstDec = binPacker.firstFitDecreasing(data, measure, max, addOversize)
       done()
     })
 
@@ -170,9 +172,26 @@ describe('bin-packer', function () {
       })
     })
 
+    describe('firstFitDecreasing', function () {
+      it('should return as many keys as it was passed', function () {
+        expect(getKeyCount(firstDec)).toEqual(Object.keys(data).length)
+      })
+
+      it('should contain some oversized', function () {
+        if (oversizedInData)
+          expect(anyTooBig(firstDec, max)).toBeTruthy()
+        else
+          expect(anyTooBig(firstDec, max)).toBeFalsy()
+      })
+    })
+
     describe('relative number of bins', function () {
       it('nextFit >= firstFit', function () {
         expect(next.length >= first.length).toBeTruthy()
+      })
+
+      it('firstFit >= firstFitDecreasing', function () {
+        expect(first.length >= firstDec.length).toBeTruthy()
       })
     })
   })
