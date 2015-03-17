@@ -20,6 +20,15 @@ function anyTooBig(testBins, maximum) {
   return false
 }
 
+function anyEmpty(testBins) {
+  for (var i in testBins) {
+    if (Object.keys(testBins[i]).length === 0) {
+      return true
+    }
+  }
+  return false
+}
+
 function numOversized(obj, maximum) {
   var count = 0
 
@@ -66,6 +75,10 @@ describe('bin-packer', function () {
         var oversized = next.pop()
         expect(numOversized(oversized, max) === Object.keys(oversized).length).toBeTruthy()
       })
+
+      it('should have no empty bins', function () {
+        expect(anyEmpty(next)).toBeFalsy()
+      })
     })
 
     describe('firstFit', function () {
@@ -82,6 +95,10 @@ describe('bin-packer', function () {
         var oversized = first.pop()
         expect(numOversized(oversized, max) === Object.keys(oversized).length).toBeTruthy()
       })
+
+      it('should have no empty bins', function () {
+        expect(anyEmpty(first)).toBeFalsy()
+      })
     })
 
     describe('firstFitDecreasing', function () {
@@ -97,6 +114,10 @@ describe('bin-packer', function () {
       it('all keys in the last bin should be oversized', function () {
         var oversized = firstDec.pop()
         expect(numOversized(oversized, max) === Object.keys(oversized).length).toBeTruthy()
+      })
+
+      it('should have no empty bins', function () {
+        expect(anyEmpty(firstDec)).toBeFalsy()
       })
     })
 

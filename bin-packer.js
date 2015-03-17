@@ -50,14 +50,14 @@ function firstFitDecreasing(obj, measure, max, addOversize) {
     , bins = []
     , remaining = []
     , oversized = {}
-    , place
+    , key
     , array = quicksort.quickSortObj(obj, measure)
 
   bins[0] = {}
   remaining[0] = max
-  for (var item in array) {
-    place = placeKey.bind(null, array[item], measure, max, bins, remaining, oversized)
-    place(quicksort._getSingleKey(array[item]))
+  for (var item = array.length - 1; item > -1; --item) {
+    key = quicksort._getSingleKey(array[item])
+    placeKey(array[item], measure, max, bins, remaining, oversized, key)
   }
 
   return getReturn(bins, oversized, addOversize)
@@ -71,7 +71,7 @@ function placeKey(obj, measure, max, bins, remaining, oversized, key) {
 
   var placed = false
   for (var bin in bins) {
-    if (obj[key][measure] < remaining[bin]) {
+    if (obj[key][measure] <= remaining[bin]) {
       bins[bin][key] = obj[key]
       remaining[bin] -= obj[key][measure]
       placed = true
@@ -80,10 +80,9 @@ function placeKey(obj, measure, max, bins, remaining, oversized, key) {
   }
   if (placed === false) {
     bins[bins.length] = {}
-    remaining[bins.length] = max
+    bins[bins.length - 1][key] = obj[key]
 
-    bins[bin][key] = obj[key]
-    remaining[bin] -= obj[key][measure]
+    remaining[bins.length - 1] = max - obj[key][measure]
   }
 }
 

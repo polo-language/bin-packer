@@ -45,7 +45,7 @@ An array of objects of the binned properties.
 ```
 
 ```js
-var require('bin-packer')
-  , bins = binPacker.firstFit(JSON.parse(data), 'size', 75, false)
+var bp = require('bin-packer')
+  , bins = bp.firstFit(JSON.parse(data), 'size', 75, false)
   , oversized = bins.pop()
 ```
