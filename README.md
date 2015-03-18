@@ -21,7 +21,7 @@ npm install bin-packer
 
 `max` is the size of each bin.
 
-`addOversize` defaults to `true`: any item larger than the size given by `max` is added to its own "oversized" bin at the tail of the returned array. If set to `false`, the last bin in the returned array contains an object with all of the oversized elements.
+`addOversize` defaults to `true`: any item larger than the size given by `max` is added to its own "oversized" bin at the tail of the returned array. If set to `false`, the last bin in the returned array contains an object with all of the oversized elements - note that in this case if there are no oversized elements, an empty object is appended to the array for consistency.
 
 #### Return value:
 An array of objects of the binned properties.
