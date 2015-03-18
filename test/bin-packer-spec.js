@@ -2,13 +2,13 @@
 'use strict'
 
 var fs = require('fs')
-  , dataFilePath = './test/data/data_01.json'
+  , dataFilePath = './test/data/data_04.json'
   , data = JSON.parse(fs.readFileSync(dataFilePath))
   , binPacker = require('../bin-packer')
   , quicksortObj = require('../quicksort-obj')
-  //, measure = 'size'
-  , measure = 'att'
-  , max = 0.15
+  , measure = 'size'
+  //, measure = 'att'
+  , max = 32.7
   , oversizedInData = true
 
 function anyTooBig(testBins, maximum) {
@@ -68,7 +68,8 @@ describe('bin-packer', function () {
       })
 
       it('should not have any bins larger than max', function () {
-        next.pop() // remove last bin with the oversized
+        if (oversizedInData)
+          next.pop() // remove last bin with the oversized
         expect(anyTooBig(next, max)).toBeFalsy()
       })
 
@@ -78,6 +79,8 @@ describe('bin-packer', function () {
       })
 
       it('should have no empty bins', function () {
+        if (!oversizedInData)
+          next.pop()
         expect(anyEmpty(next)).toBeFalsy()
       })
     })
@@ -88,7 +91,8 @@ describe('bin-packer', function () {
       })
 
       it('should not have any larger than max outside of the last bin', function () {
-        first.pop() // remove last bin with the oversized
+        if (oversizedInData)
+          first.pop() // remove last bin with the oversized
         expect(anyTooBig(first, max)).toBeFalsy()
       })
 
@@ -98,6 +102,8 @@ describe('bin-packer', function () {
       })
 
       it('should have no empty bins', function () {
+        if (!oversizedInData)
+          first.pop()
         expect(anyEmpty(first)).toBeFalsy()
       })
     })
@@ -108,7 +114,8 @@ describe('bin-packer', function () {
       })
 
       it('should not have any bins larger than max', function () {
-        firstDec.pop() // remove last bin with the oversized
+        if (oversizedInData)
+          firstDec.pop() // remove last bin with the oversized
         expect(anyTooBig(firstDec, max)).toBeFalsy()
       })
 
@@ -118,6 +125,8 @@ describe('bin-packer', function () {
       })
 
       it('should have no empty bins', function () {
+        if (!oversizedInData)
+          firstDec.pop()
         expect(anyEmpty(firstDec)).toBeFalsy()
       })
     })

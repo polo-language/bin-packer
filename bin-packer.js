@@ -100,11 +100,9 @@ function placeOversized(bins, oversized, addOversize) {
       bins[bins.length - 1][key] = oversized[key]
     }
   } else {
-    if (Object.keys(oversized).length !== 0) {
-      if (Object.keys(bins[bins.length - 1]).length === 0)
-        bins[bins.length - 1] = oversized
-      else
-        bins.push(oversized)
-    }
+    if (Object.keys(bins[bins.length - 1]).length === 0)
+      bins[bins.length - 1] = oversized
+    else
+      bins.push(oversized) // pushes empty if no oversized for consistency
   }
 }
