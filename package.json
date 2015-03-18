@@ -1,6 +1,6 @@
 {
   "name": "bin-packer",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "bin-packing algorithms",
   "author": {
     "name": "Angelo Polo",
@@ -16,6 +16,7 @@
     "bin",
     "pack",
     "packing",
-    "sort"
+    "sort",
+    "quicksort"
   ]
 }
