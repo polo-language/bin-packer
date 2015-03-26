@@ -4,8 +4,8 @@
 var fs = require('fs')
   , dataFilePath = './test/data/data_04.json'
   , data = JSON.parse(fs.readFileSync(dataFilePath))
-  , binPacker = require('../bin-packer')
-  , quicksortObj = require('../quicksort-obj')
+  , binPacker = require('../lib/bin-packer')
+  , quicksortObj = require('../lib/util/quicksort-obj')
   , measure = 'size'
   //, measure = 'att'
   , max = 32.7
@@ -257,7 +257,7 @@ describe('quicksort-obj', function () {
   })
 
   describe('quicksortObj', function () {
-    var sorted = quicksortObj.quickSortObj(data, measure)
+    var sorted = quicksortObj.quicksortObj(data, measure)
     var outOfPlace = false
     for (var i = 0; i < sorted.lengh - 1; ++i) {
       if (sorted[i] > sorted[i + 1]) {
