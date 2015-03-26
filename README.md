@@ -1,4 +1,4 @@
-# bin-packer v0.1.3
+# bin-packer v0.1.4
 
 Pack an object's properties into an array of uniform sized bins.
 
