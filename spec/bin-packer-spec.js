@@ -2,7 +2,7 @@
 'use strict'
 
 var fs = require('fs')
-  , dataFilePath = './test/data/data_04.json'
+  , dataFilePath = './spec/data/data_04.json'
   , data = JSON.parse(fs.readFileSync(dataFilePath))
   , binPacker = require('../lib/bin-packer')
   , quicksortObj = require('../lib/util/quicksort-obj')
@@ -257,14 +257,17 @@ describe('quicksort-obj', function () {
   })
 
   describe('quicksortObj', function () {
-    var sorted = quicksortObj.quicksortObj(data, measure)
-    var outOfPlace = false
-    for (var i = 0; i < sorted.lengh - 1; ++i) {
-      if (sorted[i] > sorted[i + 1]) {
-        outOfPlace = true
-        break
+
+    it('should not sort a larger value before a smaller value', function () {
+      var sorted = quicksortObj.quicksortObj(data, measure)
+      var outOfPlace = false
+      for (var i = 0; i < sorted.lengh - 1; ++i) {
+        if (sorted[i] > sorted[i + 1]) {
+          outOfPlace = true
+          break
+        }
       }
-    }
-    expect(outOfPlace).toBeFalsy()
+      expect(outOfPlace).toBeFalsy()
+    })
   })
 })
