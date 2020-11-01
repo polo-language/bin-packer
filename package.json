@@ -12,6 +12,9 @@
     "url": "https://github.com/polo-language/bin-packer.git"
   },
   "main": "lib/bin-packer.js",
+  "scripts": {
+    "test": "npx jasmine"
+  },
   "keywords": [
     "bin",
     "pack",

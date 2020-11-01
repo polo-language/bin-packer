@@ -2,7 +2,7 @@
 
 Pack an object's properties into an array of uniform sized bins.
 
-Each property of the object must have a uniformly named numeric sub-property with that gives the property's "size".
+Each property of the object must have a uniformly named numeric sub-property giving the property's "size".
 
 ## Install
 
@@ -58,7 +58,7 @@ Some JSON input:
 ```
 Pack it into bins:
 ```js
-var bp = require('bin-packer')
+const bp = require('bin-packer')
 //, data = ...
   , max = 300
   , measure = 'size'
@@ -89,7 +89,7 @@ We get an array of bins:
 
 And if we try the quicksort utility:
 ```js
-var sorted = bp.quicksortObj(data, measure)
+const sorted = bp.quicksortObj(data, measure)
 console.log(sorted)
 ```
 We get this sorted array of single-key objects:

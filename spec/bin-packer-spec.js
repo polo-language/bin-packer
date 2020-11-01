@@ -1,7 +1,7 @@
 /* global describe, it, expect, beforeEach */
 'use strict'
 
-var fs = require('fs')
+const fs = require('fs')
   , dataFilePath = './spec/data/data_04.json'
   , data = JSON.parse(fs.readFileSync(dataFilePath))
   , binPacker = require('../lib/bin-packer')
@@ -12,8 +12,8 @@ var fs = require('fs')
   , oversizedInData = true
 
 function anyTooBig(testBins, maximum) {
-  for (var i in testBins) {
-    for (var key in testBins[i]) {
+  for (const i in testBins) {
+    for (const key in testBins[i]) {
       if (testBins[i][key][measure] > maximum) {
         return true
       }
@@ -23,7 +23,7 @@ function anyTooBig(testBins, maximum) {
 }
 
 function anyEmpty(testBins) {
-  for (var i in testBins) {
+  for (const i in testBins) {
     if (Object.keys(testBins[i]).length === 0) {
       return true
     }
@@ -32,9 +32,9 @@ function anyEmpty(testBins) {
 }
 
 function numOversized(obj, maximum) {
-  var count = 0
+  let count = 0
 
-  for (var key in obj) {
+  for (const key in obj) {
     if (obj[key][measure] > maximum) {
       ++count
     }
@@ -50,8 +50,8 @@ function getKeyCount(testBins) {
 
 describe('bin-packer', function () {
   describe('without oversized', function () {
-      var addOversize = false
-        , next
+      const addOversize = false
+      let next
         , first
         , firstDec
 
@@ -74,7 +74,7 @@ describe('bin-packer', function () {
       })
 
       it('all keys in the last bin should be oversized', function () {
-        var oversized = next.pop()
+        const oversized = next.pop()
         expect(numOversized(oversized, max) === Object.keys(oversized).length).toBeTruthy()
       })
 
@@ -97,7 +97,7 @@ describe('bin-packer', function () {
       })
 
       it('all keys in the last bin should be oversized', function () {
-        var oversized = first.pop()
+        const oversized = first.pop()
         expect(numOversized(oversized, max) === Object.keys(oversized).length).toBeTruthy()
       })
 
@@ -110,7 +110,7 @@ describe('bin-packer', function () {
 
     describe('firstFitDecreasing', function () {
       it('should return as many keys as it was passed', function () {
-        expect(getKeyCount(firstDec)).toEqual(Object.keys(data).length)
+        expect(getKeyCount(firstDec)).withContext(firstDec).toEqual(Object.keys(data).length)
       })
 
       it('should not have any bins larger than max', function () {
@@ -120,7 +120,7 @@ describe('bin-packer', function () {
       })
 
       it('all keys in the last bin should be oversized', function () {
-        var oversized = firstDec.pop()
+        const oversized = firstDec.pop()
         expect(numOversized(oversized, max) === Object.keys(oversized).length).toBeTruthy()
       })
 
@@ -143,8 +143,8 @@ describe('bin-packer', function () {
   })
 
   describe('with oversized', function () {
-      var addOversize = true
-        , next
+      const addOversize = true
+      let next
         , first
         , firstDec
 
@@ -208,7 +208,7 @@ describe('bin-packer', function () {
 
 describe('quicksort-obj', function () {
   describe('getMedianOfThree', function () {
-    var perms = [ [{'0': {idem: '0'}}, {'1': {idem: '1'}}, {'2': {idem: '2'}}],
+    const perms = [ [{'0': {idem: '0'}}, {'1': {idem: '1'}}, {'2': {idem: '2'}}],
                   [{'0': {idem: '0'}}, {'2': {idem: '2'}}, {'1': {idem: '1'}}],
                   [{'1': {idem: '1'}}, {'0': {idem: '0'}}, {'2': {idem: '2'}}],
                   [{'1': {idem: '1'}}, {'2': {idem: '2'}}, {'0': {idem: '0'}}],
@@ -217,24 +217,24 @@ describe('quicksort-obj', function () {
       , correctAnswers = [1, 2, 0, 0, 2, 1]
 
     it('should find the location of 1 each time', function () {
-      for (var i in perms) {
-        var foundMedian = quicksortObj._getMedianOfThree(perms[i], 'idem', 0, perms[i].length - 1)
+      for (const i in perms) {
+        const foundMedian = quicksortObj._getMedianOfThree(perms[i], 'idem', 0, perms[i].length - 1)
         expect(foundMedian).toEqual(correctAnswers[i])
       }
     })
   })
 
   describe('getArrayOfObjSingletons', function () {
-    var array = quicksortObj._getArrayOfObjSingletons(data)
+    const array = quicksortObj._getArrayOfObjSingletons(data)
 
     it('should have length equal to number of keys in data', function () {
       expect(array.length).toEqual(Object.keys(data).length)
     })
 
     it('should contain an object in each cell', function () {
-      var failedType = false
+      let failedType = false
 
-      for (var i in array) {
+      for (const i in array) {
         if (Object.prototype.toString.call(array[i]) !== '[object Object]') {
           failedType = true
           break
@@ -244,9 +244,9 @@ describe('quicksort-obj', function () {
     })
 
     it('should contain an exactly one key in each cell', function () {
-      var failedCount = false
+      let failedCount = false
 
-      for (var i in array) {
+      for (const i in array) {
         if (Object.keys(array[i]).length !== 1) {
           failedCount = true
           break
@@ -259,9 +259,9 @@ describe('quicksort-obj', function () {
   describe('quicksortObj', function () {
 
     it('should not sort a larger value before a smaller value', function () {
-      var sorted = quicksortObj.quicksortObj(data, measure)
-      var outOfPlace = false
-      for (var i = 0; i < sorted.lengh - 1; ++i) {
+      const sorted = quicksortObj.quicksortObj(data, measure)
+      let outOfPlace = false
+      for (const i = 0; i < sorted.lengh - 1; ++i) {
         if (sorted[i] > sorted[i + 1]) {
           outOfPlace = true
           break
