@@ -1,10 +1,10 @@
 {
   "name": "bin-packer",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "bin-packing algorithms",
   "author": {
     "name": "Angelo Polo",
-    "email": "polo.language@gmail.com"
+    "email": "language.devel@gmail.com"
   },
   "license": "MIT",
   "repository": {
