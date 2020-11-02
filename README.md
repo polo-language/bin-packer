@@ -27,13 +27,13 @@ Each algorithm returns an object with the following keys:
 
 ### Algorithms
 
-#### nextFit(obj, measure, max, addOversize)
+#### nextFit(obj, measure, max)
 Naive algorithm: Opens a new bin whenever a file doesn't fit in the latest one.
 
-#### firstFit(obj, measure, max, addOversize)
+#### firstFit(obj, measure, max)
 Better: Tries to fit new items in all opened bins before opening a new one.
 
-#### firstFitDecreasing(obj, measure, max, addOversize)
+#### firstFitDecreasing(obj, measure, max)
 Even better: Runs a sort first so the hardest to place items are put down first.
 
 ### Utility method
