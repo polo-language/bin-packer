@@ -1,8 +1,8 @@
-# bin-packer v0.1.4
+# bin-packer v1.0.0
 
 Pack an object's properties into an array of uniform sized bins.
 
-Each property of the object must have a uniformly named numeric sub-property giving the property's "size".
+Each property of the object must have a uniformly named numeric sub-property giving the property's "size". The size value must be a number: values encoded as strings must be converted prior to passing to one of the algorithms.
 
 ## Install
 
@@ -15,13 +15,17 @@ npm install bin-packer
 ### Methods
 
 #### Arguments
-- `obj` is the object whose properties are to be binned.
-- `measure` is the `string` name of the sub-property giving the size to bin on.
-- `max` is the size of each bin.
-- `addOversize` defaults to `true`: any item larger than the size given by `max` is added to its own 'oversized' bin at the tail of the returned array. If set to `false`, the last bin in the returned array contains an object with all of the oversized elements - note that in this case if there are no oversized elements, an empty object is appended to the array for consistency.
+- `obj`: The object whose own enumerable properties are to be binned.
+- `measure`: The `string` name of the sub-property giving the size to bin on.
+- `max`: The maximum bin size.
+
+#### Output
+Each algorithm returns an object with the following keys:
+- `bins`: An array of objects each with total size less than or equal to `max`.
+- `oversized`: An object containing any properties which alone have a size greather than `max`.
+- `invalid`: An object containing any properties with a non-object value or with a missing numeric `measure` property.
 
 ### Algorithms
-Each algorithm returns an array of objects of the binned properties.
 
 #### nextFit(obj, measure, max, addOversize)
 Naive algorithm: Opens a new bin whenever a file doesn't fit in the latest one.
@@ -58,16 +62,15 @@ Some JSON input:
 ```
 Pack it into bins:
 ```js
-const bp = require('bin-packer')
+const binPacker = require('bin-packer')
 //, data = ...
   , max = 300
   , measure = 'size'
-  , bins = bp.firstFitDecreasing(JSON.parse(data), measure, max, false)
-  , oversized = bins.pop()
+  , result = binPacker.firstFitDecreasing(JSON.parse(data), measure, max)
 
-console.log(bins)
+console.log(result.bins)
 ```
-We get an array of bins:
+Results in an array of bins:
 ```js
 [ { '7': { size: 90, att: 0.99 },
     '10': { size: 10, att: 0.35 },
@@ -87,12 +90,12 @@ We get an array of bins:
 ]
 ```
 
-And if we try the quicksort utility:
+Using the quicksort utility:
 ```js
-const sorted = bp.quicksortObj(data, measure)
-console.log(sorted)
+const result = binPacker.quicksortObj(data, measure)
+console.log(result.sorted)
 ```
-We get this sorted array of single-key objects:
+Results in a sorted array of single-key objects:
 ```js
 [ { '16': { size: 1, att: 0.43 } },
   { '3': { size: 7, att: 0.53 } },

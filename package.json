@@ -1,6 +1,6 @@
 {
   "name": "bin-packer",
-  "version": "0.1.5",
+  "version": "1.0.0",
   "description": "bin-packing algorithms",
   "author": {
     "name": "Angelo Polo",
