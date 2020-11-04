@@ -52,16 +52,19 @@ Example JSON input:
   { "size": 7.89,
     "label": "nulla"
   },
-  { "size": 44.51,      // Larger than max
+  { "size": 44.51,
+    "OVERSIZED": "Size is larger than max.",
     "label": "nostrud"
   },
   { "size": 6.62,
     "label": "proident"
   },
-  { "size": "8.05",     // Invalid non-numeric size
+  { "size": "8.05",
+    "INVALID": "Invalid non-numeric size!",
     "label": "in"
   },
-  //...
+  { "etc": "..."
+  },
   { "size": 5.56,
     "label": "nisi"
   }
