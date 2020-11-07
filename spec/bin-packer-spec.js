@@ -9,6 +9,7 @@ const fs = require('fs')
     , utils = require('../lib/util/utils')
     , measure = 'size'
     //, measure = 'att'
+    , sizeOf = item => item[measure]
     , max = 32.7
     , oversizedInData = true
     , obj1 = { '43': {
@@ -64,7 +65,7 @@ const fs = require('fs')
 function anyTooBig(testBins, maximum) {
   for (const i in testBins) {
     for (const key in testBins[i]) {
-      if (testBins[i][key][measure] > maximum) {
+      if (sizeOf(testBins[i][key]) > maximum) {
         return true
       }
     }
@@ -85,7 +86,7 @@ function numOversized(obj, maximum) {
   let count = 0
 
   for (const key in obj) {
-    if (obj[key][measure] > maximum) {
+    if (sizeOf(obj[key]) > maximum) {
       ++count
     }
   }
@@ -106,15 +107,15 @@ describe('bin-packer', function () {
         , firstDec
 
     beforeEach(function (done) {
-      next = binPacker.nextFit(data, measure, max, addOversize)
-      first = binPacker.firstFit(data, measure, max, addOversize)
-      firstDec = binPacker.firstFitDecreasing(data, measure, max, addOversize)
+      next = binPacker.nextFit(data, sizeOf, max, addOversize)
+      first = binPacker.firstFit(data, sizeOf, max, addOversize)
+      firstDec = binPacker.firstFitDecreasing(data, sizeOf, max, addOversize)
       done()
     })
 
     describe('nextFit', function () {
       it('should return as many keys as it was passed', function () {
-        expect(getArrayKeyCount(next.bins) + Object.keys(next.oversized).length + Object.keys(next.invalid).length)
+        expect(getArrayKeyCount(next.bins) + Object.keys(next.oversized).length)
             .toEqual(Object.keys(data).length)
       })
 
@@ -133,7 +134,7 @@ describe('bin-packer', function () {
 
     describe('firstFit', function () {
       it('should return as many keys as it was passed', function () {
-        expect(getArrayKeyCount(first.bins) + Object.keys(first.oversized).length + Object.keys(first.invalid).length)
+        expect(getArrayKeyCount(first.bins) + Object.keys(first.oversized).length)
             .toEqual(Object.keys(data).length)
       })
 
@@ -152,7 +153,7 @@ describe('bin-packer', function () {
 
     describe('firstFitDecreasing', function () {
       it('should return as many keys as it was passed', function () {
-        expect(getArrayKeyCount(firstDec.bins) + Object.keys(firstDec.oversized).length + Object.keys(firstDec.invalid).length)
+        expect(getArrayKeyCount(firstDec.bins) + Object.keys(firstDec.oversized).length)
             .withContext(firstDec.bins)
             .toEqual(Object.keys(data).length)
       })
@@ -188,15 +189,15 @@ describe('bin-packer', function () {
         , firstDec
 
     beforeEach(function (done) {
-      next = binPacker.nextFit(data, measure, max, addOversize)
-      first = binPacker.firstFit(data, measure, max, addOversize)
-      firstDec = binPacker.firstFitDecreasing(data, measure, max, addOversize)
+      next = binPacker.nextFit(data, sizeOf, max, addOversize)
+      first = binPacker.firstFit(data, sizeOf, max, addOversize)
+      firstDec = binPacker.firstFitDecreasing(data, sizeOf, max, addOversize)
       done()
     })
 
     describe('nextFit', function () {
       it('should return as many keys as it was passed', function () {
-        expect(getArrayKeyCount(next.bins) + Object.keys(next.oversized).length + Object.keys(next.invalid).length)
+        expect(getArrayKeyCount(next.bins) + Object.keys(next.oversized).length)
             .toEqual(Object.keys(data).length)
       })
 
@@ -210,7 +211,7 @@ describe('bin-packer', function () {
 
     describe('firstFit', function () {
       it('should return as many keys as it was passed', function () {
-        expect(getArrayKeyCount(first.bins) + Object.keys(first.oversized).length + Object.keys(first.invalid).length)
+        expect(getArrayKeyCount(first.bins) + Object.keys(first.oversized).length)
             .toEqual(Object.keys(data).length)
       })
 
@@ -224,7 +225,7 @@ describe('bin-packer', function () {
 
     describe('firstFitDecreasing', function () {
       it('should return as many keys as it was passed', function () {
-        expect(getArrayKeyCount(firstDec.bins) + Object.keys(firstDec.oversized).length + Object.keys(firstDec.invalid).length).toEqual(Object.keys(data).length)
+        expect(getArrayKeyCount(firstDec.bins) + Object.keys(firstDec.oversized).length).toEqual(Object.keys(data).length)
       })
 
       it('should contain some oversized', function () {
@@ -259,7 +260,7 @@ describe('quicksort', function () {
 
     it('should find the location of 1', function () {
       for (const i in perms) {
-        const foundMedian = quicksort._getMedianOfThree(perms[i], 'idem', 0, perms[i].length - 1)
+        const foundMedian = quicksort._getMedianOfThree(perms[i], item => item['idem'], 0, perms[i].length - 1)
         expect(foundMedian).toEqual(correctAnswers[i])
       }
     })
@@ -267,21 +268,21 @@ describe('quicksort', function () {
 
   describe('quicksort', function () {
     it('should not sort a larger value before a smaller value', function () {
-      const {sorted: sorted} = quicksort.quicksort(data, measure)
+      const sorted = quicksort.quicksort(data, sizeOf)
       expect(sorted.length).toEqual(data.length)
       for (let i = 0; i < sorted.length - 1; ++i) {
-        if (sorted[i][measure] > sorted[i + 1][measure]) {
-          fail(`size ${sorted[i][measure]} at index ${i} > ${sorted[i + 1][measure]} at index ${i + 1}`)
+        if (sizeOf(sorted[i]) > sizeOf(sorted[i + 1])) {
+          fail(`size ${sizeOf(sorted[i])} at index ${i} > ${sorted([i + 1])} at index ${i + 1}`)
         }
       }
     })
 
     it('should not sort a smaller value before a larger value', function () {
-      const {sorted: sorted} = quicksort.quicksort(data, measure, false)
+      const sorted = quicksort.quicksort(data, sizeOf, false)
       expect(sorted.length).toEqual(data.length)
       for (let i = 0; i < sorted.length - 1; ++i) {
-        if (sorted[i][measure] < sorted[i + 1][measure]) {
-          fail(`size ${sorted[i][measure]} at index ${i} < ${sorted[i + 1][measure]} at index ${i + 1}`)
+        if (sizeOf(sorted[i]) < sizeOf(sorted[i + 1])) {
+          fail(`size ${sizeOf(sorted[i])} at index ${i} < ${sizeOf(sorted[i + 1])} at index ${i + 1}`)
         }
       }
     })
@@ -303,25 +304,6 @@ describe('utils', function () {
       expect(Array.isArray(obj1)).toBeFalse()
       expect(Array.isArray(processed)).toBeTrue()
       expect(processed.length).toEqual(originalSize)
-    })
-  })
-
-  describe('validate', function () {
-    const array = [3, 9, 'Sunday', {'fruit': 'grape', 'grams': 500.4}, {'fruit': 'orange', 'grams': 1200}, 86.144]
-    it('should should return an object with valid and invalid keys', function () {
-      const result = utils.validate(array, obj => true)
-      expect(result.valid).not.toBeUndefined()
-      expect(result.invalid).not.toBeUndefined()
-      expect(result.something).toBeUndefined()
-      expect(result.valid.length).toEqual(array.length)
-      expect(result.invalid.length).toEqual(0)
-    })
-    it('should find objects with a numeric \'grams\' property', function () {
-      const result = utils.validate(array, utils.measureValidator.bind(null, 'grams'))
-      expect(result.valid.length).toEqual(2)
-      expect(result.invalid.length).toEqual(4)
-      expect(result.valid[0].fruit).toEqual('grape')
-      expect(result.invalid[result.invalid.length -1]).toEqual(86.144)
     })
   })
 })
