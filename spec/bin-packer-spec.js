@@ -289,17 +289,17 @@ describe('quicksort', function () {
 })
 
 describe('utils', function () {
-  describe('toValuesArray', function () {
+  describe('toIterable', function () {
     it('should return arrays unchanged', function () {
       const array = [3, 9, 'Sunday', {'fruit': 'grape', 'grams': 500.4}, 86.144]
           , originalLength = array.length
-          , processed = utils.toValuesArray(array)
+          , processed = utils.toIterable(array)
       expect(processed === array).toBeTrue()
       expect(processed.length).toEqual(originalLength)
     })
     it('should return object\'s values', function () {
       const originalSize = Object.keys(obj1).length
-          , processed = utils.toValuesArray(obj1)
+          , processed = utils.toIterable(obj1)
       expect(Array.isArray(obj1)).toBeFalse()
       expect(Array.isArray(processed)).toBeTrue()
       expect(processed.length).toEqual(originalSize)
