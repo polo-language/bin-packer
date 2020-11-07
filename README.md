@@ -2,7 +2,7 @@
 
 Packs objects into bins of a specified maximum size.
 
-Accepts either an array of objects or an ordinary object with object-valued properties. In the later case, the object's property keys are discarded before packing the property values, so if the keys are to be preserved (e.g. by storing on the values) this should be done prior to calling a bin packing algorithm.
+Accepts an array of objects or an ordinary object with object-valued properties. In the later case, the object's property keys are discarded before packing the property values, so if the keys are to be preserved (e.g. by storing on the values) this should be done prior to calling a bin packing algorithm.
 Each value must have a uniformly named numeric sub-property giving the property's "size". Values with non-numeric sizes are returned as invalid (see Output). In particular, sizes encoded as strings must be converted beforehand.
 
 ## Install
@@ -35,7 +35,7 @@ Opens a new bin whenever a value doesn't fit in the latest one.
 Tries to fit new items in all opened bins before opening a new one.
 
 #### firstFitDecreasing(obj, measure, max)
-Runs a sort first (so the hardest to place items are put down first), then uses firstFit.
+Runs a sort, so the hardest to place items are placed first, then uses firstFit.
 
 ### Utility method
 
@@ -106,7 +106,7 @@ Using the quicksort utility:
 ```js
 const sorted = binPacker.quicksort(data, measure)
 console.log('Sorted: %O', sorted.sorted)
-console.log("Invalid: %O", result.invalid)
+console.log("Invalid: %O", sorted.invalid)
 ```
 Results in a sorted array of single-key objects:
 ```js
