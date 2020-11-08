@@ -1,4 +1,3 @@
-/* global describe, it, expect, beforeEach */
 'use strict'
 
 const fs = require('fs')
@@ -131,10 +130,11 @@ describe('bin-packer', function () {
       })
 
       it('should contain some oversized', function () {
-        if (oversizedInData)
+        if (oversizedInData) {
           expect(Object.keys(next.oversized).length).toBeGreaterThan(0)
-        else
+        } else {
           expect(Object.keys(next.oversized).length).toEqual(0)
+        }
       })
     })
 
@@ -157,10 +157,11 @@ describe('bin-packer', function () {
       })
 
       it('should contain some oversized', function () {
-        if (oversizedInData)
+        if (oversizedInData) {
           expect(Object.keys(first.oversized).length).toBeGreaterThan(0)
-        else
+        } else {
           expect(Object.keys(first.oversized).length).toEqual(0)
+        }
       })
     })
 
@@ -184,10 +185,11 @@ describe('bin-packer', function () {
       })
 
       it('should contain some oversized', function () {
-        if (oversizedInData)
+        if (oversizedInData) {
           expect(Object.keys(firstDec.oversized).length).toBeGreaterThan(0)
-        else
+        } else {
           expect(Object.keys(firstDec.oversized).length).toEqual(0)
+        }
       })
     })
 
@@ -230,7 +232,7 @@ describe('quicksort', function () {
 
     it('should find the location of 1', function () {
       for (const i in perms) {
-        const foundMedian = quicksort._getMedianOfThree(perms[i], item => item['idem'], 0, perms[i].length - 1)
+        const foundMedian = quicksort._getMedianOfThree(perms[i], item => item.idem, 0, perms[i].length - 1)
         expect(foundMedian).toEqual(correctAnswers[i])
       }
     })

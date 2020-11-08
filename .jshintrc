@@ -1,0 +1,21 @@
+{
+  "bitwise": true,
+  "curly": true,
+  "eqeqeq": true,
+  "esversion": 6,
+  "freeze": true,
+  "futurehostile": true,
+  "latedef": "nofunc",
+  "nonbsp": true,
+  "nonew": true,
+  "shadow": "outer",
+  "singleGroups": true,
+  "strict": true,
+  "trailingcomma": true,
+  "undef": true,
+  "unused": true,
+  "varstmt": true,
+  "asi": true,
+  "node": true,
+  "laxcomma": true
+}
