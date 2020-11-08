@@ -42,81 +42,67 @@ Sorts values by their size given by `sizeOf`. `lowToHigh` controls whether the r
 ## Example
 Example JSON input:
 ```json
-[ { "size": 3.08,
-    "label": "dolore"
-  },
-  { "size": 7.89,
-    "label": "nulla"
-  },
-  { "size": 44.51,
-    "OVERSIZED": "Size is larger than max.",
-    "label": "nostrud"
-  },
-  { "size": 6.62,
-    "label": "proident"
-  },
-  { "size": "8.05",
-    "INVALID": "Invalid non-numeric size!",
-    "label": "in"
-  },
-  { "etc": "..."
-  },
-  { "size": 5.56,
-    "label": "nisi"
-  }
+[ { "size": 3.08, "label": "dolore" },
+  { "size": 7.89, "label": "nulla" },
+  { "size": 44.51, "label": "nostrud", "OVERSIZED": "Size is larger than max." },
+  { "size": 6.62, "label": "proident" },
+  { "size": 2.07, "label": "occaecat" },
+  { "size": 0.79, "label": "consectetur" },
+  { "size": 8.05, "label": "in" },
+  { "size": 0.13, "label": "fugiat" },
+  { "size": 2.88, "label": "eiusmod" },
+  { "size": 5.56, "label": "nisi" }
 ]
 ```
 Pack it into bins:
 ```js
-const binPacker = require('../src/lib/bin-packer')
+const binPacker = require('bin-packer')
   //, data = JSON.parse(...)
     , sizeOf = item => item['size']
     , result = binPacker.firstFitDecreasing(data, sizeOf, 10)
 
 console.log("Bins: %O", result.bins)
 console.log("Oversized: %O", result.oversized)
-console.log("Invalid: %O", result.invalid)
 ```
 Results in an array of bins:
 ```js
 Bins: [
   [
-    { size: 7.89, label: 'nulla' },
+    { size: 8.05, label: 'in' },
     { size: 0.79, label: 'consectetur' },
     { size: 0.13, label: 'fugiat' }
   ],
+  [ { size: 7.89, label: 'nulla' },
+    { size: 2.07, label: 'occaecat' } ],
   [
     { size: 6.62, label: 'proident' },
     { size: 3.08, label: 'dolore' }
   ],
-  [
-    { size: 5.56, label: 'nisi' },
+  [ { size: 5.56, label: 'nisi' },
     { size: 2.88, label: 'eiusmod' }
-  ],
-  [ { size: 2.18, label: 'occaecat' } ]
+  ]
 ]
-Oversized: [ { size: 44.51, label: 'nostrud' } ]
-Invalid: [ { size: '8.05', label: 'in' } ]
+Oversized: [
+  { size: 44.51, OVERSIZED: 'Size is larger than max.', label: 'nostrud' }
+]
 ```
 
 Using the quicksort utility:
 ```js
-const sorted = binPacker.quicksort(data, sizeOf)
-console.log('Sorted: %O', sorted.sorted)
-console.log("Invalid: %O", sorted.invalid)
+console.log(binPacker.quicksort(data, sizeOf))
 ```
 Results in a sorted array of single-key objects:
 ```js
-Sorted: [
+[
   { size: 0.13, label: 'fugiat' },
   { size: 0.79, label: 'consectetur' },
-  { size: 2.18, label: 'occaecat' },
+  { size: 2.07, label: 'occaecat' },
   { size: 2.88, label: 'eiusmod' },
   { size: 3.08, label: 'dolore' },
   { size: 5.56, label: 'nisi' },
   { size: 6.62, label: 'proident' },
   { size: 7.89, label: 'nulla' },
-  { size: 44.51, label: 'nostrud' }
+  { size: 8.05, label: 'in' },
+  { size: 44.51, OVERSIZED: 'Size is larger than max.', label: 'nostrud' }
 ]
-Invalid: [ { size: '8.05', label: 'in' } ]
 ```
