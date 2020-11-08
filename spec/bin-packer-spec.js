@@ -201,6 +201,21 @@ describe('bin-packer', function () {
       })
     })
   })
+
+  describe('empty input', function () {
+      const next = binPacker.nextFit([], sizeOf, max)
+          , first = binPacker.firstFit([], sizeOf, max)
+          , firstDec = binPacker.firstFitDecreasing([], sizeOf, max)
+
+    it('should produce empty arrays', function () {
+      expect(next.bins.length).toEqual(0)
+      expect(next.oversized.length).toEqual(0)
+      expect(first.bins.length).toEqual(0)
+      expect(first.oversized.length).toEqual(0)
+      expect(firstDec.bins.length).toEqual(0)
+      expect(firstDec.oversized.length).toEqual(0)
+    })
+  })
 })
 
 describe('quicksort', function () {
