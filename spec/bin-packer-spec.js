@@ -103,11 +103,13 @@ describe('bin-packer', function () {
       let next
         , first
         , firstDec
+        , bestDec
 
     beforeEach(function (done) {
       next = binPacker.nextFit(data, sizeOf, max)
       first = binPacker.firstFit(data, sizeOf, max)
       firstDec = binPacker.firstFitDecreasing(data, sizeOf, max)
+      bestDec = binPacker.bestFitDecreasing(data, sizeOf, max)
       done()
     })
 
@@ -144,7 +146,7 @@ describe('bin-packer', function () {
             .toEqual(Object.keys(data).length)
       })
 
-      it('should not have any larger than max outside of the last bin', function () {
+      it('should not have any larger than max', function () {
         expect(anyTooBig(first.bins, max)).toBeFalsy()
       })
 
@@ -193,6 +195,34 @@ describe('bin-packer', function () {
       })
     })
 
+    describe('bestFitDecreasing', function () {
+      it('should return as many keys as it was passed', function () {
+        expect(getArrayKeyCount(bestDec.bins) + Object.keys(bestDec.oversized).length)
+            .withContext(bestDec.bins)
+            .toEqual(Object.keys(data).length)
+      })
+
+      it('should not have any bins larger than max', function () {
+        expect(anyTooBig(bestDec.bins, max)).toBeFalsy()
+      })
+
+      it('all values in the oversized bin should be larger than max', function () {
+        expect(numOversized(bestDec.oversized, max) === Object.keys(bestDec.oversized).length).toBeTruthy()
+      })
+
+      it('should have no empty bins', function () {
+        expect(anyEmpty(bestDec.bins)).toBeFalsy()
+      })
+
+      it('should contain some oversized', function () {
+        if (oversizedInData) {
+          expect(Object.keys(bestDec.oversized).length).toBeGreaterThan(0)
+        } else {
+          expect(Object.keys(bestDec.oversized).length).toEqual(0)
+        }
+      })
+    })
+
     describe('relative number of bins', function () {
       it('nextFit >= firstFit', function () {
         expect(next.bins.length >= first.bins.length).toBeTruthy()
@@ -201,6 +231,10 @@ describe('bin-packer', function () {
       it('firstFit >= firstFitDecreasing', function () {
         expect(first.bins.length >= firstDec.bins.length).toBeTruthy()
       })
+
+      it('firstFitDecreasing >= bestFitDecreasing', function () {
+        expect(firstDec.bins.length >= bestDec.bins.length).toBeTruthy()
+      })
     })
   })
 
@@ -208,6 +242,7 @@ describe('bin-packer', function () {
       const next = binPacker.nextFit([], sizeOf, max)
           , first = binPacker.firstFit([], sizeOf, max)
           , firstDec = binPacker.firstFitDecreasing([], sizeOf, max)
+          , bestDec = binPacker.bestFitDecreasing([], sizeOf, max)
 
     it('should produce empty arrays', function () {
       expect(next.bins.length).toEqual(0)
@@ -216,6 +251,8 @@ describe('bin-packer', function () {
       expect(first.oversized.length).toEqual(0)
       expect(firstDec.bins.length).toEqual(0)
       expect(firstDec.oversized.length).toEqual(0)
+      expect(bestDec.bins.length).toEqual(0)
+      expect(bestDec.oversized.length).toEqual(0)
     })
   })
 })
@@ -270,6 +307,7 @@ describe('utils', function () {
       expect(processed === array).toBeTrue()
       expect(processed.length).toEqual(originalLength)
     })
+    
     it('should return object\'s values', function () {
       const originalSize = Object.keys(obj1).length
           , processed = utils.toIterable(obj1)
