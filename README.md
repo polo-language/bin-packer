@@ -34,7 +34,7 @@ Tries to fit new items sequentially in all opened bins before opening a new one.
 Runs a sort, so the hardest to place items are placed first, then uses First Fit.
 
 #### bestFitDecreasing(obj, sizeOf, max)
-Sorts the items largest to smallest like First Fit Decreasing and then places each item in the most full bin in which it will fit. Best Fit Decreasing should generally be preferred to First Fit and First Fit Decreasing since the Best Fit algorithm uses binary search to find the target bin for each item rather than First Fit's linear search.
+Sorts items largest to smallest like First Fit Decreasing and then places each one in the most full bin into which it will fit. Best Fit Decreasing should generally be preferred to First Fit and First Fit Decreasing since the Best Fit algorithm uses binary search to find the target bin for each item rather than First Fit's linear search and is considerably faster.
 
 ### Utility method
 
@@ -62,7 +62,7 @@ Pack it into bins:
 const binPacker = require('bin-packer')
   //, data = JSON.parse(...)
     , sizeOf = item => item['size']
-    , result = binPacker.bestFitDecreasing(data, sizeOf, 10)
+    , result = binPacker.bestFitDecreasing(data.slice(), sizeOf, 10)
 
 console.log("Bins: %O", result.bins)
 console.log("Oversized: %O", result.oversized)
@@ -93,7 +93,7 @@ Oversized: [
 
 Using the quicksort utility:
 ```js
-console.log(binPacker.quicksort(data, sizeOf))
+console.log(binPacker.quicksort(data.slice(), sizeOf))
 ```
 Results in a sorted array:
 ```js

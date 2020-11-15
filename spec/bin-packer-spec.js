@@ -106,10 +106,10 @@ describe('bin-packer', function () {
         , bestDec
 
     beforeEach(function (done) {
-      next = binPacker.nextFit(data, sizeOf, max)
-      first = binPacker.firstFit(data, sizeOf, max)
-      firstDec = binPacker.firstFitDecreasing(data, sizeOf, max)
-      bestDec = binPacker.bestFitDecreasing(data, sizeOf, max)
+      next = binPacker.nextFit(data.slice(), sizeOf, max)
+      first = binPacker.firstFit(data.slice(), sizeOf, max)
+      firstDec = binPacker.firstFitDecreasing(data.slice(), sizeOf, max)
+      bestDec = binPacker.bestFitDecreasing(data.slice(), sizeOf, max)
       done()
     })
 
@@ -277,7 +277,7 @@ describe('quicksort', function () {
 
   describe('quicksort', function () {
     it('should not sort a larger value before a smaller value', function () {
-      const sorted = quicksort.quicksort(data, sizeOf)
+      const sorted = quicksort.quicksort(data.slice(), sizeOf)
       expect(sorted.length).toEqual(data.length)
       for (let i = 0; i < sorted.length - 1; ++i) {
         if (sizeOf(sorted[i]) > sizeOf(sorted[i + 1])) {
@@ -287,7 +287,7 @@ describe('quicksort', function () {
     })
 
     it('should not sort a smaller value before a larger value', function () {
-      const sorted = quicksort.quicksort(data, sizeOf, false)
+      const sorted = quicksort.quicksort(data.slice(), sizeOf, false)
       expect(sorted.length).toEqual(data.length)
       for (let i = 0; i < sorted.length - 1; ++i) {
         if (sizeOf(sorted[i]) < sizeOf(sorted[i + 1])) {
