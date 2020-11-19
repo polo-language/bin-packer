@@ -1,4 +1,4 @@
-# bin-packer v1.2.0
+# bin-packer v1.3.0
 
 Packs objects into bins of a specified capacity.
 
