@@ -4,60 +4,10 @@ const fs = require('fs')
     , dataFilePath = './spec/data/data_04.json'
     , data = JSON.parse(fs.readFileSync(dataFilePath))
     , binPacker = require('../lib/bin-packer')
-    , quicksort = require('../lib/util/quicksort')
     , utils = require('../lib/util/utils')
     , sizeOf = item => item.size
     , capacity = 32.7
     , oversizedInData = true
-    , obj1 = { '43': {
-          size: 2,
-          sizeDecimal: 2.15,
-          guid: '10324ecc-fcfa-4bc2-84b9-e595155a5b50',
-          label: 'do'
-        },
-        '82': {
-          size: 30,
-          sizeDecimal: 30.15,
-          guid: 'ec7bd17e-1d85-475d-ab36-416dae8f18f4',
-          label: 'elit'
-        },
-        '12': {
-          size: 3,
-          sizeDecimal: 3.15,
-          guid: 'bd72cb34-3801-4e9b-b41d-818dbfe1e88e',
-          label: 'aute'
-        },
-        '96': {
-          size: 28,
-          sizeDecimal: 28.15,
-          guid: '1e2a22b6-c95d-4359-82d2-d5d6d807de61',
-          label: 'sit'
-        },
-        '41': {
-          size: 24,
-          sizeDecimal: 24.15,
-          guid: '8f638ee5-c573-4f00-bc79-57c41318e1a0',
-          label: 'minim'
-        },
-        '42': {
-          size: 7,
-          sizeDecimal: 7.15,
-          guid: 'ba524759-4831-42e6-acf2-5c701194900e',
-          label: 'non'
-        },
-        '73': {
-          size: 24,
-          sizeDecimal: 24.15,
-          guid: '0fb8e8ee-203b-4754-bdf8-2349558bb17a',
-          label: 'consequat'
-        },
-        '86': {
-          size: 7,
-          sizeDecimal: 7.15,
-          guid: '2ef4822d-c461-488c-887b-43712383698b',
-          label: 'anim'
-        }
-      }
 
 function anyTooBig(testBins, capacity) {
   for (const i in testBins) {
@@ -278,63 +228,16 @@ describe('bin-packer', function () {
   })
 })
 
-describe('quicksort', function () {
-  describe('getMedianOfThree', function () {
-    const perms = [ [{idem: 0}, {idem: 1}, {idem: 2}],
-                  [{idem: 0}, {idem: 2}, {idem: 1}],
-                  [{idem: 1}, {idem: 0}, {idem: 2}],
-                  [{idem: 1}, {idem: 2}, {idem: 0}],
-                  [{idem: 2}, {idem: 0}, {idem: 1}],
-                  [{idem: 2}, {idem: 1}, {idem: 0}] ]
-        , correctAnswers = [1, 2, 0, 0, 2, 1]
-
-    it('should find the location of 1', function () {
-      for (const i in perms) {
-        const foundMedian = quicksort._getMedianOfThree(perms[i], item => item.idem, 0, perms[i].length - 1)
-        expect(foundMedian).toEqual(correctAnswers[i])
-      }
-    })
-  })
-
-  describe('quicksort', function () {
-    it('should not sort a larger value before a smaller value', function () {
-      const sorted = quicksort.quicksort(data.slice(), sizeOf)
-      expect(sorted.length).toEqual(data.length)
-      for (let i = 0; i < sorted.length - 1; ++i) {
-        if (sizeOf(sorted[i]) > sizeOf(sorted[i + 1])) {
-          fail(`size ${sizeOf(sorted[i])} at index ${i} > ${sorted([i + 1])} at index ${i + 1}`)
-        }
-      }
-    })
-
+describe('utils', function () {
+  describe('sortDecreasing', function () {
     it('should not sort a smaller value before a larger value', function () {
-      const sorted = quicksort.quicksort(data.slice(), sizeOf, false)
+      const sorted = utils.sortDecreasing(data.slice(), sizeOf)
       expect(sorted.length).toEqual(data.length)
       for (let i = 0; i < sorted.length - 1; ++i) {
         if (sizeOf(sorted[i]) < sizeOf(sorted[i + 1])) {
           fail(`size ${sizeOf(sorted[i])} at index ${i} < ${sizeOf(sorted[i + 1])} at index ${i + 1}`)
         }
       }
-    })
-  })
-})
-
-describe('utils', function () {
-  describe('toIterable', function () {
-    it('should return arrays unchanged', function () {
-      const array = [3, 9, 'Sunday', {'fruit': 'grape', 'grams': 500.4}, 86.144]
-          , originalLength = array.length
-          , processed = utils.toIterable(array)
-      expect(processed === array).toBeTrue()
-      expect(processed.length).toEqual(originalLength)
-    })
-    
-    it('should return object\'s values', function () {
-      const originalSize = Object.keys(obj1).length
-          , processed = utils.toIterable(obj1)
-      expect(Array.isArray(obj1)).toBeFalse()
-      expect(Array.isArray(processed)).toBeTrue()
-      expect(processed.length).toEqual(originalSize)
     })
   })
 })

@@ -14,7 +14,7 @@ npm install bin-packer
 
 #### Arguments
 - `obj`: The array or object whose own enumerable property values are to be binned (property keys are discarded). Modifies `obj`, though not its values, if it is an array, so pass in a shallow copy if you want to preserve the original.
-- `sizeOf`: A function from items in `obj` to their numerical size.
+- `sizeOf`: A function from items in `obj` to their numerical sizes. Will be called multiple times on each item by most algorithms. So if this would be an expensive operation, it is advisable to supply a function that returns the memoized value.
 - `capacity`: The maximum bin size.
 
 #### Output
@@ -43,11 +43,6 @@ A simple-to-compute lower bound on the number of bins required by an optimal sol
 
 #### lowerBound2(obj, sizeOf, capacity)
 Martello and Toth's L2 lower bound on the number of bins required by an optimal solution. Combines the methodology of the L1 lower bound with the addition of a 'waste' component for each bin that can be shown not to be fully fillable.
-
-### Utility method
-
-#### quicksort(obj, sizeOf, lowToHigh=true)
-Sorts values by their size given by `sizeOf`. `lowToHigh` controls whether the result is sorted from smallest to largest or largest to smallest.
 
 ## Example
 Example JSON input:
@@ -95,26 +90,6 @@ Bins: [
   [ { size: 8.05, label: 'in' } ]
 ]
 Oversized: [
-  { size: 44.51, label: 'nostrud', OVERSIZED: 'Size is larger than capacity.' }
-]
-```
-
-Using the quicksort utility:
-```js
-console.log(binPacker.quicksort(data.slice(), sizeOf))
-```
-Results in a sorted array:
-```js
-[
-  { size: 0.13, label: 'fugiat' },
-  { size: 0.79, label: 'consectetur' },
-  { size: 2.07, label: 'occaecat' },
-  { size: 2.88, label: 'eiusmod' },
-  { size: 3.08, label: 'dolore' },
-  { size: 5.56, label: 'nisi' },
-  { size: 6.62, label: 'proident' },
-  { size: 7.89, label: 'nulla' },
-  { size: 8.05, label: 'in' },
   { size: 44.51, label: 'nostrud', OVERSIZED: 'Size is larger than capacity.' }
 ]
 ```

@@ -19,8 +19,7 @@
     "bin",
     "pack",
     "packing",
-    "sort",
-    "quicksort"
+    "sort"
   ],
   "devDependencies": {
     "jasmine": "^3.6.3"
