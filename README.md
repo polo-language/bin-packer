@@ -1,4 +1,4 @@
-# bin-packer v1.3.0
+# bin-packer v1.4.0
 
 Packs objects into bins of a specified capacity.
 
@@ -17,12 +17,10 @@ npm install bin-packer
 - `sizeOf`: A function from items in `obj` to their numerical sizes. Will be called multiple times on each item by most algorithms. So if this would be an expensive operation, it is advisable to supply a function that returns the memoized value.
 - `capacity`: The maximum bin size.
 
-#### Output
+### Algorithms
 Each algorithm returns an object with the following keys:
 - `bins`: An array of arrays, each containing elements with total size less than or equal to `capacity`.
 - `oversized`: An array containing any elements which on their own have a size greater than `capacity`.
-
-### Algorithms
 
 #### nextFit(obj, sizeOf, capacity)
 Opens a new bin whenever a value doesn't fit in the latest one.
@@ -37,9 +35,12 @@ Runs a sort, so the hardest to place items are placed first, then uses First Fit
 Sorts items largest to smallest like First Fit Decreasing and then places each one in the fullest bin into which it will fit. Best Fit Decreasing should generally be preferred to First Fit and First Fit Decreasing since the Best Fit algorithm uses binary search to find the target bin for each item rather than First Fit's linear search and is considerably faster.
 
 ### Bounds
+Each bound function returns an object with the following keys:
+- `bound`: A lower bound on the number of bins required by an optimal solution.
+- `oversized`: The number of oversized items.
 
 #### lowerBound1(obj, sizeOf, capacity)
-A simple-to-compute lower bound on the number of bins required by an optimal solution. Computes the number of bins required if elements' sizes could be split across bins to fill each completely before opening a new one.
+Simple to compute: the number of bins required if elements' sizes could be split across bins to fill each completely before opening a new one.
 
 #### lowerBound2(obj, sizeOf, capacity)
 Martello and Toth's L2 lower bound on the number of bins required by an optimal solution. Combines the methodology of the L1 lower bound with the addition of a 'waste' component for each bin that can be shown not to be fully fillable.

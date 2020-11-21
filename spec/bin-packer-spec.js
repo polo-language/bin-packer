@@ -7,43 +7,47 @@ const fs = require('fs')
     , utils = require('../lib/util/utils')
     , sizeOf = item => item.size
     , capacity = 32.7
-    , oversizedInData = true
+    , oversizedInData = anyTooBigInBin(data, capacity)
 
-function anyTooBig(testBins, capacity) {
-  for (const i in testBins) {
-    for (const key in testBins[i]) {
-      if (sizeOf(testBins[i][key]) > capacity) {
-        return true
-      }
-    }
-  }
-  return false
-}
-
-function anyEmpty(testBins) {
-  for (const i in testBins) {
-    if (Object.keys(testBins[i]).length === 0) {
+function anyTooBig(bins, capacity) {
+  for (const bin of bins) {
+    if (anyTooBigInBin(bin, capacity)) {
       return true
     }
   }
   return false
 }
 
-function numOversized(obj, capacity) {
-  let count = 0
+function anyTooBigInBin(bin, capacity) {
+  for (const item of bin) {
+    if (sizeOf(item) > capacity) {
+      return true
+    }
+  }
+  return false
+}
 
-  for (const key in obj) {
-    if (sizeOf(obj[key]) > capacity) {
+function anyEmpty(bins) {
+  for (const bin of bins) {
+    if (Object.keys(bin).length === 0) {
+      return true
+    }
+  }
+  return false
+}
+
+function numOversized(bin, capacity) {
+  let count = 0
+  for (const item of bin) {
+    if (sizeOf(item) > capacity) {
       ++count
     }
   }
   return count
 }
 
-function getArrayKeyCount(testBins) {
-  return testBins.reduce(function (previous, currentBin) {
-    return previous + Object.keys(currentBin).length
-  }, 0)
+function getArrayKeyCount(bins) {
+  return bins.reduce((acc, bin) => acc + Object.keys(bin).length, 0)
 }
 
 describe('bin-packer', function () {
@@ -75,7 +79,7 @@ describe('bin-packer', function () {
       })
 
       it('all values in the oversized bin should be larger than capacity', function () {
-        expect(numOversized(next.oversized, capacity) === Object.keys(next.oversized).length).toBeTruthy()
+        expect(numOversized(next.oversized, capacity)).toEqual(Object.keys(next.oversized).length)
       })
 
       it('should have no empty bins', function () {
@@ -102,7 +106,7 @@ describe('bin-packer', function () {
       })
 
       it('all values in the oversized bin should be larger than capacity', function () {
-        expect(numOversized(first.oversized, capacity) === Object.keys(first.oversized).length).toBeTruthy()
+        expect(numOversized(first.oversized, capacity)).toEqual(Object.keys(first.oversized).length)
       })
 
       it('should have no empty bins', function () {
@@ -130,7 +134,7 @@ describe('bin-packer', function () {
       })
 
       it('all values in the oversized bin should be larger than capacity', function () {
-        expect(numOversized(firstDec.oversized, capacity) === Object.keys(firstDec.oversized).length).toBeTruthy()
+        expect(numOversized(firstDec.oversized, capacity)).toEqual(Object.keys(firstDec.oversized).length)
       })
 
       it('should have no empty bins', function () {
@@ -158,7 +162,7 @@ describe('bin-packer', function () {
       })
 
       it('all values in the oversized bin should be larger than capacity', function () {
-        expect(numOversized(bestDec.oversized, capacity) === Object.keys(bestDec.oversized).length).toBeTruthy()
+        expect(numOversized(bestDec.oversized, capacity)).toEqual(Object.keys(bestDec.oversized).length)
       })
 
       it('should have no empty bins', function () {
@@ -188,23 +192,39 @@ describe('bin-packer', function () {
       })
 
       it('lowerBound1 <= all solutions', function () {
-        expect(lowerBound1 <= next.bins.length + next.oversized.length)
-        expect(lowerBound1 <= first.bins.length + first.oversized.length)
-        expect(lowerBound1 <= firstDec.bins.length + firstDec.oversized.length)
-        expect(lowerBound1 <= firstDec.bins.length + firstDec.oversized.length)
+        expect(lowerBound1.bound).toBeLessThanOrEqual(next.bins.length)
+        expect(lowerBound1.oversized).toEqual(next.oversized.length)
+        
+        expect(lowerBound1.bound).toBeLessThanOrEqual(first.bins.length)
+        expect(lowerBound1.oversized).toEqual(first.oversized.length)
+        
+        expect(lowerBound1.bound).toBeLessThanOrEqual(firstDec.bins.length)
+        expect(lowerBound1.oversized).toEqual(firstDec.oversized.length)
+        
+        expect(lowerBound1.bound).toBeLessThanOrEqual(firstDec.bins.length)
+        expect(lowerBound1.oversized).toEqual(firstDec.oversized.length)
       })
 
       it('lowerBound2 < all solutions', function () {
-        expect(lowerBound2 <= next.bins.length + next.oversized.length)
-        expect(lowerBound2 <= first.bins.length + first.oversized.length)
-        expect(lowerBound2 <= firstDec.bins.length + firstDec.oversized.length)
-        expect(lowerBound2 <= firstDec.bins.length + firstDec.oversized.length)
+        expect(lowerBound2.bound).toBeLessThanOrEqual(next.bins.length)
+        expect(lowerBound2.oversized).toEqual(next.oversized.length)
+        
+        expect(lowerBound2.bound).toBeLessThanOrEqual(first.bins.length)
+        expect(lowerBound2.oversized).toEqual(first.oversized.length)
+        
+        expect(lowerBound2.bound).toBeLessThanOrEqual(firstDec.bins.length)
+        expect(lowerBound2.oversized).toEqual(firstDec.oversized.length)
+        
+        expect(lowerBound2.bound).toBeLessThanOrEqual(firstDec.bins.length)
+        expect(lowerBound2.oversized).toEqual(firstDec.oversized.length)
       })
       
       it('lowerBound1 <= lowerBound2', function () {
-        expect(0 < lowerBound1)
-        expect(lowerBound1 <= lowerBound2)
-        expect(lowerBound2 <= Object.keys(data).length)
+        expect(0).toBeLessThan(lowerBound1.bound)
+        expect(lowerBound1.bound).toBeLessThanOrEqual(lowerBound2.bound)
+        expect(lowerBound2.bound).toBeLessThanOrEqual(Object.keys(data).length)
+        
+        expect(lowerBound1.oversized).toEqual(lowerBound2.oversized)
       })
     })
   })
@@ -229,13 +249,25 @@ describe('bin-packer', function () {
 })
 
 describe('utils', function () {
-  describe('sortDecreasing', function () {
+  describe('sortDescending', function () {
     it('should not sort a smaller value before a larger value', function () {
-      const sorted = utils.sortDecreasing(data.slice(), sizeOf)
+      const sorted = utils.sortDescending(data.slice(), sizeOf)
       expect(sorted.length).toEqual(data.length)
       for (let i = 0; i < sorted.length - 1; ++i) {
         if (sizeOf(sorted[i]) < sizeOf(sorted[i + 1])) {
           fail(`size ${sizeOf(sorted[i])} at index ${i} < ${sizeOf(sorted[i + 1])} at index ${i + 1}`)
+        }
+      }
+    })
+  })
+  
+  describe('sortAscending', function () {
+    it('should not sort a larger value before a smaller value', function () {
+      const sorted = utils.sortAscending(data.slice(), sizeOf)
+      expect(sorted.length).toEqual(data.length)
+      for (let i = 0; i < sorted.length - 1; ++i) {
+        if (sizeOf(sorted[i]) > sizeOf(sorted[i + 1])) {
+          fail(`size ${sizeOf(sorted[i])} at index ${i} > ${sizeOf(sorted[i + 1])} at index ${i + 1}`)
         }
       }
     })
