@@ -1,4 +1,4 @@
-# bin-packer v1.4.0
+# bin-packer v1.5.0
 
 Packs objects into bins of a specified capacity.
 
@@ -33,6 +33,9 @@ Runs a sort, so the hardest to place items are placed first, then uses First Fit
 
 #### bestFitDecreasing(obj, sizeOf, capacity)
 Sorts items largest to smallest like First Fit Decreasing and then places each one in the fullest bin into which it will fit. Best Fit Decreasing should generally be preferred to First Fit and First Fit Decreasing since the Best Fit algorithm uses binary search to find the target bin for each item rather than First Fit's linear search and is considerably faster.
+
+#### binCompletion(obj, sizeOf, capacity)
+Korf's Bin Completion algorithm for producing an optimal solution. Warning! Bin packing is an NP-hard problem. Time and resource consumption may be high.
 
 ### Bounds
 Each bound function returns an object with the following keys:

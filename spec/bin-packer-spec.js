@@ -1,12 +1,12 @@
 'use strict'
 
 const fs = require('fs')
-    , dataFilePath = './spec/data/data_04.json'
+    , dataFilePath = './spec/data/Falkenauer_u120_00_shuffled.json'
     , data = JSON.parse(fs.readFileSync(dataFilePath))
     , binPacker = require('../lib/bin-packer')
     , utils = require('../lib/util/utils')
-    , sizeOf = item => item.size
-    , capacity = 32.7
+    , sizeOf = item => item
+    , capacity = 150
     , dataArray = utils.toArray(data)
     , dataLength = dataArray.length
     , oversizedInData = anyTooBigInBin(dataArray, capacity)
@@ -60,6 +60,7 @@ describe('bin-packer', function () {
         , bestDec
         , lowerBound1
         , lowerBound2
+        , binComp
 
     beforeAll(function () {
       next = binPacker.nextFit(data.slice(), sizeOf, capacity)
@@ -68,9 +69,10 @@ describe('bin-packer', function () {
       bestDec = binPacker.bestFitDecreasing(data.slice(), sizeOf, capacity)
       lowerBound1 = binPacker.lowerBound1(data.slice(), sizeOf, capacity)
       lowerBound2 = binPacker.lowerBound2(data.slice(), sizeOf, capacity)
+      binComp = binPacker.binCompletion(data.slice(), sizeOf, capacity)
     })
 
-    describe('nextFit', function () {
+    describe('next fit', function () {
       it('should return as many keys as it was passed', function () {
         expect(getArrayKeyCount(next.bins) + next.oversized.length)
             .toEqual(dataLength)
@@ -80,8 +82,9 @@ describe('bin-packer', function () {
         expect(anyTooBig(next.bins, capacity)).toBeFalsy()
       })
 
-      it('all values in the oversized bin should be larger than capacity', function () {
-        expect(numOversized(next.oversized, capacity)).toEqual(next.oversized.length)
+      it('all oversized values should be > than capacity', function () {
+        expect(numOversized(next.oversized, capacity))
+            .toEqual(next.oversized.length)
       })
 
       it('should have no empty bins', function () {
@@ -97,7 +100,7 @@ describe('bin-packer', function () {
       })
     })
 
-    describe('firstFit', function () {
+    describe('first fit', function () {
       it('should return as many keys as it was passed', function () {
         expect(getArrayKeyCount(first.bins) + first.oversized.length)
             .toEqual(dataLength)
@@ -107,8 +110,9 @@ describe('bin-packer', function () {
         expect(anyTooBig(first.bins, capacity)).toBeFalsy()
       })
 
-      it('all values in the oversized bin should be larger than capacity', function () {
-        expect(numOversized(first.oversized, capacity)).toEqual(first.oversized.length)
+      it('all oversized values should be > than capacity', function () {
+        expect(numOversized(first.oversized, capacity))
+            .toEqual(first.oversized.length)
       })
 
       it('should have no empty bins', function () {
@@ -124,7 +128,7 @@ describe('bin-packer', function () {
       })
     })
 
-    describe('firstFitDecreasing', function () {
+    describe('first fit decreasing', function () {
       it('should return as many keys as it was passed', function () {
         expect(getArrayKeyCount(firstDec.bins) + firstDec.oversized.length)
             .withContext(firstDec.bins)
@@ -135,8 +139,9 @@ describe('bin-packer', function () {
         expect(anyTooBig(firstDec.bins, capacity)).toBeFalsy()
       })
 
-      it('all values in the oversized bin should be larger than capacity', function () {
-        expect(numOversized(firstDec.oversized, capacity)).toEqual(firstDec.oversized.length)
+      it('all oversized values should be > than capacity', function () {
+        expect(numOversized(firstDec.oversized, capacity))
+            .toEqual(firstDec.oversized.length)
       })
 
       it('should have no empty bins', function () {
@@ -152,7 +157,7 @@ describe('bin-packer', function () {
       })
     })
 
-    describe('bestFitDecreasing', function () {
+    describe('best fit decreasing', function () {
       it('should return as many keys as it was passed', function () {
         expect(getArrayKeyCount(bestDec.bins) + bestDec.oversized.length)
             .withContext(bestDec.bins)
@@ -163,8 +168,9 @@ describe('bin-packer', function () {
         expect(anyTooBig(bestDec.bins, capacity)).toBeFalsy()
       })
 
-      it('all values in the oversized bin should be larger than capacity', function () {
-        expect(numOversized(bestDec.oversized, capacity)).toEqual(bestDec.oversized.length)
+      it('all oversized values should be > than capacity', function () {
+        expect(numOversized(bestDec.oversized, capacity))
+            .toEqual(bestDec.oversized.length)
       })
 
       it('should have no empty bins', function () {
@@ -176,6 +182,35 @@ describe('bin-packer', function () {
           expect(bestDec.oversized.length).toBeGreaterThan(0)
         } else {
           expect(bestDec.oversized.length).toEqual(0)
+        }
+      })
+    })
+
+    describe('bin completion', function () {
+      it('should return as many keys as it was passed', function () {
+        expect(getArrayKeyCount(binComp.bins) + binComp.oversized.length)
+            .withContext(binComp.bins)
+            .toEqual(dataLength)
+      })
+
+      it('should not have any bins larger than capacity', function () {
+        expect(anyTooBig(binComp.bins, capacity)).toBeFalsy()
+      })
+
+      it('all oversized values should be > than capacity', function () {
+        expect(numOversized(binComp.oversized, capacity))
+            .toEqual(binComp.oversized.length)
+      })
+
+      it('should have no empty bins', function () {
+        expect(anyEmpty(binComp.bins)).toBeFalsy()
+      })
+
+      it('should contain some oversized', function () {
+        if (oversizedInData) {
+          expect(binComp.oversized.length).toBeGreaterThan(0)
+        } else {
+          expect(binComp.oversized.length).toEqual(0)
         }
       })
     })
@@ -205,6 +240,9 @@ describe('bin-packer', function () {
         
         expect(lowerBound1.bound).toBeLessThanOrEqual(firstDec.bins.length)
         expect(lowerBound1.oversized).toEqual(firstDec.oversized.length)
+        
+        expect(lowerBound1.bound).toBeLessThanOrEqual(binComp.bins.length)
+        expect(lowerBound1.oversized).toEqual(binComp.oversized.length)
       })
 
       it('lowerBound2 < all solutions', function () {
@@ -219,6 +257,9 @@ describe('bin-packer', function () {
         
         expect(lowerBound2.bound).toBeLessThanOrEqual(firstDec.bins.length)
         expect(lowerBound2.oversized).toEqual(firstDec.oversized.length)
+        
+        expect(lowerBound2.bound).toBeLessThanOrEqual(binComp.bins.length)
+        expect(lowerBound2.oversized).toEqual(binComp.oversized.length)
       })
       
       it('lowerBound1 <= lowerBound2', function () {
@@ -257,7 +298,8 @@ describe('utils', function () {
       expect(sorted.length).toEqual(data.length)
       for (let i = 0; i < sorted.length - 1; ++i) {
         if (sizeOf(sorted[i]) < sizeOf(sorted[i + 1])) {
-          fail(`size ${sizeOf(sorted[i])} at index ${i} < ${sizeOf(sorted[i + 1])} at index ${i + 1}`)
+          fail(`size ${sizeOf(sorted[i])} at index ${i} < ` +
+              `${sizeOf(sorted[i + 1])} at index ${i + 1}`)
         }
       }
     })
@@ -269,7 +311,8 @@ describe('utils', function () {
       expect(sorted.length).toEqual(data.length)
       for (let i = 0; i < sorted.length - 1; ++i) {
         if (sizeOf(sorted[i]) > sizeOf(sorted[i + 1])) {
-          fail(`size ${sizeOf(sorted[i])} at index ${i} > ${sizeOf(sorted[i + 1])} at index ${i + 1}`)
+          fail(`size ${sizeOf(sorted[i])} at index ${i} > ` +
+              `${sizeOf(sorted[i + 1])} at index ${i + 1}`)
         }
       }
     })
