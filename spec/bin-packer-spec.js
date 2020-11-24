@@ -72,6 +72,24 @@ describe('bin-packer', function () {
       binComp = binPacker.binCompletion(data.slice(), sizeOf, capacity)
     })
 
+    describe('validation', function () {
+      it('should reject a non-positive capacity', function () {
+        expect(() => binPacker.bestFitDecreasing([0, 1, 5], item => item, []))
+            .toThrowError('expected a number for capacity')
+        expect(() => binPacker.bestFitDecreasing([0, 1, 5], item => item, 0))
+            .toThrowError('Capacity must be a positive number')
+        expect(() => binPacker.bestFitDecreasing([0, 1, 5], item => item, -3.2))
+            .toThrowError('Capacity must be a positive number')
+      })
+      
+      it('sizeOf must always return a number', function () {
+        expect(() => binPacker.bestFitDecreasing([0, 1, 5], item => item.toString(), 10))
+            .toThrowError('expected a number for 0')
+        expect(() => binPacker.bestFitDecreasing([0, 1, {test: 100}, 5], item => item, 10))
+            .toThrowError('expected a number for 2')
+      })
+    })
+
     describe('next fit', function () {
       it('should return as many keys as it was passed', function () {
         expect(getArrayKeyCount(next.bins) + next.oversized.length)
