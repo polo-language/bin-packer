@@ -1,16 +1,20 @@
 const fs = require('fs')
     , readline = require('readline')
     , path = require('path')
+    , solutionsFile = path.join(__dirname, 'bpplib/Falkenauer_solutions.txt')
     , inDir = path.join(__dirname, 'bpplib/Falkenauer')
-    , outDir = path.join(__dirname, 'bpplib/Falkenauer_out')
-    , util = require('util')
+    , outFile = 'spec/data/Falkenauer.json'
 
-listFiles(inDir)
-    .then(files => {
-      for (const file of files) {
-        processFile(file, path.join(outDir, path.basename(file, path.extname(file)) +'.json'))
-      }
-    })
+main()
+
+async function main() {
+  const solutions = await solutionsFileToObject(solutionsFile)
+
+  listFiles(inDir)
+      .then(filesToObject.bind(null, solutions))
+      .then(data => fs.promises.appendFile(outFile, JSON.stringify(data)))
+      .catch(console.error)
+}
 
 async function listFiles(inDir) {
   const files = []
@@ -23,17 +27,15 @@ async function listFiles(inDir) {
   return Promise.resolve(files)
 }
 
-function processFile(inFile, outFile) {
-  fileToObject(inFile)
-      .then(data => {
-        shuffleArrayInPlace(data.data)
-        return Promise.resolve(data)
-      })
-      .then(data => {
-        fs.promises.appendFile(outFile, JSON.stringify(data))
-      })
-      .then(() => console.info(`Success: ${inFile}`))
-      .catch(err => console.error(err))
+async function filesToObject(solutions, files) {
+  const obj = {}
+  for (const file of files) {
+    const data = await fileToObject(file)
+    shuffleArrayInPlace(data.data)
+    data.solution = solutions[data.name]
+    obj[data.name] = data
+  }
+  return Promise.resolve(obj)
 }
 
 async function fileToObject(inFile) {
@@ -58,7 +60,11 @@ async function fileToObject(inFile) {
   if (expectedCount !== data.length) {
     return Promise.reject(Error(`Expected ${expectedCount} data values, found ${data.length}`))
   } else {
-    return Promise.resolve({'capacity': capacity, 'data': data})
+    return Promise.resolve({
+      'name': path.basename(inFile, path.extname(inFile)),
+      'capacity': capacity,
+      'data': data,
+    })
   }
 }
 
@@ -71,4 +77,17 @@ function shuffleArrayInPlace(array) {
     const j = Math.floor(Math.random() * (i + 1));
     [array[i], array[j]] = [array[j], array[i]];
   }
+}
+
+async function solutionsFileToObject(inFile) {
+  const rl = readline.createInterface({
+    input: fs.createReadStream(inFile),
+    crlfDelay: Infinity,
+  })
+  var data = {}
+  for await (const line of rl) {
+    const split = line.split(' ')
+    data[path.basename(split[0], path.extname(split[0]))] = split[1]
+  }
+  return Promise.resolve(data)
 }
