@@ -219,25 +219,25 @@ describe('bin-packer', function () {
             , lowerBound2 = findResultFor(allResults, 'lowerBound2').result
             , arbitrarySpec = allResults[0].dataSpec // All results have the same DataSpec
             , path = arbitrarySpec.path
-            , dataLength = arbitrarySpec.dataLength
 
         it(`nextFit >= firstFit (${path})`, function () {
-          expect(nextFit.bins.length >= firstFit.bins.length).toBeTruthy()
+          expect(nextFit.bins.length).toBeGreaterThanOrEqual(firstFit.bins.length)
         })
 
         it(`firstFit >= firstFitDecreasing (${path})`, function () {
-          expect(firstFit.bins.length >= firstFitDecreasing.bins.length).toBeTruthy()
+          expect(firstFit.bins.length).toBeGreaterThanOrEqual(firstFitDecreasing.bins.length)
         })
 
         it(`firstFitDecreasing >= bestFitDecreasing (${path})`, function () {
-          expect(firstFitDecreasing.bins.length >= bestFitDecreasing.bins.length).toBeTruthy()
+          expect(firstFitDecreasing.bins.length).toBeGreaterThanOrEqual(bestFitDecreasing.bins.length)
+        })
+
+        it(`bestFitDecreasing >= binCompletion (${path})`, function () {
+          expect(bestFitDecreasing.bins.length).toBeGreaterThanOrEqual(binCompletion.bins.length)
         })
         
         it(`lowerBound1 <= lowerBound2 (${path})`, function () {
-          expect(0).toBeLessThan(lowerBound1.bound)
           expect(lowerBound1.bound).toBeLessThanOrEqual(lowerBound2.bound)
-          expect(lowerBound2.bound).toBeLessThanOrEqual(dataLength)
-          
           expect(lowerBound1.oversized).toEqual(lowerBound2.oversized)
         })
       }
@@ -250,15 +250,34 @@ describe('bin-packer', function () {
         })
       }
 
-      function lowerBoundLessOrEqualToSolution(lowerBound, fitResult) {
+      function lowerBoundLessOrEqualToFitResult(lowerBound, fitResult) {
         const bound = lowerBound.result
             , result = fitResult.result
             , path = fitResult.dataSpec.path
             , boundName = lowerBound.algorithm.name
             , fitName = fitResult.algorithm.name
-        it(`lower bound ${boundName} should be <= solution ${fitName} (${path})`, function () {
+        it(`lower bound ${boundName} should be <= fit result ${fitName} (${path})`, function () {
           expect(bound.bound).toBeLessThanOrEqual(result.bins.length)
           expect(bound.oversized).toEqual(result.oversized.length)
+        })
+      }
+
+      function boundInvariants(lowerBound) {
+        const bound = lowerBound.result.bound
+            , path = lowerBound.dataSpec.path
+            , boundName = lowerBound.algorithm.name
+            , dataLength = lowerBound.dataSpec.dataLength
+            , exactSize = lowerBound.dataSpec.optimalSize
+        it(`0 < bound ${boundName} (${path})`, function () {
+          expect(0).toBeLessThan(bound)
+        })
+
+        it(`bound ${boundName} <= size of data (${path})`, function () {
+          expect(bound).toBeLessThanOrEqual(dataLength)
+        })
+        
+        it(`lower bound ${boundName} <= exact solution (${path})`, function () {
+          expect(bound).toBeLessThanOrEqual(exactSize)
         })
       }
 
@@ -273,16 +292,18 @@ describe('bin-packer', function () {
           if (AlgorithmType.isPacking(result.algorithm.type)) {
 
             resultChecks(result)
-
             if (AlgorithmType.EXACT_PACKING === result.algorithm.type) {
               exactAlgorithmShouldGetExactResult(result)
             }
-
             for (const maybeBound of allResults) {
               if (AlgorithmType.LOWER_BOUND === maybeBound.algorithm.type) {
-                lowerBoundLessOrEqualToSolution(maybeBound, result)
+                lowerBoundLessOrEqualToFitResult(maybeBound, result)
               }
             }
+          }
+
+          if(AlgorithmType.LOWER_BOUND === result.algorithm.type) {
+            boundInvariants(result)
           }
         }
       }
