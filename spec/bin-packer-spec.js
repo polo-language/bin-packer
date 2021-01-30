@@ -46,6 +46,13 @@ class DataSpec {
 }
 
 class PackedResult {
+  /**
+   * @param {Algorithm} algorithm
+   * @param {DataSpec} dataSpec
+   * @param {object} result  Altgorithm output.
+   *    For fit algorithms: {bins: [], oversized: [],}
+   *    For bound algorithms: {bound: <Number>, oversized: <Number>}
+   */
   constructor(algorithm, dataSpec, result) {
     this.algorithm = algorithm
     this.dataSpec = dataSpec
@@ -225,40 +232,6 @@ describe('bin-packer', function () {
         it(`firstFitDecreasing >= bestFitDecreasing (${path})`, function () {
           expect(firstFitDecreasing.bins.length >= bestFitDecreasing.bins.length).toBeTruthy()
         })
-
-        it(`lowerBound1 <= all solutions (${path})`, function () {
-          expect(lowerBound1.bound).toBeLessThanOrEqual(nextFit.bins.length)
-          expect(lowerBound1.oversized).toEqual(nextFit.oversized.length)
-          
-          expect(lowerBound1.bound).toBeLessThanOrEqual(firstFit.bins.length)
-          expect(lowerBound1.oversized).toEqual(firstFit.oversized.length)
-          
-          expect(lowerBound1.bound).toBeLessThanOrEqual(firstFitDecreasing.bins.length)
-          expect(lowerBound1.oversized).toEqual(firstFitDecreasing.oversized.length)
-          
-          expect(lowerBound1.bound).toBeLessThanOrEqual(bestFitDecreasing.bins.length)
-          expect(lowerBound1.oversized).toEqual(bestFitDecreasing.oversized.length)
-          
-          expect(lowerBound1.bound).toBeLessThanOrEqual(binCompletion.bins.length)
-          expect(lowerBound1.oversized).toEqual(binCompletion.oversized.length)
-        })
-
-        it(`lowerBound2 <= all solutions (${path})`, function () {
-          expect(lowerBound2.bound).toBeLessThanOrEqual(nextFit.bins.length)
-          expect(lowerBound2.oversized).toEqual(nextFit.oversized.length)
-          
-          expect(lowerBound2.bound).toBeLessThanOrEqual(firstFit.bins.length)
-          expect(lowerBound2.oversized).toEqual(firstFit.oversized.length)
-          
-          expect(lowerBound2.bound).toBeLessThanOrEqual(firstFitDecreasing.bins.length)
-          expect(lowerBound2.oversized).toEqual(firstFitDecreasing.oversized.length)
-          
-          expect(lowerBound2.bound).toBeLessThanOrEqual(bestFitDecreasing.bins.length)
-          expect(lowerBound2.oversized).toEqual(bestFitDecreasing.oversized.length)
-          
-          expect(lowerBound2.bound).toBeLessThanOrEqual(binCompletion.bins.length)
-          expect(lowerBound2.oversized).toEqual(binCompletion.oversized.length)
-        })
         
         it(`lowerBound1 <= lowerBound2 (${path})`, function () {
           expect(0).toBeLessThan(lowerBound1.bound)
@@ -268,14 +241,50 @@ describe('bin-packer', function () {
           expect(lowerBound1.oversized).toEqual(lowerBound2.oversized)
         })
       }
+      
+      function exactAlgorithmShouldGetExactResult(exactResult) {
+        const name = exactResult.algorithm.name
+            , path = exactResult.dataSpec.path
+        it(`exact algorithm ${name} should get the exact result (${path})`, function () {
+          expect(exactResult.result.bins.length).toEqual(exactResult.dataSpec.optimalSize)
+        })
+      }
 
+      function lowerBoundLessOrEqualToSolution(lowerBound, fitResult) {
+        const bound = lowerBound.result
+            , result = fitResult.result
+            , path = fitResult.dataSpec.path
+            , boundName = lowerBound.algorithm.name
+            , fitName = fitResult.algorithm.name
+        it(`lower bound ${boundName} should be <= solution ${fitName} (${path})`, function () {
+          expect(bound.bound).toBeLessThanOrEqual(result.bins.length)
+          expect(bound.oversized).toEqual(result.oversized.length)
+        })
+      }
+
+      // allResultsEachData: [[PackedResult]]
+      // allResults: [PackedResult]
+      // result: PackedResult
       for (const allResults of allResultsEachData) {
-        for (const results of allResults) {
-          if (AlgorithmType.isPacking(results.algorithm.type)) {
-            resultChecks(results)
+        
+        relativeNumberOfBins(allResults)
+
+        for (const result of allResults) {
+          if (AlgorithmType.isPacking(result.algorithm.type)) {
+
+            resultChecks(result)
+
+            if (AlgorithmType.EXACT_PACKING === result.algorithm.type) {
+              exactAlgorithmShouldGetExactResult(result)
+            }
+
+            for (const maybeBound of allResults) {
+              if (AlgorithmType.LOWER_BOUND === maybeBound.algorithm.type) {
+                lowerBoundLessOrEqualToSolution(maybeBound, result)
+              }
+            }
           }
         }
-        relativeNumberOfBins(allResults)
       }
     })
   })
