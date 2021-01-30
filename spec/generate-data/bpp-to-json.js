@@ -1,3 +1,5 @@
+'use strict'
+
 const fs = require('fs')
     , readline = require('readline')
     , path = require('path')
@@ -43,10 +45,10 @@ async function fileToObject(inFile) {
     input: fs.createReadStream(inFile),
     crlfDelay: Infinity,
   })
-  var index = 0
-  var expectedCount = undefined
-  var capacity = undefined
-  var data = []
+  let index = 0
+  let expectedCount
+  let capacity
+  let data = []
   for await (const line of rl) {
     if (index === 0) {
       expectedCount = stringToInt(line)
@@ -84,7 +86,7 @@ async function solutionsFileToObject(inFile) {
     input: fs.createReadStream(inFile),
     crlfDelay: Infinity,
   })
-  var data = {}
+  let data = {}
   for await (const line of rl) {
     const split = line.split(' ')
     data[path.basename(split[0], path.extname(split[0]))] = split[1]
