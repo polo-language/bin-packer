@@ -72,7 +72,7 @@ const algorithms = [
     , itemIsSize = item => item
     , dataPath = './spec/data/Falkenauer_ordered.json'
     , dataSpecs = toDataSpecs(dataFileToJson(dataPath), itemIsSize)
-    , specsToRun = 20 // Number.MAX_SAFE_INTEGER
+    , specsToRun = 80 // Number.MAX_SAFE_INTEGER
 
 function toDataSpecs(json, sizeOf) {
   return Object.values(json).map(data =>
@@ -92,14 +92,30 @@ function dataFileToJson(path) {
 function allResultsFor(dataSpec, algorithms) {
   const results = []
   for (const algorithm of algorithms) {
-    results.push(new PackedResult(
-        algorithm,
-        dataSpec,
-        algorithm.method(dataSpec.data.slice(), dataSpec.sizeOf, dataSpec.capacity)))
+    if (AlgorithmType.EXACT_PACKING !== algorithm.type || isSafeToRunExactAlgo(dataSpec)) {
+      results.push(new PackedResult(
+          algorithm,
+          dataSpec,
+          algorithm.method(dataSpec.data.slice(), dataSpec.sizeOf, dataSpec.capacity)))
+    }
   }
   return results
 }
 
+function isSafeToRunExactAlgo(dataSpec) {
+  if (dataSpec.data.length > 120) {
+    return false
+  }
+  if (dataSpec.name.startsWith('Falkenauer_t')) {
+    return false
+  }
+  return true
+}
+
+/**
+ * @param {array<PackedResult>} allResults
+ * @param {string} algorithmName
+ */
 function findResultFor(allResults, algorithmName) {
   return allResults.find(results => results.algorithm.name === algorithmName)
 }
@@ -215,19 +231,19 @@ describe('bin-packer', function () {
       }
 
       /**
-       * @param {Object} allResults   Output of function allResultsFor
+       * @param {array<PackedResult>} allResults
        */
       function relativeNumberOfBins(allResults) {
         const nextFit = findResultFor(allResults, 'nextFit').result
             , firstFit = findResultFor(allResults, 'firstFit').result
             , firstFitDecreasing = findResultFor(allResults, 'firstFitDecreasing').result
             , bestFitDecreasing = findResultFor(allResults, 'bestFitDecreasing').result
-            , binCompletion = findResultFor(allResults, 'binCompletion').result
+            , binCompletion = findResultFor(allResults, 'binCompletion')?.result
             , lowerBound1 = findResultFor(allResults, 'lowerBound1').result
             , lowerBound2 = findResultFor(allResults, 'lowerBound2').result
             , arbitrarySpec = allResults[0].dataSpec // All results have the same DataSpec
             , dataName = arbitrarySpec.name
-
+        
         it(`nextFit >= firstFit (${dataName})`, function () {
           expect(nextFit.bins.length).toBeGreaterThanOrEqual(firstFit.bins.length)
         })
@@ -240,8 +256,15 @@ describe('bin-packer', function () {
           expect(firstFitDecreasing.bins.length).toBeGreaterThanOrEqual(bestFitDecreasing.bins.length)
         })
 
-        it(`bestFitDecreasing >= binCompletion (${dataName})`, function () {
-          expect(bestFitDecreasing.bins.length).toBeGreaterThanOrEqual(binCompletion.bins.length)
+        if (binCompletion) {
+          it(`bestFitDecreasing >= binCompletion (${dataName})`, function () {
+            expect(bestFitDecreasing.bins.length).toBeGreaterThanOrEqual(binCompletion.bins.length)
+          })
+        }
+
+        it(`bestFitDecreasing >= optimal solution (${dataName})`, function () {
+          // Exact algorithms are tested against the optimal solution in exactAlgorithmShouldGetExactResult
+          expect(bestFitDecreasing.bins.length).toBeGreaterThanOrEqual(arbitrarySpec.optimalSize)
         })
         
         it(`lowerBound1 <= lowerBound2 (${dataName})`, function () {
@@ -253,7 +276,7 @@ describe('bin-packer', function () {
       function exactAlgorithmShouldGetExactResult(exactResult) {
         const algoName = exactResult.algorithm.name
             , dataName = exactResult.dataSpec.name
-        it(`exact algorithm ${algoName} should get the exact result (${dataName})`, function () {
+        it(`exact algorithm ${algoName} should get the optimal solution (${dataName})`, function () {
           expect(exactResult.result.bins.length).toEqual(exactResult.dataSpec.optimalSize)
         })
       }
@@ -291,7 +314,6 @@ describe('bin-packer', function () {
 
       let i = 0
       for (const spec of dataSpecs) {
-      // for (const allResults of allResultsEachData) {
         if (i < specsToRun) {
           ++i
           // allResults has type array<PackedResult>
