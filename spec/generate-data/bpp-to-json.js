@@ -34,7 +34,7 @@ async function filesToObject(solutions, files) {
   for (const file of files) {
     const data = await fileToObject(file)
     shuffleArrayInPlace(data.data)
-    data.solution = solutions[data.name]
+    data.solution = stringToInt(solutions[data.name])
     obj[data.name] = data
   }
   return Promise.resolve(obj)

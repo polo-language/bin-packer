@@ -33,9 +33,9 @@ class Algorithm {
 }
 
 class DataSpec {
-  constructor(path, sizeOf, capacity, optimalSize) {
-    this.path = path
-    this.data = JSON.parse(fs.readFileSync(path))
+  constructor(name, data, sizeOf, capacity, optimalSize) {
+    this.name = name
+    this.data = data
     this.sizeOf = sizeOf
     this.capacity = capacity
     this.optimalSize = optimalSize
@@ -70,12 +70,19 @@ const algorithms = [
         new Algorithm('lowerBound2', binPacker.lowerBound2, AlgorithmType.LOWER_BOUND),
         ]
     , itemIsSize = item => item
-    , dataSpecs = [
-        new DataSpec('./spec/data/Falkenauer_u120_00_shuffled.json', itemIsSize, 150, 48),
-        new DataSpec('./spec/data/Falkenauer_u120_01_shuffled.json', itemIsSize, 150, 49),
-        new DataSpec('./spec/data/Falkenauer_u120_02_shuffled.json', itemIsSize, 150, 46),
-        ]
-    , allResultsEachData = dataSpecs.map(spec => allResultsFor(spec, algorithms))
+    , dataPath = './spec/data/Falkenauer_ordered.json'
+    , dataSpecs = toDataSpecs(dataFileToJson(dataPath), itemIsSize)
+    , specsToRun = 20 // Number.MAX_SAFE_INTEGER
+
+function toDataSpecs(json, sizeOf) {
+  return Object.values(json).map(data =>
+    new DataSpec(data.name, data.data, sizeOf, data.capacity, data.solution)
+  )
+}
+
+function dataFileToJson(path) {
+  return JSON.parse(fs.readFileSync(path))
+}
 
 /**
  * @param {DataSpec} dataSpec 
@@ -171,33 +178,34 @@ describe('bin-packer', function () {
        * @param {PackedResult} result 
        */
       function resultChecks(results) {
-        const name = results.algorithm.name
-        const result = results.result
-        const spec = results.dataSpec
+        const algoName = results.algorithm.name
+            , result = results.result
+            , spec = results.dataSpec
+            , dataName = spec.name
 
-        it(`should return as many keys as it was passed (${name}, ${spec.path})`, function () {
+        it(`${algoName} should return as many keys as it was passed (${dataName})`, function () {
           expect(getArrayKeyCount(result.bins) + result.oversized.length)
               .withContext(result.bins)
               .toEqual(spec.dataLength)
         })
       
-        it(`should not have any bins larger than capacity (${name}, ${spec.path})`, function () {
+        it(`${algoName} should not have any bins larger than capacity (${dataName})`, function () {
           expect(anyTooBig(
               result.bins,
               spec.sizeOf,
               spec.capacity)).toBeFalsy()
         })
       
-        it(`all oversized values should be > than capacity (${name}, ${spec.path})`, function () {
+        it(`${algoName} all oversized values should be > than capacity (${dataName})`, function () {
           expect(numOversized(result.oversized, spec.sizeOf, spec.capacity))
               .toEqual(result.oversized.length)
         })
       
-        it(`should have no empty bins (${name}, ${spec.path})`, function () {
+        it(`${algoName} should have no empty bins (${dataName})`, function () {
           expect(anyEmpty(result.bins)).toBeFalsy()
         })
       
-        it(`should contain some oversized (${name}, ${spec.path})`, function () {
+        it(`${algoName} should contain some oversized (${dataName})`, function () {
           if (spec.oversizedInData) {
             expect(result.oversized.length).toBeGreaterThan(0)
           } else {
@@ -218,34 +226,34 @@ describe('bin-packer', function () {
             , lowerBound1 = findResultFor(allResults, 'lowerBound1').result
             , lowerBound2 = findResultFor(allResults, 'lowerBound2').result
             , arbitrarySpec = allResults[0].dataSpec // All results have the same DataSpec
-            , path = arbitrarySpec.path
+            , dataName = arbitrarySpec.name
 
-        it(`nextFit >= firstFit (${path})`, function () {
+        it(`nextFit >= firstFit (${dataName})`, function () {
           expect(nextFit.bins.length).toBeGreaterThanOrEqual(firstFit.bins.length)
         })
 
-        it(`firstFit >= firstFitDecreasing (${path})`, function () {
+        it(`firstFit >= firstFitDecreasing (${dataName})`, function () {
           expect(firstFit.bins.length).toBeGreaterThanOrEqual(firstFitDecreasing.bins.length)
         })
 
-        it(`firstFitDecreasing >= bestFitDecreasing (${path})`, function () {
+        it(`firstFitDecreasing >= bestFitDecreasing (${dataName})`, function () {
           expect(firstFitDecreasing.bins.length).toBeGreaterThanOrEqual(bestFitDecreasing.bins.length)
         })
 
-        it(`bestFitDecreasing >= binCompletion (${path})`, function () {
+        it(`bestFitDecreasing >= binCompletion (${dataName})`, function () {
           expect(bestFitDecreasing.bins.length).toBeGreaterThanOrEqual(binCompletion.bins.length)
         })
         
-        it(`lowerBound1 <= lowerBound2 (${path})`, function () {
+        it(`lowerBound1 <= lowerBound2 (${dataName})`, function () {
           expect(lowerBound1.bound).toBeLessThanOrEqual(lowerBound2.bound)
           expect(lowerBound1.oversized).toEqual(lowerBound2.oversized)
         })
       }
       
       function exactAlgorithmShouldGetExactResult(exactResult) {
-        const name = exactResult.algorithm.name
-            , path = exactResult.dataSpec.path
-        it(`exact algorithm ${name} should get the exact result (${path})`, function () {
+        const algoName = exactResult.algorithm.name
+            , dataName = exactResult.dataSpec.name
+        it(`exact algorithm ${algoName} should get the exact result (${dataName})`, function () {
           expect(exactResult.result.bins.length).toEqual(exactResult.dataSpec.optimalSize)
         })
       }
@@ -253,10 +261,10 @@ describe('bin-packer', function () {
       function lowerBoundLessOrEqualToFitResult(lowerBound, fitResult) {
         const bound = lowerBound.result
             , result = fitResult.result
-            , path = fitResult.dataSpec.path
+            , dataName = fitResult.dataSpec.name
             , boundName = lowerBound.algorithm.name
             , fitName = fitResult.algorithm.name
-        it(`lower bound ${boundName} should be <= fit result ${fitName} (${path})`, function () {
+        it(`lower bound ${boundName} should be <= fit result ${fitName} (${dataName})`, function () {
           expect(bound.bound).toBeLessThanOrEqual(result.bins.length)
           expect(bound.oversized).toEqual(result.oversized.length)
         })
@@ -264,46 +272,50 @@ describe('bin-packer', function () {
 
       function boundInvariants(lowerBound) {
         const bound = lowerBound.result.bound
-            , path = lowerBound.dataSpec.path
+            , dataName = lowerBound.dataSpec.name
             , boundName = lowerBound.algorithm.name
             , dataLength = lowerBound.dataSpec.dataLength
             , exactSize = lowerBound.dataSpec.optimalSize
-        it(`0 < bound ${boundName} (${path})`, function () {
+        it(`0 < bound ${boundName} (${dataName})`, function () {
           expect(0).toBeLessThan(bound)
         })
 
-        it(`bound ${boundName} <= size of data (${path})`, function () {
+        it(`bound ${boundName} <= size of data (${dataName})`, function () {
           expect(bound).toBeLessThanOrEqual(dataLength)
         })
         
-        it(`lower bound ${boundName} <= exact solution (${path})`, function () {
+        it(`lower bound ${boundName} <= exact solution (${dataName})`, function () {
           expect(bound).toBeLessThanOrEqual(exactSize)
         })
       }
 
-      // allResultsEachData: [[PackedResult]]
-      // allResults: [PackedResult]
-      // result: PackedResult
-      for (const allResults of allResultsEachData) {
+      let i = 0
+      for (const spec of dataSpecs) {
+      // for (const allResults of allResultsEachData) {
+        if (i < specsToRun) {
+          ++i
+          // allResults has type array<PackedResult>
+          const allResults = allResultsFor(spec, algorithms)
         
-        relativeNumberOfBins(allResults)
+          relativeNumberOfBins(allResults)
 
-        for (const result of allResults) {
-          if (AlgorithmType.isPacking(result.algorithm.type)) {
+          for (const result of allResults) {
+            if (AlgorithmType.isPacking(result.algorithm.type)) {
 
-            resultChecks(result)
-            if (AlgorithmType.EXACT_PACKING === result.algorithm.type) {
-              exactAlgorithmShouldGetExactResult(result)
-            }
-            for (const maybeBound of allResults) {
-              if (AlgorithmType.LOWER_BOUND === maybeBound.algorithm.type) {
-                lowerBoundLessOrEqualToFitResult(maybeBound, result)
+              resultChecks(result)
+              if (AlgorithmType.EXACT_PACKING === result.algorithm.type) {
+                exactAlgorithmShouldGetExactResult(result)
+              }
+              for (const maybeBound of allResults) {
+                if (AlgorithmType.LOWER_BOUND === maybeBound.algorithm.type) {
+                  lowerBoundLessOrEqualToFitResult(maybeBound, result)
+                }
               }
             }
-          }
 
-          if(AlgorithmType.LOWER_BOUND === result.algorithm.type) {
-            boundInvariants(result)
+            if(AlgorithmType.LOWER_BOUND === result.algorithm.type) {
+              boundInvariants(result)
+            }
           }
         }
       }
@@ -331,7 +343,7 @@ describe('bin-packer', function () {
 describe('utils', function () {
   describe('sortDescending', function () {
     function sortOrder(dataSpec) {
-      it(`should not sort a smaller value before a larger value ${dataSpec.path}`, function () {
+      it(`should not sort a smaller value before a larger value ${dataSpec.name}`, function () {
         const sorted = utils.sortDescending(dataSpec.data.slice(), dataSpec.sizeOf)
         expect(sorted.length).toEqual(dataSpec.data.length)
         for (let i = 0; i < sorted.length - 1; ++i) {
@@ -350,7 +362,7 @@ describe('utils', function () {
   
   describe('sortAscending', function () {
     function sortOrder(dataSpec) {
-      it(`should not sort a larger value before a smaller value ${dataSpec.path}`, function () {
+      it(`should not sort a larger value before a smaller value ${dataSpec.name}`, function () {
         const sorted = utils.sortAscending(dataSpec.data.slice(), dataSpec.sizeOf)
         expect(sorted.length).toEqual(dataSpec.data.length)
         for (let i = 0; i < sorted.length - 1; ++i) {
