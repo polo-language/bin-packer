@@ -17,5 +17,6 @@
   "varstmt": true,
   "asi": true,
   "node": true,
+  "module": true,
   "laxcomma": true
 }
