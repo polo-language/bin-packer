@@ -1,19 +1,20 @@
 {
   "name": "bin-packer",
-  "version": "1.5.0",
+  "version": "1.6.0",
   "description": "bin-packing algorithms",
   "author": {
     "name": "Angelo Polo",
     "email": "language.devel@gmail.com"
   },
   "license": "MIT",
+  "type": "module",
   "repository": {
     "type": "git",
     "url": "https://github.com/polo-language/bin-packer.git"
   },
   "main": "lib/bin-packer.js",
   "scripts": {
-    "test": "npx jasmine"
+    "test": "node jasmine"
   },
   "keywords": [
     "bin",

@@ -1,9 +1,14 @@
 'use strict'
 
-const fs = require('fs')
-    , readline = require('readline')
-    , path = require('path')
-    , solutionsFile = path.join(__dirname, 'bpplib/Falkenauer_solutions.txt')
+import * as fs from 'fs'
+import * as readline from 'readline'
+import { fileURLToPath } from 'url'
+import * as path from 'path'
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
+
+const solutionsFile = path.join(__dirname, 'bpplib/Falkenauer_solutions.txt')
     , inDir = path.join(__dirname, 'bpplib/Falkenauer')
     , outFile = 'spec/data/Falkenauer.json'
 

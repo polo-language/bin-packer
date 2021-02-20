@@ -1,8 +1,8 @@
 'use strict'
 
-const fs = require('fs')
-    , binPacker = require('../lib/bin-packer')
-    , utils = require('../lib/util/utils')
+import * as fs from 'fs'
+import * as binPacker from '../lib/bin-packer.js'
+import * as utils from '../lib/util/utils.js'
 
 class AlgorithmType {
   static APPROX_PACKING = new AlgorithmType('APPROX_PACKING')
