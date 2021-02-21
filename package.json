@@ -1,6 +1,6 @@
 {
   "name": "bin-packer",
-  "version": "1.5.0",
+  "version": "1.6.0",
   "description": "bin-packing algorithms",
   "author": {
     "name": "Angelo Polo",
@@ -12,6 +12,7 @@
     "url": "https://github.com/polo-language/bin-packer.git"
   },
   "main": "lib/bin-packer.js",
+  "types": "index.d.ts",
   "scripts": {
     "test": "npx jasmine"
   },
