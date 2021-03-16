@@ -13,14 +13,20 @@ npm install bin-packer
 ### Methods
 
 #### Arguments
-- `obj`: The array or object whose own enumerable property values are to be binned (property keys are discarded). Modifies `obj`, though not its values, if it is an array, so pass in a shallow copy if you want to preserve the original.
-- `sizeOf`: A function from items in `obj` to their numerical sizes. Will be called multiple times on each item by most algorithms. So if this would be an expensive operation, it is advisable to supply a function that returns the memoized value.
+- `obj`: The array or object whose own enumerable property values are to be binned (property keys 
+are discarded). Modifies `obj`, though not its values, if it is an array, so pass in a shallow 
+copy if you want to preserve the original.
+- `sizeOf`: A function from items in `obj` to their numerical sizes. Will be called multiple times 
+on each item by most algorithms. So if this would be an expensive operation, it is advisable to 
+supply a function that returns the memoized value.
 - `capacity`: The maximum bin size.
 
 ### Algorithms
 Each algorithm returns an object with the following keys:
-- `bins`: An array of arrays, each containing elements with total size less than or equal to `capacity`.
-- `oversized`: An array containing any elements which on their own have a size greater than `capacity`.
+- `bins`: An array of arrays, each containing elements with total size less than or equal to 
+`capacity`.
+- `oversized`: An array containing any elements which on their own have a size greater than 
+`capacity`.
 
 #### nextFit(obj, sizeOf, capacity)
 Opens a new bin whenever a value doesn't fit in the latest one.
@@ -32,10 +38,14 @@ Tries to fit new items sequentially in all opened bins before opening a new one.
 Runs a sort, so the hardest to place items are placed first, then uses First Fit.
 
 #### bestFitDecreasing(obj, sizeOf, capacity)
-Sorts items largest to smallest like First Fit Decreasing and then places each one in the fullest bin into which it will fit. Best Fit Decreasing should generally be preferred to First Fit and First Fit Decreasing since the Best Fit algorithm uses binary search to find the target bin for each item rather than First Fit's linear search and is considerably faster.
+Sorts items largest to smallest like First Fit Decreasing and then places each one in the fullest 
+bin into which it will fit. Best Fit Decreasing should generally be preferred to First Fit and 
+First Fit Decreasing since the Best Fit algorithm uses binary search to find the target bin for 
+each item rather than First Fit's linear search and is considerably faster.
 
 #### binCompletion(obj, sizeOf, capacity)
-Korf's Bin Completion algorithm for producing an optimal solution. Warning! Bin packing is an NP-hard problem. Time and resource consumption may be high.
+Korf's Bin Completion algorithm for producing an optimal solution. Warning! Bin packing is an 
+NP-hard problem. Time and resource consumption may be high.
 
 ### Bounds
 Each bound function returns an object with the following keys:
@@ -43,10 +53,13 @@ Each bound function returns an object with the following keys:
 - `oversized`: The number of oversized items.
 
 #### lowerBound1(obj, sizeOf, capacity)
-Simple to compute: the number of bins required if elements' sizes could be split across bins to fill each completely before opening a new one.
+Simple to compute: the number of bins required if elements' sizes could be split across bins to 
+fill each completely before opening a new one.
 
 #### lowerBound2(obj, sizeOf, capacity)
-Martello and Toth's L2 lower bound on the number of bins required by an optimal solution. Combines the methodology of the L1 lower bound with the addition of a 'waste' component for each bin that can be shown not to be fully fillable.
+Martello and Toth's L2 lower bound on the number of bins required by an optimal solution. Combines 
+the methodology of the L1 lower bound with the addition of a 'waste' component for each bin that 
+can be shown not to be fully fillable.
 
 ## Example
 Example JSON input:

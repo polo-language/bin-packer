@@ -63,8 +63,10 @@ class PackedResult {
 const algorithms = [
         new Algorithm('nextFit', binPacker.nextFit, AlgorithmType.APPROX_PACKING),
         new Algorithm('firstFit', binPacker.firstFit, AlgorithmType.APPROX_PACKING),
-        new Algorithm('firstFitDecreasing', binPacker.firstFitDecreasing, AlgorithmType.APPROX_PACKING),
-        new Algorithm('bestFitDecreasing', binPacker.bestFitDecreasing, AlgorithmType.APPROX_PACKING),
+        new Algorithm('firstFitDecreasing',
+            binPacker.firstFitDecreasing, AlgorithmType.APPROX_PACKING),
+        new Algorithm('bestFitDecreasing',
+            binPacker.bestFitDecreasing, AlgorithmType.APPROX_PACKING),
         new Algorithm('binCompletion', binPacker.binCompletion, AlgorithmType.EXACT_PACKING),
         new Algorithm('lowerBound1', binPacker.lowerBound1, AlgorithmType.LOWER_BOUND),
         new Algorithm('lowerBound2', binPacker.lowerBound2, AlgorithmType.LOWER_BOUND),
@@ -199,20 +201,20 @@ describe('bin-packer', function () {
             , spec = results.dataSpec
             , dataName = spec.name
 
-        it(`${algoName} should return as many keys as it was passed (${dataName})`, function () {
+        it(`${algoName} should return as many keys as it was passed (${dataName})`, () => {
           expect(getArrayKeyCount(result.bins) + result.oversized.length)
               .withContext(result.bins)
               .toEqual(spec.dataLength)
         })
       
-        it(`${algoName} should not have any bins larger than capacity (${dataName})`, function () {
+        it(`${algoName} should not have any bins larger than capacity (${dataName})`, () => {
           expect(anyTooBig(
               result.bins,
               spec.sizeOf,
               spec.capacity)).toBeFalsy()
         })
       
-        it(`${algoName} all oversized values should be > than capacity (${dataName})`, function () {
+        it(`${algoName} all oversized values should be > than capacity (${dataName})`, () => {
           expect(numOversized(result.oversized, spec.sizeOf, spec.capacity))
               .toEqual(result.oversized.length)
         })
@@ -253,7 +255,8 @@ describe('bin-packer', function () {
         })
 
         it(`firstFitDecreasing >= bestFitDecreasing (${dataName})`, function () {
-          expect(firstFitDecreasing.bins.length).toBeGreaterThanOrEqual(bestFitDecreasing.bins.length)
+          expect(firstFitDecreasing.bins.length)
+              .toBeGreaterThanOrEqual(bestFitDecreasing.bins.length)
         })
 
         if (binCompletion) {
@@ -263,7 +266,8 @@ describe('bin-packer', function () {
         }
 
         it(`bestFitDecreasing >= optimal solution (${dataName})`, function () {
-          // Exact algorithms are tested against the optimal solution in exactAlgorithmShouldGetExactResult
+          // Exact algorithms are tested against the optimal solution in
+          // exactAlgorithmShouldGetExactResult
           expect(bestFitDecreasing.bins.length).toBeGreaterThanOrEqual(arbitrarySpec.optimalSize)
         })
         
@@ -276,7 +280,7 @@ describe('bin-packer', function () {
       function exactAlgorithmShouldGetExactResult(exactResult) {
         const algoName = exactResult.algorithm.name
             , dataName = exactResult.dataSpec.name
-        it(`exact algorithm ${algoName} should get the optimal solution (${dataName})`, function () {
+        it(`exact algorithm ${algoName} should get the optimal solution (${dataName})`, () => {
           expect(exactResult.result.bins.length).toEqual(exactResult.dataSpec.optimalSize)
         })
       }
@@ -287,7 +291,7 @@ describe('bin-packer', function () {
             , dataName = fitResult.dataSpec.name
             , boundName = lowerBound.algorithm.name
             , fitName = fitResult.algorithm.name
-        it(`lower bound ${boundName} should be <= fit result ${fitName} (${dataName})`, function () {
+        it(`lower bound ${boundName} should be <= fit result ${fitName} (${dataName})`, () => {
           expect(bound.bound).toBeLessThanOrEqual(result.bins.length)
           expect(bound.oversized).toEqual(result.oversized.length)
         })
