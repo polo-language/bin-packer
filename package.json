@@ -23,6 +23,6 @@
     "sort"
   ],
   "devDependencies": {
-    "jasmine": "^3.6.3"
+    "jasmine": "^3.7.0"
   }
 }
