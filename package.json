@@ -1,0 +1,14 @@
+{
+  "name": "bin-repacker",
+  "private": true,
+  "version": "0.1.0",
+  "author": {
+    "name": "Angelo Polo",
+    "email": "language.devel@gmail.com"
+  },
+  "main": "build/index.js",
+  "types": "build/index.d.ts",
+  "devDependencies": {
+    "typescript": "^4.2.3"
+  }
+}
