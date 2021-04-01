@@ -1,7 +1,7 @@
 import { Item, Bin }  from './common'
 import * as utils from './utils'
 
-export function eliminateBins(bins: Bin[], idsToEliminate: number[]): Bin[] {
+export function eliminateBins(bins: Bin[], idsToEliminate: string[]): Bin[] {
   const [openBins, fullBins, itemsToMove] = bins.reduce(
     (acc: [Bin[], Bin[], Item[]], bin: Bin) => {
       if (idsToEliminate.includes(bin.id)) {

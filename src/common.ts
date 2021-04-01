@@ -1,20 +1,19 @@
-export interface Item {
-  id: string
-  size: number
-  wasMoved(): boolean
+export class Item {
+  constructor(
+      readonly id: string,
+      readonly size: number,
+      readonly originalBinId?: string
+  ) { }
 }
 
 export class Bin {
-  readonly id: number
-  readonly capacity: number
-  readonly maxItems: number
   items: Item[]
   utilization: number
 
-  constructor(id: number, capacity: number, maxItems: number) {
-    this.id = id
-    this.capacity = capacity
-    this.maxItems = maxItems
+  constructor(
+      readonly id: string,
+      readonly capacity: number,
+      readonly maxItems: number) {
     this.items = []
     this.utilization = 0
   }
