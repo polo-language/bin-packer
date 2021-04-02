@@ -47,7 +47,7 @@ function doNothing(bins: Bin[], itemsToMove: Item[]): Bin[] {
 
 function greedyMaxout(bins: Bin[], itemsToMove: Item[]): Bin[] {
   itemsToMove.sort((a, b) => b.size - a.size)
-  for (const item in itemsToMove) {
+  for (const item of itemsToMove) {
     sortAscendingFreeSpace(bins)
     // TODO: Find bin with smallest free space that can accept item.
   }
