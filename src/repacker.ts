@@ -1,5 +1,5 @@
 import { Item, Bin }  from './common'
-import * as utils from './utils'
+import * as validation from './validation'
 
 export function eliminateBins(bins: Bin[], idsToEliminate: string[]): Bin[] {
   const [openBins, fullBins, itemsToMove] = bins.reduce(
@@ -30,12 +30,12 @@ export function eliminateBins(bins: Bin[], idsToEliminate: string[]): Bin[] {
 
   // Run the algorithm
   // TODO: Switch/iterate algorithms based on metrics and/or initial success.
-  // const repackedBins = greedyMaxout(openBins, itemsToMove).concat(fullBins)
+  // const repackedBins = greedyFillMax(openBins, itemsToMove).concat(fullBins)
   const repackedBins = doNothing(openBins, itemsToMove).concat(fullBins)
   
   // Quality control
-  utils.itemAccounting(bins, repackedBins)
-  utils.validateBins(bins)
+  validation.itemAccounting(bins, repackedBins)
+  validation.validateBins(bins)
 
   return repackedBins
 }
@@ -43,18 +43,4 @@ export function eliminateBins(bins: Bin[], idsToEliminate: string[]): Bin[] {
 // Output will not pass validation!
 function doNothing(bins: Bin[], itemsToMove: Item[]): Bin[] {
   return bins
-}
-
-function greedyMaxout(bins: Bin[], itemsToMove: Item[]): Bin[] {
-  itemsToMove.sort((a, b) => b.size - a.size)
-  for (const item of itemsToMove) {
-    sortAscendingFreeSpace(bins)
-    // TODO: Find bin with smallest free space that can accept item.
-  }
-  return bins
-}
-
-/** In-place sort. */
-function sortAscendingFreeSpace(bins: Bin[]) {
-  bins.sort((a, b) => a.freeSpace - b.freeSpace)
 }
