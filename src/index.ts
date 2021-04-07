@@ -1,3 +1,3 @@
-export { Item, Bin }  from './common'
-export { eliminateBins } from './repacker'
+export { Item, Bin, Move, ChangeReport }  from './common'
+export { repack } from './repacker'
 
