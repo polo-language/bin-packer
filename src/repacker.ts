@@ -1,8 +1,12 @@
 import { Item, Bin, RepackAlgorithm, ChangeReport }  from './common'
 import * as validation from './validation'
+import { greedyFillMax } from './greedy-fill-max'
 
 export function repack(bins: Bin[], newItems: Item[]): [Bin[], ChangeReport] {
   checkFeasibility(bins, newItems)
+  const originalBins: readonly Bin[] = Object.freeze(bins.map(bin => Bin.deepClone(bin)))
+  const originalNewItems: readonly Item[] =
+      Object.freeze(newItems.map(item => Item.deepClone(item)))
   const [openBins, overfullBins] = bins.reduce(
     (acc: [Bin[], Bin[]], bin: Bin) => {
       acc[bin.isOpen() ? 0 : 1].push(bin)
@@ -23,11 +27,11 @@ export function repack(bins: Bin[], newItems: Item[]): [Bin[], ChangeReport] {
 
   // Run the algorithm
   // TODO: Switch/iterate algorithms based on metrics and/or initial success.
-  // const repackedBins = greedyFillMax(openBins, itemsToMove).concat(fullBins)
-  const repackAlgorithm: RepackAlgorithm = doNothing
+  const repackAlgorithm: RepackAlgorithm = greedyFillMax
+  // const repackAlgorithm: RepackAlgorithm = doNothing
 
   const repackedBins = repackAlgorithm(openBins, overfullBins, newItems)
-  validation.itemAccounting(bins, repackedBins)
+  validation.itemAccounting(originalBins, originalNewItems, repackedBins)
   validation.validateBins(repackedBins)
   return [repackedBins, validation.getChangeReport(repackedBins)]
 }
@@ -39,6 +43,7 @@ function doNothing(openBins: Bin[], overfullBins: Bin[], newItems: Item[]): Bin[
 
 /**
  * Throws if not all items can fit in the bins.
+ * Does not modify its arguments.
  */
 function checkFeasibility(bins: Bin[], newItems: Item[]) {
   const binSpace = bins.reduce((acc: number, bin: Bin) => acc + bin.capacity, 0)

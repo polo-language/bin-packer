@@ -6,6 +6,14 @@ export class Item {
       readonly size: number,
       readonly originalBinId?: string
   ) { }
+
+  static deepClone(item: Item): Item {
+    const cloned = new Item(item.id, item.size, item.originalBinId)
+    if (item.newBinId !== undefined) {
+      cloned.newBinId = item.newBinId
+    }
+    return cloned
+  }
 }
 
 export class Bin {
@@ -48,6 +56,12 @@ export class Bin {
   sortDescending(): Item[] {
     return this.items.sort((a, b) => b.size - a.size)
   }
+
+  static deepClone(bin: Bin): Bin {
+    const cloned = new Bin(bin.id, bin.capacity, bin.maxItems)
+    bin.items.forEach(item => cloned.add(Item.deepClone(item)))
+    return cloned
+  }
 }
 
 export type RepackAlgorithm = (
@@ -59,8 +73,8 @@ export type RepackAlgorithm = (
 export class Move {
   constructor(
     readonly item: Item,
-    readonly fromBin: Bin | undefined,
-    readonly toBin: Bin
+    readonly fromBinId: string | undefined,
+    readonly toBinId: string
   ) { }
 }
 

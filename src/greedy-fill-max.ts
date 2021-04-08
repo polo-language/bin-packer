@@ -1,16 +1,21 @@
 import { Item, Bin }  from './common'
 import { binaryApply } from './utils'
 
-export function greedyFillMax(bins: Bin[], itemsToMove: Item[]): Bin[] {
-  itemsToMove.sort((a, b) => b.size - a.size)
-  sortAscendingFreeSpace(bins)
-  for (const item of itemsToMove) {
-    // Insert into bin with smallest free space that can accept item.
-    const binIndex = binaryApply(bins, item, itemFits, insertItem)
-    // Move updated bin to preserve sort
-    binaryApply(bins, binIndex, hasLessFreeSpace, binResort)
+export function greedyFillMax(openBins: Bin[], overfullBins: Bin[], newItems: Item[]): Bin[] {
+  // Temporary
+  if (overfullBins.length > 0) {
+    throw new Error('Moving items fom overfull bins is not yet supported.')
   }
-  return bins
+
+  newItems.sort((a, b) => b.size - a.size)
+  sortAscendingFreeSpace(openBins)
+  for (const item of newItems) {
+    // Insert into bin with smallest free space that can accept item.
+    const binIndex = binaryApply(openBins, item, itemFits, insertItem)
+    // Move updated bin to preserve sort
+    binaryApply(openBins, binIndex, hasLessFreeSpace, binResort)
+  }
+  return openBins
 }
 
 function itemFits(item: Item, _: Bin[], arrayElement: Bin): boolean {
@@ -21,7 +26,9 @@ function insertItem(item: Item, array: Bin[], i: number) {
   if (i === array.length) {
     throw new Error(`Item ${item.id} with size ${item.size} does not fit in any bin`)
   }
-  array[i].add(item)
+  const bin = array[i]
+  bin.add(item)
+  item.newBinId = bin.id
 }
 
 // Item is an index into array.
