@@ -53,6 +53,10 @@ export class Bin {
     return this.freeSlots > 0 && this.freeSpace > 0
   }
 
+  isOverutilized(): boolean {
+    return this.maxItems < this.itemCount || this.capacity < this.utilization
+  }
+
   sortDescending(): Item[] {
     return this.items.sort((a, b) => b.size - a.size)
   }
@@ -63,12 +67,6 @@ export class Bin {
     return cloned
   }
 }
-
-export type RepackAlgorithm = (
-  openBins: Bin[],
-  overfullBins: Bin[],
-  newItems: Item[]
-) => Bin[]
 
 export class Move {
   constructor(

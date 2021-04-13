@@ -73,14 +73,16 @@ export function validateBins(bins: Bin[]) {
  * Report all item moves.
  */
 export function getChangeReport(bins: Bin[]): ChangeReport {
+  const errorHandler = new ThrowingErrorHandler()
   const moves: Move[] = []
   for (const bin of bins) {
     for (const item of bin.items) {
       if (item.originalBinId === undefined || item.originalBinId !== item.newBinId) {
         if (item.newBinId === undefined) {
-          throw new Error(`Item with ID ${item.id} not assigned to a new bin`)
+          errorHandler.handle(`Item with ID ${item.id} not assigned to a new bin`)
+        } else {
+          moves.push(new Move(item, item.originalBinId, item.newBinId))
         }
-        moves.push(new Move(item, item.originalBinId, item.newBinId))
       }
     }
   }

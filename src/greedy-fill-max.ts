@@ -1,21 +1,21 @@
 import { Item, Bin }  from './common'
 import { binaryApply } from './utils'
 
-export function greedyFillMax(openBins: Bin[], overfullBins: Bin[], newItems: Item[]): Bin[] {
-  // Temporary
-  if (overfullBins.length > 0) {
-    throw new Error('Moving items fom overfull bins is not yet supported.')
-  }
-
+/**
+ * Adds newItems to bins.
+ * @param bins        Modifies the bins in place. No bins are added or removed, but the order and
+ *                    contents will be changed.
+ * @param newItems    Items to be added to bins.
+ */
+export function greedyFillMax(bins: Bin[], newItems: Item[]) {
   newItems.sort((a, b) => b.size - a.size)
-  sortAscendingFreeSpace(openBins)
+  sortAscendingFreeSpace(bins)
   for (const item of newItems) {
     // Insert into bin with smallest free space that can accept item.
-    const binIndex = binaryApply(openBins, item, itemFits, insertItem)
+    const binIndex = binaryApply(bins, item, itemFits, insertItem)
     // Move updated bin to preserve sort
-    binaryApply(openBins, binIndex, hasLessFreeSpace, binResort)
+    binaryApply(bins, binIndex, hasLessFreeSpace, binResort)
   }
-  return openBins
 }
 
 function itemFits(item: Item, _: Bin[], arrayElement: Bin): boolean {
