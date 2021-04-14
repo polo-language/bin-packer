@@ -8,7 +8,7 @@
  *                              type as the array elements. E.g. each array element may be an
  *                              object or array into which the item can be inserted.
  * @param {function} leq        (item, array, arrayElement) => whether item is '<=' arrayElement.
- * @param {function} operation  (item, array, i) => undefined. i is index in array where item is to
+ * @param {function} operation  (item, array, i) => void. i is index in array where item is to
  *                              be applied. Expected to modify array in-place.
  * @returns {number}            The index at which operation applied item to array.
  */

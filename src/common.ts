@@ -1,3 +1,5 @@
+import { binaryApply } from './utils'
+
 export class Item {
   newBinId?: string
 
@@ -17,27 +19,36 @@ export class Item {
 }
 
 export class Bin {
-  items: Item[]
-  utilization: number
+  /** Maintained in order of increasing size. */
+  private _items: Item[]
+  private _utilization: number
 
   constructor(
       readonly id: string,
       readonly capacity: number,
       readonly maxItems: number) {
-    this.items = []
-    this.utilization = 0
+    this._items = []
+    this._utilization = 0
+  }
+
+  get items() {
+    return this._items.slice()
   }
 
   get itemCount() {
-    return this.items.length
+    return this._items.length
   }
 
   get freeSpace() {
-    return this.capacity - this.utilization
+    return Math.max(0, this.capacity - this.utilization)
   }
 
   get freeSlots() {
     return Math.max(0, this.maxItems - this.itemCount)
+  }
+
+  get utilization() {
+    return this._utilization
   }
 
   get overutilization() {
@@ -45,25 +56,58 @@ export class Bin {
   }
 
   add(item: Item) {
-    this.items.push(item)
-    this.utilization += item.size
+    binaryApply(
+        this._items,
+        item,
+        (a, _, b) => a.size <= b.size,
+        (a, array, i) => { array.splice(i, 0, a) }
+    )
+    this._utilization += item.size
+  }
+
+  removeFromOverutilization(max: number) {
+    if (this.itemCount === 0) {
+      throw new Error('Can not remove item from empty bin')
+    }
+    if (!this.isOverutilized()) {
+      throw new Error('Bin is not overutilized')
+    }
+    if (max < this._items[0].size) {
+      throw new Error(`No item is smaller than ${max}`)
+    }
+    const softMin = this.overutilization
+    const maxIndex = this._items.length - 1
+    const index = this._items[maxIndex].size < softMin ?
+        maxIndex :
+        this._items.findIndex(item => softMin <= item.size)
+    return this.remove(index)
+  }
+
+  private remove(index: number): Item {
+    if (index < 0 || this._items.length - 1 < index) {
+      throw new Error(`Cannot remove item at index ${index} from array of length `+
+          `${this._items.length}`)
+    }
+    const removed = this._items.splice(index, 1)[0]
+    this._utilization -= removed.size
+    return removed
   }
 
   isOpen(): boolean {
     return this.freeSlots > 0 && this.freeSpace > 0
   }
 
+  isFull(): boolean {
+    return !this.isOpen() && !this.isOverutilized()
+  }
+
   isOverutilized(): boolean {
     return this.maxItems < this.itemCount || this.capacity < this.utilization
   }
 
-  sortDescending(): Item[] {
-    return this.items.sort((a, b) => b.size - a.size)
-  }
-
   static deepClone(bin: Bin): Bin {
     const cloned = new Bin(bin.id, bin.capacity, bin.maxItems)
-    bin.items.forEach(item => cloned.add(Item.deepClone(item)))
+    bin._items.forEach(item => cloned.add(Item.deepClone(item)))
     return cloned
   }
 }
