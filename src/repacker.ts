@@ -15,23 +15,9 @@ export function repack(bins: Bin[], newItems: Item[]): [Bin[], ChangeReport] {
 
 /** Modifies bins in-place. */
 function repackCopies(bins: Bin[], newItems: Item[]) {
-  let [_, overutilizedBins] = splitByUtilization(bins)
-  if (overutilizedBins.length > 0) {
+  if (bins.some(bin => bin.isOverutilized())) {
     shiftOverutilized(bins)
   }
   // No bins should now be overutilized, so pass them all to be filled with new items.
   greedyFillMax(bins, newItems)
-}
-
-/**
- * Splits bins into a tuple of acceptably utilized bins and overutilized bins.
- */
-function splitByUtilization(bins: Bin[]): [Bin[], Bin[]] {
-  return bins.reduce(
-    (acc: [Bin[], Bin[]], bin: Bin) => {
-      acc[bin.isOverutilized() ? 1 : 0].push(bin)
-      return acc
-    },
-    [[], []]
-  )
 }
