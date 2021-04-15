@@ -28,7 +28,6 @@ function insertItem(item: Item, array: Bin[], i: number) {
   }
   const bin = array[i]
   bin.add(item)
-  item.newBinId = bin.id
 }
 
 // Item is an index into array.

@@ -16,6 +16,11 @@ export class Item {
     }
     return cloned
   }
+
+  toString(): string {
+    return `ID: ${this.id}, size: ${this.size}, fromBin: ${this.originalBinId}, `+
+        `toBin: ${this.newBinId}`
+  }
 }
 
 export class Bin {
@@ -63,6 +68,7 @@ export class Bin {
         (a, array, i) => { array.splice(i, 0, a) }
     )
     this._utilization += item.size
+    item.newBinId = this.id
   }
 
   removeFromOverutilization(max: number) {
@@ -90,6 +96,7 @@ export class Bin {
     }
     const removed = this._items.splice(index, 1)[0]
     this._utilization -= removed.size
+    removed.newBinId = undefined
     return removed
   }
 
@@ -109,6 +116,13 @@ export class Bin {
     const cloned = new Bin(bin.id, bin.capacity, bin.maxItems)
     bin._items.forEach(item => cloned.add(Item.deepClone(item)))
     return cloned
+  }
+
+  toString(): string {
+    const status = this.isOverutilized() ? 'overutilized' : (this.isOpen() ? 'open' : 'full')
+    return `ID: ${this.id}, capacity: ${this.capacity}, maxItems: ${this.maxItems}, `+
+        `utilization: ${this.utilization}, itemCount: ${this.itemCount}, status: ${status}, `+
+        `items: [${this._items.map(item => item.id).join(', ')}]`
   }
 }
 

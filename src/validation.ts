@@ -11,6 +11,30 @@ class ThrowingErrorHandler implements ErrorHandler {
 }
 
 /**
+ * Throws if not all items can fit in the bins.
+ * Does not modify its arguments.
+ */
+ export function checkFeasibility(bins: readonly Bin[], newItems: readonly Item[]) {
+  const errorHandler = new ThrowingErrorHandler()
+  const binSpace = bins.reduce((acc: number, bin: Bin) => acc + bin.capacity, 0)
+  const itemSpace =
+      newItems.reduce((acc: number, item: Item) => acc + item.size, 0) +
+      bins.reduce((acc: number, bin: Bin) => acc + bin.utilization, 0)
+  const totalItems =
+      newItems.length +
+      bins.reduce((acc: number, bin: Bin) => acc + bin.itemCount, 0)
+  const totalSlots = bins.reduce((acc: number, bin: Bin) => acc + bin.maxItems, 0)
+
+  if (binSpace < itemSpace) {
+    errorHandler.handle(`There is only ${binSpace} total space but ${itemSpace} of total item size ` +
+        `to be placed`)
+  }
+  if (totalSlots < totalItems) {
+    errorHandler.handle(`There are only ${totalSlots} total slots but ${totalItems} items to be placed`)
+  }
+}
+
+/**
  * Checks whether any items are missing/added between the two inputs.
  * Checks whether any item still has an undefined newBinId.
  * Checks whether any bins have been added or removed.
@@ -60,11 +84,11 @@ export function validateBins(bins: Bin[]) {
   for (const bin of bins) {
     if (bin.itemCount > bin.maxItems) {
       errorHandler.handle(`Bin ${bin.id} with max items ${bin.maxItems} contains ` +
-          `${bin.itemCount} items`)
+          `${bin.itemCount} items. Full bin details: ${bin.toString()}`)
     }
     if (bin.utilization > bin.capacity) {
       errorHandler.handle(`Bin ${bin.id} with capacity ${bin.capacity} contains items with ` +
-          `${bin.utilization} total utilization`)
+          `${bin.utilization} total utilization. Full bin details: ${bin.toString()}`)
     }
   }
 }
