@@ -27,7 +27,7 @@ export function shiftOverutilized(bins: Bin[]) {
         mostOverutilizedBin.removeFromOverutilization(openBins[openBins.length - 1].freeSpace)
     // Will find an insertion bin since removeFromremoveFromOverutilization throws if it can't
     // return an item that will fit in the bin with the most open space.
-    const insertionBinIndex = openBins.findIndex(bin => itemToMove.size <= bin.freeSpace)!
+    const insertionBinIndex = openBins.findIndex(bin => itemToMove.size <= bin.freeSpace)
     const insertionBin = openBins[insertionBinIndex]
     insertionBin.add(itemToMove)
     if (insertionBin.isFull()) {

@@ -44,8 +44,9 @@ export class Bin {
     return this._items.length
   }
 
+  /** May be negative. */
   get freeSpace() {
-    return Math.max(0, this.capacity - this.utilization)
+    return this.capacity - this.utilization
   }
 
   get freeSlots() {
@@ -56,8 +57,9 @@ export class Bin {
     return this._utilization
   }
 
+  /** Always non-negative, zero for bins with no overutilization. */
   get overutilization() {
-    return Math.min(0, -1 * this.freeSpace)
+    return Math.max(0, -1 * this.freeSpace)
   }
 
   add(item: Item) {
@@ -83,9 +85,13 @@ export class Bin {
     }
     const softMin = this.overutilization
     const maxIndex = this._items.length - 1
-    const index = this._items[maxIndex].size < softMin ?
-        maxIndex :
-        this._items.findIndex(item => softMin <= item.size)
+    const index = softMin <= max ?
+        (this._items[maxIndex].size < softMin ?
+            maxIndex :
+            this._items.findIndex(item => softMin <= item.size)) :
+        (this._items[maxIndex].size < max ?
+            maxIndex :
+            this._items.findIndex(item => max <= item.size) - 1) // Safe since item zero is smaller
     return this.remove(index)
   }
 
