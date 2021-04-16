@@ -132,6 +132,11 @@ export class Bin {
   }
 }
 
+export interface ChangeReport {
+  moves: Move[]
+  analysis: Analysis
+}
+
 export class Move {
   constructor(
     readonly item: Item,
@@ -140,6 +145,30 @@ export class Move {
   ) { }
 }
 
-export interface ChangeReport {
-  moves: Move[]
+export class Analysis {
+  readonly freeSlots: Metric
+  readonly freeSpace: Metric
+
+  constructor(bins: Bin[]) {
+    this.freeSlots = Analysis.calculate(bins, bin => bin.freeSlots)
+    this.freeSpace = Analysis.calculate(bins, bin => bin.freeSpace)
+  }
+
+  private static calculate(bins: Bin[], numeric: (bin: Bin) => number): Metric {
+    const values = bins.map(numeric)
+    const total = values.reduce((acc, val) => acc + val)
+    return {
+      total: total,
+      min: Math.min(...values),
+      avg: total / values.length,
+      max: Math.max(...values)
+    }
+  }
+}
+
+export interface Metric {
+  readonly total: number
+  readonly min: number
+  readonly avg: number
+  readonly max: number
 }

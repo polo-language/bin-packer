@@ -1,4 +1,4 @@
-import { Item, Bin, Move, ChangeReport }  from './common'
+import { Item, Bin, Move, ChangeReport, Analysis }  from './common'
 
 interface ErrorHandler {
   handle: (message: string) => void
@@ -110,5 +110,8 @@ export function getChangeReport(bins: Bin[]): ChangeReport {
       }
     }
   }
-  return { moves: moves }
+  return {
+    moves: moves,
+    analysis: new Analysis(bins)
+  }
 }
