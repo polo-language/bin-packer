@@ -165,29 +165,29 @@ function getArrayKeyCount(bins) {
 
 describe('bin-packer', function () {
   describe('algorithms', function () {
-    describe('validation', function () {
-      function validationFor(algorithm) {
+    describe('prepareValues', function () {
+      function testPrepareValuesFor(algorithm) {
         const name = algorithm.name
         const method = algorithm.method
         it(`${name} should reject a non-positive capacity`, function () {
           expect(() => method([0, 1, 5], item => item, []))
-          .toThrowError('expected a number for capacity')
+              .toThrowError('Expected a number for capacity')
           expect(() => method([0, 1, 5], item => item, 0))
-          .toThrowError('Capacity must be a positive number')
+              .toThrowError('Capacity must be a positive number')
           expect(() => method([0, 1, 5], item => item, -3.2))
-          .toThrowError('Capacity must be a positive number')
+              .toThrowError('Capacity must be a positive number')
         })
         
         it(`${name} sizeOf must always return a number`, function () {
           expect(() => method([0, 1, 5], item => item.toString(), 10))
-          .toThrowError('expected a number for 0')
+              .toThrowError('Expected a number for 0')
           expect(() => method([0, 1, {test: 100}, 5], item => item, 10))
-          .toThrowError('expected a number for 2')
+              .toThrowError('Expected a number for 2')
         })
       }
       
       for (const algorithm of algorithms) {
-        validationFor(algorithm)
+        testPrepareValuesFor(algorithm)
       }
     })
 
@@ -202,21 +202,7 @@ describe('bin-packer', function () {
             , dataName = spec.name
 
         it(`${algoName} should return as many keys as it was passed (${dataName})`, () => {
-          expect(getArrayKeyCount(result.bins) + result.oversized.length)
-              .withContext(result.bins)
-              .toEqual(spec.dataLength)
-        })
-      
-        it(`${algoName} should not have any bins larger than capacity (${dataName})`, () => {
-          expect(anyTooBig(
-              result.bins,
-              spec.sizeOf,
-              spec.capacity)).toBeFalsy()
-        })
-      
-        it(`${algoName} all oversized values should be > than capacity (${dataName})`, () => {
-          expect(numOversized(result.oversized, spec.sizeOf, spec.capacity))
-              .toEqual(result.oversized.length)
+          expect(getArrayKeyCount(result.bins) + result.oversized.length).toEqual(spec.dataLength)
         })
       
         it(`${algoName} should have no empty bins (${dataName})`, function () {
@@ -229,6 +215,25 @@ describe('bin-packer', function () {
           } else {
             expect(result.oversized.length).toEqual(0)
           }
+        })
+      }
+
+      function resultCapacityChecks(results) {
+        const algoName = results.algorithm.name
+            , result = results.result
+            , spec = results.dataSpec
+            , dataName = spec.name
+
+        it(`${algoName} should not have any bins larger than capacity (${dataName})`, () => {
+          expect(anyTooBig(
+              result.bins,
+              spec.sizeOf,
+              spec.capacity)).toBeFalsy()
+        })
+
+        it(`${algoName} all oversized values should be > than capacity (${dataName})`, () => {
+          expect(result.oversized)
+              .toHaveSize(numOversized(result.oversized, spec.sizeOf, spec.capacity))
         })
       }
 
@@ -266,10 +271,11 @@ describe('bin-packer', function () {
         }
 
         it(`bestFitDecreasing >= optimal solution (${dataName})`, function () {
-          // Exact algorithms are tested against the optimal solution in
-          // exactAlgorithmShouldGetExactResult
           expect(bestFitDecreasing.bins.length).toBeGreaterThanOrEqual(arbitrarySpec.optimalSize)
         })
+
+        // Note: Exact algorithms are tested against the optimal solution in
+        // exactAlgorithmShouldGetExactResult
         
         it(`lowerBound1 <= lowerBound2 (${dataName})`, function () {
           expect(lowerBound1.bound).toBeLessThanOrEqual(lowerBound2.bound)
@@ -281,7 +287,7 @@ describe('bin-packer', function () {
         const algoName = exactResult.algorithm.name
             , dataName = exactResult.dataSpec.name
         it(`exact algorithm ${algoName} should get the optimal solution (${dataName})`, () => {
-          expect(exactResult.result.bins.length).toEqual(exactResult.dataSpec.optimalSize)
+          expect(exactResult.result.bins).toHaveSize(exactResult.dataSpec.optimalSize)
         })
       }
 
@@ -303,8 +309,8 @@ describe('bin-packer', function () {
             , boundName = lowerBound.algorithm.name
             , dataLength = lowerBound.dataSpec.dataLength
             , exactSize = lowerBound.dataSpec.optimalSize
-        it(`0 < bound ${boundName} (${dataName})`, function () {
-          expect(0).toBeLessThan(bound)
+        it(`bound ${boundName} > 0 (${dataName})`, function () {
+          expect(bound).toBeGreaterThan(0)
         })
 
         it(`bound ${boundName} <= size of data (${dataName})`, function () {
@@ -329,17 +335,15 @@ describe('bin-packer', function () {
             if (AlgorithmType.isPacking(result.algorithm.type)) {
 
               resultChecks(result)
+              resultCapacityChecks(result)
               if (AlgorithmType.EXACT_PACKING === result.algorithm.type) {
                 exactAlgorithmShouldGetExactResult(result)
               }
-              for (const maybeBound of allResults) {
-                if (AlgorithmType.LOWER_BOUND === maybeBound.algorithm.type) {
-                  lowerBoundLessOrEqualToFitResult(maybeBound, result)
-                }
-              }
-            }
-
-            if(AlgorithmType.LOWER_BOUND === result.algorithm.type) {
+              // Check all lower bounds are less than this packing's size
+              allResults
+                  .filter(r => AlgorithmType.LOWER_BOUND === r.algorithm.type)
+                  .forEach(lb => lowerBoundLessOrEqualToFitResult(lb, result))
+            } else if (AlgorithmType.LOWER_BOUND === result.algorithm.type) {
               boundInvariants(result)
             }
           }
@@ -353,8 +357,8 @@ describe('bin-packer', function () {
       it(`should produce empty arrays (${algorithm.name})`, function () {
         // sizeOf and capacity are arbitrary
         const packing = algorithm.method([], itemIsSize, 100)
-        expect(packing.bins.length).toEqual(0)
-        expect(packing.oversized.length).toEqual(0)
+        expect(packing.bins).toHaveSize(0)
+        expect(packing.oversized).toHaveSize(0)
       })
     }
 
@@ -371,7 +375,7 @@ describe('utils', function () {
     function sortOrder(dataSpec) {
       it(`should not sort a smaller value before a larger value ${dataSpec.name}`, function () {
         const sorted = utils.sortDescending(dataSpec.data.slice(), dataSpec.sizeOf)
-        expect(sorted.length).toEqual(dataSpec.data.length)
+        expect(sorted).toHaveSize(dataSpec.data.length)
         for (let i = 0; i < sorted.length - 1; ++i) {
           if (dataSpec.sizeOf(sorted[i]) < dataSpec.sizeOf(sorted[i + 1])) {
             fail(`size ${dataSpec.sizeOf(sorted[i])} at index ${i} < ` +
@@ -380,17 +384,14 @@ describe('utils', function () {
         }
       })
     }
-    
-    for (const dataSpec of dataSpecs) {
-      sortOrder(dataSpec)
-    }
+    dataSpecs.forEach(spec => sortOrder(spec))
   })
   
   describe('sortAscending', function () {
     function sortOrder(dataSpec) {
       it(`should not sort a larger value before a smaller value ${dataSpec.name}`, function () {
         const sorted = utils.sortAscending(dataSpec.data.slice(), dataSpec.sizeOf)
-        expect(sorted.length).toEqual(dataSpec.data.length)
+        expect(sorted).toHaveSize(dataSpec.data.length)
         for (let i = 0; i < sorted.length - 1; ++i) {
           if (dataSpec.sizeOf(sorted[i]) > dataSpec.sizeOf(sorted[i + 1])) {
             fail(`size ${dataSpec.sizeOf(sorted[i])} at index ${i} > ` +
@@ -399,9 +400,6 @@ describe('utils', function () {
         }
       })
     }
-
-    for (const dataSpec of dataSpecs) {
-      sortOrder(dataSpec)
-    }
+    dataSpecs.forEach(spec => sortOrder(spec))
   })
 })
