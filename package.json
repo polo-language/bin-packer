@@ -14,8 +14,13 @@
   "main": "lib/bin-packer.js",
   "types": "index.d.ts",
   "scripts": {
-    "test": "npx jasmine"
+    "build": "tsc",
+    "test": "npx jasmine",
+    "prepare": "npm run build"
   },
+  "files": [
+    "lib/**/*"
+  ],
   "keywords": [
     "bin",
     "knapsack",
@@ -24,6 +29,7 @@
     "sort"
   ],
   "devDependencies": {
-    "jasmine": "^3.7.0"
+    "jasmine": "^3.7.0",
+    "typescript": "^4.2.4"
   }
 }
