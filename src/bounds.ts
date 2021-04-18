@@ -1,24 +1,18 @@
-'use strict'
-
-const utils = require('./util/utils')
-
-module.exports = {
-  lowerBound1,
-  lowerBound2,
-  lowerBound2Sorted,
-}
+import { BoundOutput } from './index';
+import * as utils from './util/utils'
 
 /**
  * A simple-to-compute lower bound on the number of bins required by an optimal
  * solution. Computes the nubmer of bins required if elements' sizes could be
  * split across bins to fill each completely before opening a new one.
- * @param {*} obj 
- * @param {*} sizeOf 
- * @param {*} capacity 
  * @returns An object with two keys: 'bound' giving the lower bound and
  *          'oversized' giving the number of oversized items.
  */
-function lowerBound1(obj, sizeOf, capacity) {
+export function lowerBound1<T>(
+    obj: T[]|Iterable<T>|object,
+    sizeOf: (t: T) => number,
+    capacity: number)
+        : BoundOutput {
   const {array: array, oversized: oversized} = utils.prepareValues(obj, sizeOf, capacity)
   return {
     'bound': Math.ceil(utils.sum(array, sizeOf) / capacity),
@@ -31,13 +25,14 @@ function lowerBound1(obj, sizeOf, capacity) {
  * optimal solution. Combines the methodology of the L1 lower bound with the
  * addition of a 'waste' component for each bin that can be shown not to be
  * fully fillable.
- * @param {*} obj 
- * @param {*} sizeOf 
- * @param {*} capacity 
  * @returns An object with two keys: 'bound' giving the lower bound and
  *          'oversized' giving the number of oversized items.
  */
-function lowerBound2(obj, sizeOf, capacity) {
+export function lowerBound2<T>(
+    obj: T[]|Iterable<T>|object,
+    sizeOf: (t: T) => number,
+    capacity: number)
+        : BoundOutput {
   const {array: array, oversized: oversized} = utils.prepareValues(obj, sizeOf, capacity)
   return {
     'bound': lowerBound2Sorted(utils.sortAscending(array, sizeOf), sizeOf, capacity),
@@ -48,18 +43,18 @@ function lowerBound2(obj, sizeOf, capacity) {
 /**
  * Assumes {@link sortedArray} contains no oversized items and is sorted ascending.
  * Consumes {@link sortedArray}.
- * @param {*} sortedArray 
- * @param {*} sizeOf 
- * @param {*} capacity 
  */
-function lowerBound2Sorted(sortedArray, sizeOf, capacity) {
+export function lowerBound2Sorted<T>(sortedArray: T[],
+    sizeOf: (t: T) => number,
+    capacity: number)
+        : number {
   // Calculates the total as it visits each element.
   let waste = 0
-      , carry = 0
-      , elementTotal = 0
+  let carry = 0
+  let elementTotal = 0
   const constSizeOf = sizeOf // const for linter.
   while (sortedArray.length > 0) {
-    const largestSize = sizeOf(sortedArray.pop())
+    const largestSize = sizeOf(sortedArray.pop()!)
     elementTotal += largestSize
     const remainder = capacity - largestSize
     const firstLargerThanRemainder = sortedArray.findIndex(function (element) {

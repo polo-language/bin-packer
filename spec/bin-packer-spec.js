@@ -1,7 +1,7 @@
 'use strict'
 
 const fs = require('fs')
-    , binPacker = require('../lib/bin-packer')
+    , binPacker = require('../lib/index')
     , utils = require('../lib/util/utils')
 
 class AlgorithmType {

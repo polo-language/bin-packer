@@ -1,27 +1,26 @@
-'use strict'
+import { InputObject, PackingOutput } from './index';
+import { lowerBound2Sorted } from './bounds'
+import { bestFitDecreasingSorted } from './fit-algos'
+import * as utils from './util/utils'
 
-const utils = require('./util/utils')
-const fitAlgos = require('./fit-algos')
-const bounds = require('./bounds')
+class CompletionNode<T> {
+  accumulatedWaste: number
 
-module.exports = {
-  binCompletion,
-}
-
-class CompletionNode {
-  constructor(bin, size, depth, parent, parentWaste, tail, tailSum, capacity) {
-    this.bin = bin
-    this.depth = depth
-    this.parent = parent
+  constructor(
+      public bin: T[],
+      size: number,
+      public depth: number,
+      public parent: CompletionNode<T> | null,
+      parentWaste: number,
+      public tail: T[],
+      public tailSum: number,
+      public capacity: number) {
     this.accumulatedWaste = parentWaste + capacity - size
-    this.tail = tail
-    this.tailSum = tailSum
-    this.capacity = capacity
   }
 
-  completionChildFrom(feasibleSet) {
-    const childBin = []
-    const childTail = []
+  completionChildFrom(feasibleSet: FeasibleSet<T>): CompletionNode<T> {
+    const childBin: T[] = []
+    const childTail: T[] = []
     for (let i = 0; i < feasibleSet.tailStartIndex; ++i) {
       if (feasibleSet.includedIndexes[i] !== undefined) {
         childBin.push(feasibleSet.array[i])
@@ -43,9 +42,9 @@ class CompletionNode {
   }
 
   /** Walks up the tree, assembling itself and its parents into an array. */
-  assemblePacking() {
-    const packing = []
-    let node = this
+  assemblePacking(): T[][] {
+    const packing: T[][] = []
+    let node: CompletionNode<T> = this
     while (node.parent !== null) {
         packing.push(node.bin)
         node = node.parent
@@ -54,34 +53,20 @@ class CompletionNode {
   }
 }
 
-class FeasibleSet {
-  /**
-   * @param {*} array Never modified
-   * @param {*} includedIndexes Sparse array: value set at included indexes.
-   * @param {*} includedSum 
-   * @param {*} numIncludedIndexes Number of values set in includedIndexes
-   * @param {*} tailStartIndex 
-   * @param {*} tailSum 
-   */
+class FeasibleSet<T> {
   constructor(
-      array,
-      includedIndexes,
-      includedSum,
-      numIncludedIndexes,
-      tailStartIndex,
-      tailSum) {
-    this.array = array
-    this.includedIndexes = includedIndexes
-    this.includedSum = includedSum
-    this.numIncludedIndexes = numIncludedIndexes
-    this.tailStartIndex = tailStartIndex
-    this.tailSum = tailSum
+      readonly array: T[],
+      public includedIndexes: number[],     // Sparse array: value set at included indexes.
+      public includedSum: number,
+      public numIncludedIndexes: number,    // Number of values set in includedIndexes
+      public tailStartIndex: number,
+      public tailSum: number) {
   }
 
   /* private */
   // May produce a non-feasible FeasibleSet (size larger than capacity) if
   // includeTailStart === true.
-  makeChildIncluding(sizeOf, nextIncludedIndex) {
+  makeChildIncluding(sizeOf: (t: T) => number, nextIncludedIndex: number): FeasibleSet<T> {
     if (nextIncludedIndex < this.tailStartIndex ||
       this.array.length <= nextIncludedIndex) {
       throw new Error('Can only include an element from the tail when creating '+
@@ -90,7 +75,7 @@ class FeasibleSet {
     const childIncludeIndexes = this.includedIndexes.slice()
     childIncludeIndexes[nextIncludedIndex] = nextIncludedIndex
     const elementSize = sizeOf(this.array[nextIncludedIndex])
-    return new FeasibleSet(
+    return new FeasibleSet<T>(
       this.array,
       childIncludeIndexes,
       this.includedSum + elementSize,
@@ -99,7 +84,7 @@ class FeasibleSet {
       this.tailSum - elementSize)
   }
 
-  makeChildNotIncluding(nextTailStartIndex) {
+  makeChildNotIncluding(nextTailStartIndex: number): FeasibleSet<T> {
     if (nextTailStartIndex < this.tailStartIndex ||
         this.array.length < nextTailStartIndex) {
       // May equal tailStartIndex when the tail has been exhausted.
@@ -125,8 +110,8 @@ class FeasibleSet {
    * that can be included, then returns a single right child with the same
    * included elements as this, but with an empty tail.
    */
-  makeFeasibleChildren(sizeOf, capacity) {
-    const children = []
+  makeFeasibleChildren(sizeOf: (t: T) => number, capacity: number): FeasibleSet<T>[] {
+    const children: FeasibleSet<T>[] = []
     let index = this.tailStartIndex
     while (index < this.array.length) {
       const elementSize = sizeOf(this.array[index])
@@ -153,39 +138,45 @@ class FeasibleSet {
   }
 }
 
-class SolutionState {
-  constructor(lowerBound, totalSize, capacity, bestSolution) {
-    this.lowerBound = lowerBound    // const
-    this.totalSize = totalSize      // const
-    this.capacity = capacity        // const
-    this.bestSolution = bestSolution
+class SolutionState<T> {
+  maxWaste: number
+
+  constructor(
+      readonly lowerBound: number,
+      readonly totalSize: number,
+      readonly capacity: number,
+      public bestSolution: T[][]) {
     this.maxWaste = this.getMaxWaste()
   }
 
-  get bestLength() {
+  get bestLength(): number {
     return this.bestSolution.length
   }
 
-  updateBestSolution(newBestSolution) {
+  updateBestSolution(newBestSolution: T[][]) {
     this.bestSolution = newBestSolution
     this.maxWaste = this.getMaxWaste()
   }
 
   /* private */
-  getMaxWaste() {
+  getMaxWaste(): number {
     return (this.bestLength - 1) * this.capacity - this.totalSize
   }
 
-  minCompletionSum(accumulatedWaste) {
+  minCompletionSum(accumulatedWaste: number): number {
     return this.capacity - (this.maxWaste - accumulatedWaste)
   }
 }
 
-function binCompletion(obj, sizeOf, capacity) {
+export function binCompletion<T>(
+    obj: InputObject<T>,
+    sizeOf: (t: T) => number,
+    capacity: number)
+        : PackingOutput<T> {
   const {array: array, oversized: oversized} = utils.prepareValues(obj, sizeOf, capacity)
   const descending = utils.sortDescending(array, sizeOf)
-  const lowerBound = bounds.lowerBound2Sorted(descending.slice().reverse(), sizeOf, capacity)
-  const bestSolution = fitAlgos.bestFitDecreasingSorted(descending, sizeOf, capacity)
+  const lowerBound = lowerBound2Sorted(descending.slice().reverse(), sizeOf, capacity)
+  const bestSolution = bestFitDecreasingSorted(descending, sizeOf, capacity)
   if (lowerBound === bestSolution.length) {
     return {
       'bins': bestSolution,
@@ -205,18 +196,13 @@ function binCompletion(obj, sizeOf, capacity) {
   }
 }
 
-/**
- * @param {CompletionNode} completionNode 
- * @param {SolutionState} solutionState 
- * @returns {object[][]|null}
- */
-function nextCompletionLevel(completionNode, solutionState, sizeOf) {
+function nextCompletionLevel<T>(
+    completionNode: CompletionNode<T>,
+    solutionState: SolutionState<T>,
+    sizeOf: (t: T) => number)
+        : T[][] | null {
   const nextDepth = completionNode.depth + 1
-  const feasibleSets = generateFeasibleSets(
-      completionNode,
-      solutionState,
-      sizeOf)
-  for (const feasibleSet of feasibleSets) {
+  for (const feasibleSet of generateFeasibleSets(completionNode, solutionState, sizeOf)) {
     if (feasibleSet.numIncludedIndexes === feasibleSet.array.length) {
       // All elements have been binned.
       if (nextDepth === solutionState.lowerBound) {
@@ -247,12 +233,11 @@ function nextCompletionLevel(completionNode, solutionState, sizeOf) {
   return null
 }
 
-/**
- * @param {CompletionNode} completionNode 
- * @param {SolutionState} solutionState 
- * @returns {FeasibleSet[]}
- */
-function generateFeasibleSets(completionNode, solutionState, sizeOf) {
+function generateFeasibleSets<T>(
+    completionNode: CompletionNode<T>,
+    solutionState: SolutionState<T>,
+    sizeOf: (t: T) => number)
+        : FeasibleSet<T>[] {
   // Individual elements are all assumed smaller than capacity, so no need to
   // check for a bin containing a single element.
   const largestElementSize = sizeOf(completionNode.tail[0])
@@ -273,12 +258,13 @@ function generateFeasibleSets(completionNode, solutionState, sizeOf) {
  * Generates all feasible sets containing this set's elements and any smaller
  * elements. Assumes {@link feasibleSet}'s size is less than capacity (i.e. is
  * truly a feasible set).
- * @param {FeasibleSet} feasibleSet 
- * @param {number} capacity 
- * @param {number} minCompletionSum 
- * @returns {FeasibleSet[]}
  */
-function recurseFeasibleSets(feasibleSet, sizeOf, capacity, minCompletionSum) {
+function recurseFeasibleSets<T>(
+    feasibleSet: FeasibleSet<T>,
+    sizeOf: (t: T) => number,
+    capacity: number,
+    minCompletionSum: number)
+        : FeasibleSet<T>[] {
   if (feasibleSet.includedSum === capacity) {
     // Already full.
     return [feasibleSet,]
