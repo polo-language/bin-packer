@@ -1,5 +1,5 @@
-import { BoundOutput } from './index';
-import * as utils from './util/utils'
+import { BoundOutput } from '../index';
+import * as utils from '../util/utils'
 
 /**
  * A simple-to-compute lower bound on the number of bins required by an optimal

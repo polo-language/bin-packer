@@ -1,7 +1,7 @@
-import { InputObject, PackingOutput } from './index';
+import { InputObject, PackingOutput } from '../index';
 import { lowerBound2Sorted } from './bounds'
 import { bestFitDecreasingSorted } from './fit-algos'
-import * as utils from './util/utils'
+import * as utils from '../util/utils'
 
 class CompletionNode<T> {
   accumulatedWaste: number

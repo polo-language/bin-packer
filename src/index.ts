@@ -25,7 +25,7 @@ export type BoundFunction<T> = (
     capacity: number
     ) => BoundOutput
     
-export { nextFit, firstFit, firstFitDecreasing, bestFitDecreasing } from './fit-algos'
-export { binCompletion } from './bin-completion'
-export { lowerBound1, lowerBound2 } from './bounds'
+export { nextFit, firstFit, firstFitDecreasing, bestFitDecreasing } from './pack/fit-algos'
+export { binCompletion } from './pack/bin-completion'
+export { lowerBound1, lowerBound2 } from './pack/bounds'
     

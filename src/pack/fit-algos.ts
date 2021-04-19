@@ -1,5 +1,5 @@
-import { InputObject, PackingOutput } from './index';
-import * as utils from './util/utils'
+import { InputObject, PackingOutput } from '../index';
+import * as utils from '../util/utils'
 
 export function nextFit<T>(
     obj: InputObject<T>,
