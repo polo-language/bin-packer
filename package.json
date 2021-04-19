@@ -1,6 +1,6 @@
 {
   "name": "bin-packer",
-  "version": "1.6.1",
+  "version": "1.7.0",
   "description": "bin-packing algorithms",
   "author": {
     "name": "Angelo Polo",
@@ -12,7 +12,7 @@
     "url": "https://github.com/polo-language/bin-packer.git"
   },
   "main": "lib/index.js",
-  "types": "index.d.ts",
+  "types": "lib/index.d.ts",
   "scripts": {
     "build": "tsc",
     "test": "npx jasmine",
@@ -26,6 +26,7 @@
     "knapsack",
     "pack",
     "packing",
+    "repack",
     "sort"
   ],
   "devDependencies": {

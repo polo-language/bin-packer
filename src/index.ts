@@ -23,9 +23,12 @@ export type BoundFunction<T> = (
     obj: InputObject<T>,
     sizeOf: (item: T) => number,
     capacity: number
-    ) => BoundOutput
+) => BoundOutput
     
 export { nextFit, firstFit, firstFitDecreasing, bestFitDecreasing } from './pack/fit-algos'
 export { binCompletion } from './pack/bin-completion'
 export { lowerBound1, lowerBound2 } from './pack/bounds'
     
+export { Item, Bin, Move, ChangeReport, Analysis }  from './common'
+export { repack } from './repacker'
+

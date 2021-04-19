@@ -101,7 +101,7 @@ export function sum<T>(array: T[], sizeOf: ((t: T) => number)): number {
  *                              be applied. Expected to modify array in-place.
  * @returns {number}            The index at which operation applied item to array.
  */
- export function binaryApply<T, U>(
+export function binaryApply<T, U>(
     array: T[],
     item: U,
     leq: (item: U, array: T[], arrayElement: T) => boolean,
