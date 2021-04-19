@@ -1,7 +1,7 @@
 import { Item, Bin, ChangeReport }  from './common'
-import * as validation from './validation'
-import { greedyFillMax } from './greedy-fill-max'
-import { shiftOverutilized } from './shift-overutilized'
+import * as validation from './util/validation'
+import { greedyFillMax } from './repack/greedy-fill-max'
+import { shiftOverutilized } from './repack/shift-overutilized'
 
 export function repack(bins: Bin[], newItems: Item[]): [Bin[], ChangeReport] {
   validation.checkFeasibility(bins, newItems)

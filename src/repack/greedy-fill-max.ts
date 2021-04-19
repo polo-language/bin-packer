@@ -1,5 +1,5 @@
-import { Item, Bin }  from './common'
-import { binaryApply } from './utils'
+import { Item, Bin }  from '../common'
+import { binaryApply } from '../util/utils'
 
 /**
  * Adds newItems to bins.

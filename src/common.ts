@@ -1,4 +1,4 @@
-import { binaryApply } from './utils'
+import { binaryApply } from './util/utils'
 
 export class Item {
   newBinId?: string

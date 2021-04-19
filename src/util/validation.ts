@@ -1,4 +1,4 @@
-import { Item, Bin, Move, ChangeReport, Analysis }  from './common'
+import { Item, Bin, Move, ChangeReport, Analysis }  from '../common'
 
 interface ErrorHandler {
   handle: (message: string) => void

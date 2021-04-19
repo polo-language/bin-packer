@@ -1,4 +1,4 @@
-import { Bin }  from './common'
+import { Bin }  from '../common'
 
 export function shiftOverutilized(bins: Bin[]) {
   const [overBins, openBins, fullBins] =  bins.reduce(
