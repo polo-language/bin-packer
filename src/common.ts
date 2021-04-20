@@ -36,6 +36,7 @@ export class Bin {
     this._utilization = 0
   }
 
+  /** Returns a copy of the item array. */
   get items() {
     return this._items.slice()
   }
@@ -95,7 +96,7 @@ export class Bin {
     return this.remove(index)
   }
 
-  private remove(index: number): Item {
+  remove(index: number): Item {
     if (index < 0 || this._items.length - 1 < index) {
       throw new Error(`Cannot remove item at index ${index} from array of length `+
           `${this._items.length}`)

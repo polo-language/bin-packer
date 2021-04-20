@@ -2,6 +2,7 @@ import { Item, Bin, ChangeReport }  from './common'
 import * as validation from './util/validation'
 import { greedyFillMax } from './repack/greedy-fill-max'
 import { shiftOverutilized } from './repack/shift-overutilized'
+import { swapSpace } from './repack/swap-overutilized'
 
 export function repack(bins: Bin[], newItems: Item[]): [Bin[], ChangeReport] {
   validation.checkFeasibility(bins, newItems)
@@ -15,9 +16,13 @@ export function repack(bins: Bin[], newItems: Item[]): [Bin[], ChangeReport] {
 
 /** Modifies bins in-place. */
 function repackCopies(bins: Bin[], newItems: Item[]) {
+  if (newItems.length > 0) {
+    greedyFillMax(bins, newItems)
+  }
   if (bins.some(bin => bin.isOverutilized())) {
     shiftOverutilized(bins)
   }
-  // No bins should now be overutilized, so pass them all to be filled with new items.
-  greedyFillMax(bins, newItems)
+  if (bins.some(bin => bin.isOverutilized())) {
+    swapSpace(bins)
+  }
 }

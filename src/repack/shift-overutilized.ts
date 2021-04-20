@@ -15,7 +15,8 @@ export function shiftOverutilized(bins: Bin[]) {
   )
   while (overBins.length > 0) {
     if (openBins.length < 1) {
-      throw new Error(`There are still ${overBins.length} overutilized bins but no more open bins`)
+      // The remaining overutilized bins will need to swap out items.
+      return
     }
     // TODO: Keep bins sorted more efficiently.
     // Sort most to least overutilized

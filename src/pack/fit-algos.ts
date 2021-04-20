@@ -56,7 +56,7 @@ function firstFitArray<T>(
   for (const value of array) {
     const size = sizeOf(value)
     let createNewBin = true
-    for (const i in bins) {
+    for (let i = 0; i < bins.length; ++i) {
       if (size <= remaining[i]) {
         bins[i].push(value)
         remaining[i] -= size
@@ -120,7 +120,7 @@ export function bestFitDecreasing<T>(
     sizedBins[i].size += sizeOf(item)
     sizedBins[i].bin.push(item)
   }
-      // Sort it earlier if it's larger!
+  // Sort it earlier if it's larger!
   const binMoreFull = (currentIndex: number, sizedBins: SizedBin<T>[], bin: SizedBin<T>) =>
       sizedBins[currentIndex].size >= bin.size
   const binResort = (currentIndex: number, sizedBins: SizedBin<T>[], i: number) => {
