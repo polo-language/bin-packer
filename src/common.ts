@@ -133,11 +133,6 @@ export class Bin {
   }
 }
 
-export interface ChangeReport {
-  moves: Move[]
-  analysis: Analysis
-}
-
 export class Move {
   constructor(
     readonly item: Item,
@@ -149,10 +144,48 @@ export class Move {
 export class Analysis {
   readonly freeSlots: Metric
   readonly freeSpace: Metric
+  readonly negativeSpaceBinCount: number
+  readonly zeroSpaceBinCount: number
+  readonly positiveSpaceBinCount: number
+  readonly negativeOpenSlotsBinCount: number
+  readonly zeroOpenSlotsBinCount: number
+  readonly positiveOpenSlotsBinCount: number
+  readonly itemCount: number
+  readonly moveCount: number
+  readonly moveRatio: number
+  readonly moves: Move[]
 
   constructor(bins: Bin[]) {
     this.freeSlots = Analysis.calculate(bins, bin => bin.freeSlots)
     this.freeSpace = Analysis.calculate(bins, bin => bin.freeSpace)
+    let freeSpaceBins: [number, number, number] = [0, 0, 0]
+    let freeSlotsBins: [number, number, number] = [0, 0, 0]
+    let itemCount = 0
+    const moves: Move[] = []
+    for (const bin of bins) {
+      ++freeSpaceBins[1 + Math.sign(bin.freeSpace)]
+      ++freeSlotsBins[1 + Math.sign(bin.maxItems - bin.itemCount)]
+      for (const item of bin.items) {
+        ++itemCount
+        if (item.originalBinId === undefined || item.originalBinId !== item.newBinId) {
+          // if (item.newBinId === undefined) {
+          //   errorHandler.handle(`Item with ID ${item.id} not assigned to a new bin`)
+          // } else {
+            moves.push(new Move(item, item.originalBinId, item.newBinId!))
+          // }
+        }
+      }
+    }
+    this.moves = moves
+    this.itemCount = itemCount
+    this.moveCount = this.moves.length
+    this.moveRatio = this.moveCount / itemCount
+    this.negativeSpaceBinCount = freeSpaceBins[0]
+    this.zeroSpaceBinCount = freeSpaceBins[1]
+    this.positiveSpaceBinCount = freeSpaceBins[2]
+    this.negativeOpenSlotsBinCount = freeSlotsBins[0]
+    this.zeroOpenSlotsBinCount = freeSlotsBins[1]
+    this.positiveOpenSlotsBinCount = freeSlotsBins[2]
   }
 
   private static calculate(bins: Bin[], numeric: (bin: Bin) => number): Metric {

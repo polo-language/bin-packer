@@ -29,6 +29,6 @@ export { nextFit, firstFit, firstFitDecreasing, bestFitDecreasing } from './pack
 export { binCompletion } from './pack/bin-completion'
 export { lowerBound1, lowerBound2 } from './pack/bounds'
     
-export { Item, Bin, Move, ChangeReport, Analysis }  from './common'
+export { Item, Bin, Move, Analysis }  from './common'
 export { repack } from './repacker'
 

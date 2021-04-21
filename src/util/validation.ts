@@ -1,4 +1,4 @@
-import { Item, Bin, Move, ChangeReport, Analysis }  from '../common'
+import { Item, Bin }  from '../common'
 
 interface ErrorHandler {
   handle: (message: string) => void
@@ -90,28 +90,5 @@ export function validateBins(bins: Bin[]) {
       errorHandler.handle(`Bin ${bin.id} with capacity ${bin.capacity} contains items with ` +
           `${bin.utilization} total utilization. Full bin details: ${bin.toString()}`)
     }
-  }
-}
-
-/**
- * Report all item moves.
- */
-export function getChangeReport(bins: Bin[]): ChangeReport {
-  const errorHandler = new ThrowingErrorHandler()
-  const moves: Move[] = []
-  for (const bin of bins) {
-    for (const item of bin.items) {
-      if (item.originalBinId === undefined || item.originalBinId !== item.newBinId) {
-        if (item.newBinId === undefined) {
-          errorHandler.handle(`Item with ID ${item.id} not assigned to a new bin`)
-        } else {
-          moves.push(new Move(item, item.originalBinId, item.newBinId))
-        }
-      }
-    }
-  }
-  return {
-    moves: moves,
-    analysis: new Analysis(bins)
   }
 }
