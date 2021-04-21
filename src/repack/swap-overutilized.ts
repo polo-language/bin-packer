@@ -9,8 +9,8 @@ class SwapPair<T> {
   }
 }
 
-class Entry {
-  constructor(readonly index: number, readonly item: Item) { }
+class Entry<T> {
+  constructor(readonly index: number, readonly value: T) { }
 }
 
 /**
@@ -37,57 +37,48 @@ export function swapSpace(bins: Bin[]) {
   posSpaceBins.sort((a, b) => a.utilization - b.utilization)  // Most free space to Least.
   while (negSpaceBins.length > 0) {
     const fromBin = negSpaceBins[0]
-    const toBin = posSpaceBins[0]
-    const candidatePairs: SwapPair<Entry>[] = []
-    const toItems = toBin.items
-    for (let toIndex = 0; toIndex < toItems.length; ++toIndex) { // Smallest to largest
-      const toItem = toItems[toIndex]
-      const fromIndexCandidates: Entry[] = []
-      const maxSize = toItem.size + toBin.freeSpace
-      const minTarget = toItem.size + fromBin.overutilization
-      let idealFromIndex: number | undefined = undefined
-      const fromItems = fromBin.items
-      for (let fromIndex = 0; fromIndex < fromItems.length; ++fromIndex) {
-        const fromItem = fromItems[fromIndex]
-        if (fromItem.size < maxSize) {
-          if (minTarget <= fromItem.size) {
-            idealFromIndex = fromIndex
-            break // fromItems loop
-          } else {
-            fromIndexCandidates.push(new Entry(fromIndex, fromItem))
-          }
+    for (let toIndex = 0; toIndex < posSpaceBins.length; ++toIndex) {
+      const toBin = posSpaceBins[0]
+      const pair = findSwapPair(fromBin, toBin)
+      if (pair !== null) {
+        swap(new SwapPair(fromBin, toBin), pair.map(entry => entry.index))
+        resortNegSpaceBin(negSpaceBins, noSpaceBins, posSpaceBins, new Entry(0, fromBin))
+        resortPosSpaceBin(negSpaceBins, noSpaceBins, posSpaceBins, new Entry(toIndex, toBin))
+        break   // for loop
+      }
+    }
+    throw new Error('Was not able to find a swapping partner for overutilized bin with ID ' +
+        fromBin.id)
+  }
+}
+
+function findSwapPair(fromBin: Bin, toBin: Bin): SwapPair<Entry<Item>> | null {
+  const candidatePairs: SwapPair<Entry<Item>>[] = []
+  const toItems = toBin.items
+  for (let toIndex = 0; toIndex < toItems.length; ++toIndex) { // Smallest to largest
+    const toItem = toItems[toIndex]
+    const fromIndexCandidates: Entry<Item>[] = []
+    const maxSize = toItem.size + toBin.freeSpace
+    const minTarget = toItem.size + fromBin.overutilization
+    const fromItems = fromBin.items
+    for (let fromIndex = 0; fromIndex < fromItems.length; ++fromIndex) {
+      const fromItem = fromItems[fromIndex]
+      if (fromItem.size < maxSize) {
+        if (minTarget <= fromItem.size) {
+          return new SwapPair(new Entry(fromIndex, fromItem), new Entry(toIndex, toItem))
+        } else {
+          fromIndexCandidates.push(new Entry(fromIndex, fromItem))
         }
       }
-      if (idealFromIndex !== undefined) {
-        swap(new SwapPair(fromBin, toBin), new SwapPair(idealFromIndex, toIndex))
-        break // toItems loop
-      } else {
-        candidatePairs.push(new SwapPair(
-            max(fromIndexCandidates, entry => entry.item.size), new Entry(toIndex, toItem)))
-      }
     }
-    swap(
-        new SwapPair(fromBin, toBin),
-        max(candidatePairs, pair => pair.from.item.size - pair.to.item.size)
-            .map(entry => entry.index))
-    // Move swapping bins based on their new utilizations.
-    if (fromBin.freeSpace <= 0) {
-      const fromBin = negSpaceBins.splice(0, 1)[0] // Shadowing
-      if (fromBin.freeSpace === 0) {
-        noSpaceBins.push(fromBin) // Order doesn't matter.
-      } else {
-        binaryApply(posSpaceBins, fromBin, isLessUtilized, spliceBin)
-      }
-    } else {
-      binaryApply(negSpaceBins, 0, isMoreUtilizedByIndex, moveBinWithin)
-    }
-    if (toBin.freeSpace < 0) {
-      throw new Error(`Algorithm error: Should never over fill a bin.`)
-    }
-    if (toBin.freeSpace == 0) {
-      noSpaceBins.push(toBin)
+    if (0 !== fromIndexCandidates.length) {
+      candidatePairs.push(new SwapPair(
+          max(fromIndexCandidates, entry => entry.value.size), new Entry(toIndex, toItem)))
     }
   }
+  return 0 === candidatePairs.length ?
+      null :
+      max(candidatePairs, pair => pair.from.value.size - pair.to.value.size)
 }
 
 function swap(binPair: SwapPair<Bin>, itemIndexPair: SwapPair<number>) {
@@ -99,6 +90,41 @@ function swap(binPair: SwapPair<Bin>, itemIndexPair: SwapPair<number>) {
 
 function max<T>(array: T[], sizeOf: (t: T) => number): T {
   return array.reduce((a, b) => sizeOf(a) >= sizeOf(b) ? a : b)
+}
+
+function resortNegSpaceBin(
+    negSpaceBins: Bin[],
+    noSpaceBins: Bin[],
+    posSpaceBins: Bin[],
+    entry: Entry<Bin>) {
+  if (entry.value.freeSpace >= 0) {
+    const bin = negSpaceBins.splice(entry.index, 1)[0] // Shadowing
+    if (entry.value !== bin) {
+      throw new Error(`Algorithm error: Bin not found at indicated index.`)
+    }
+    if (bin.freeSpace === 0) {
+      noSpaceBins.push(bin) // Order doesn't matter.
+    } else {
+      binaryApply(posSpaceBins, bin, isLessUtilized, spliceBin)
+    }
+  } else {
+    binaryApply(negSpaceBins, 0, isMoreUtilizedByIndex, moveBinWithin)
+  }
+}
+
+function resortPosSpaceBin(
+    negSpaceBins: Bin[],
+    noSpaceBins: Bin[],
+    posSpaceBins: Bin[],
+    entry: Entry<Bin>) {
+  if (entry.value.freeSpace < 0) {
+    throw new Error(`Algorithm error: Should never over-fill a previously open bin.`)
+  }
+  if (entry.value.freeSpace == 0) {
+    noSpaceBins.push(entry.value)
+  } else {
+    binaryApply(posSpaceBins, entry.index, isMoreUtilizedByIndex, moveBinWithin)
+  }
 }
 
 function isLessUtilized(bin: Bin, _: Bin[], otherBin: Bin): boolean {
