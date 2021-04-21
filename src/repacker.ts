@@ -10,7 +10,7 @@ export function repack(bins: Bin[], newItems: Item[]): [Bin[], ChangeReport] {
   const workingNewItems: Item[] = newItems.map(item => Item.deepClone(item))
   repackCopies(workingBins, workingNewItems)
   validation.itemAccounting(bins, newItems, workingBins)
-  validation.validateBins(workingBins)
+  // validation.validateBins(workingBins)
   return [workingBins, validation.getChangeReport(workingBins)]
 }
 
