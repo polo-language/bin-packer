@@ -64,32 +64,34 @@ function findSwapPair(fromBin: Bin, toBin: Bin): SwapPair<Entry<Item>> | null {
   const toItems = toBin.items
   for (let toIndex = 0; toIndex < toItems.length; ++toIndex) { // Smallest to largest
     const toItem = toItems[toIndex]
-    const fromIndexCandidates: Entry<Item>[] = []
-    const maxSize = toItem.size + toBin.freeSpace
-    const minTarget = toItem.size + fromBin.overutilization
-    const fromItems = fromBin.items
-    for (let fromIndex = fromItems.length - 1; 0 <= fromIndex; --fromIndex) { // Largest to smallest
-      const fromItem = fromItems[fromIndex]
-      if (fromItem.size <= toItem.size) {
-        // The from items will only get smaller from here, so don't loop through the rest.
-        break // for
+    const fromCandidate = findMaxPartner(fromBin, toItem.size, toItem.size + toBin.freeSpace)
+    if (fromCandidate !== null) {
+      if (toItem.size + fromBin.overutilization <= fromCandidate.value.size) {
+        return new SwapPair(fromCandidate, new Entry(toIndex, toItem))
+      } else {
+        candidatePairs.push(new SwapPair(fromCandidate, new Entry(toIndex, toItem)))
       }
-      if (fromItem.size < maxSize) {
-        if (minTarget <= fromItem.size) {
-          return new SwapPair(new Entry(fromIndex, fromItem), new Entry(toIndex, toItem))
-        } else {
-          fromIndexCandidates.push(new Entry(fromIndex, fromItem))
-        }
-      }
-    }
-    if (0 !== fromIndexCandidates.length) {
-          candidatePairs.push(new SwapPair(
-          max(fromIndexCandidates, entry => entry.value.size), new Entry(toIndex, toItem)))
     }
   }
   return 0 === candidatePairs.length ?
       null :
       max(candidatePairs, pair => pair.from.value.size - pair.to.value.size)
+}
+
+function findMaxPartner(bin: Bin, minSize: number, maxSize: number): Entry<Item> | null {
+  const items = bin.items
+  for (let fromIndex = items.length - 1; 0 <= fromIndex; --fromIndex) { // Largest to smallest
+    const item = items[fromIndex]
+    if (item.size <= minSize) {
+      // Items will only get smaller from here, so don't loop through the rest.
+      return null
+    }
+    // The first item that satisfies the criterion is always the best one since it is the largest.
+    if (item.size <= maxSize) {
+      return new Entry(fromIndex, item)
+    }
+  }
+  return null
 }
 
 function swap(binPair: SwapPair<Bin>, itemIndexPair: SwapPair<number>) {
