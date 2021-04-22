@@ -17,6 +17,10 @@ export class Item {
     return cloned
   }
 
+  hasMoved(): boolean {
+    return this.originalBinId !== this.newBinId
+  }
+
   toString(): string {
     return `ID: ${this.id}, size: ${this.size}, fromBin: ${this.originalBinId}, `+
         `toBin: ${this.newBinId}`
@@ -144,12 +148,8 @@ export class Move {
 export class Analysis {
   readonly freeSlots: Metric
   readonly freeSpace: Metric
-  readonly negativeSpaceBinCount: number
-  readonly zeroSpaceBinCount: number
-  readonly positiveSpaceBinCount: number
-  readonly negativeOpenSlotsBinCount: number
-  readonly zeroOpenSlotsBinCount: number
-  readonly positiveOpenSlotsBinCount: number
+  readonly binsWithSpace: { '-': number, '0': number, '+': number }
+  readonly binsWithSlots: { '-': number, '0': number, '+': number }
   readonly itemCount: number
   readonly moveCount: number
   readonly moveRatio: number
@@ -167,7 +167,7 @@ export class Analysis {
       ++freeSlotsBins[1 + Math.sign(bin.maxItems - bin.itemCount)]
       for (const item of bin.items) {
         ++itemCount
-        if (item.originalBinId === undefined || item.originalBinId !== item.newBinId) {
+        if (item.hasMoved()) {
           // if (item.newBinId === undefined) {
           //   errorHandler.handle(`Item with ID ${item.id} not assigned to a new bin`)
           // } else {
@@ -180,12 +180,8 @@ export class Analysis {
     this.itemCount = itemCount
     this.moveCount = this.moves.length
     this.moveRatio = this.moveCount / itemCount
-    this.negativeSpaceBinCount = freeSpaceBins[0]
-    this.zeroSpaceBinCount = freeSpaceBins[1]
-    this.positiveSpaceBinCount = freeSpaceBins[2]
-    this.negativeOpenSlotsBinCount = freeSlotsBins[0]
-    this.zeroOpenSlotsBinCount = freeSlotsBins[1]
-    this.positiveOpenSlotsBinCount = freeSlotsBins[2]
+    this.binsWithSpace = { '-': freeSpaceBins[0], '0': freeSpaceBins[1], '+': freeSpaceBins[2] }
+    this.binsWithSlots = { '-': freeSlotsBins[0], '0': freeSlotsBins[1], '+': freeSlotsBins[2] }
   }
 
   private static calculate(bins: Bin[], numeric: (bin: Bin) => number): Metric {
