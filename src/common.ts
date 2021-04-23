@@ -9,10 +9,10 @@ export class Item {
       readonly originalBinId?: string
   ) { }
 
-  static deepClone(item: Item): Item {
-    const cloned = new Item(item.id, item.size, item.originalBinId)
-    if (item.newBinId !== undefined) {
-      cloned.newBinId = item.newBinId
+  deepClone(): Item {
+    const cloned = new Item(this.id, this.size, this.originalBinId)
+    if (this.newBinId !== undefined) {
+      cloned.newBinId = this.newBinId
     }
     return cloned
   }
@@ -123,9 +123,9 @@ export class Bin {
     return this.maxItems < this.itemCount || this.capacity < this.utilization
   }
 
-  static deepClone(bin: Bin): Bin {
-    const cloned = new Bin(bin.id, bin.capacity, bin.maxItems)
-    bin._items.forEach(item => cloned.add(Item.deepClone(item)))
+  deepClone(): Bin {
+    const cloned = new Bin(this.id, this.capacity, this.maxItems)
+    this._items.forEach(item => cloned.add(item.deepClone()))
     return cloned
   }
 
@@ -146,8 +146,11 @@ export class Move {
 }
 
 export class Analysis {
-  readonly freeSlots: Metric
+  readonly binCount: number
+  readonly totalSpace: number
+  readonly totalSlots: number
   readonly freeSpace: Metric
+  readonly freeSlots: Metric
   readonly binsWithSpace: { '-': number, '0': number, '+': number }
   readonly binsWithSlots: { '-': number, '0': number, '+': number }
   readonly itemCount: number
@@ -155,7 +158,10 @@ export class Analysis {
   readonly moveRatio: number
   readonly moves: Move[]
 
-  constructor(bins: Bin[]) {
+  constructor(bins: readonly Bin[]) {
+    this.binCount = bins.length
+    this.totalSpace = Analysis.totalCapacity(bins)
+    this.totalSlots = Analysis.totalSlots(bins)
     this.freeSlots = Analysis.calculate(bins, bin => bin.freeSlots)
     this.freeSpace = Analysis.calculate(bins, bin => bin.freeSpace)
     let freeSpaceBins: [number, number, number] = [0, 0, 0]
@@ -184,15 +190,32 @@ export class Analysis {
     this.binsWithSlots = { '-': freeSlotsBins[0], '0': freeSlotsBins[1], '+': freeSlotsBins[2] }
   }
 
-  private static calculate(bins: Bin[], numeric: (bin: Bin) => number): Metric {
-    const values = bins.map(numeric)
-    const total = values.reduce((acc, val) => acc + val)
-    return {
-      total: total,
-      min: Math.min(...values),
-      avg: total / values.length,
-      max: Math.max(...values)
+  private static calculate(bins: readonly Bin[], numeric: (bin: Bin) => number): Metric {
+    if (0 === bins.length) {
+      return {
+        total: 0,
+        min: 0,
+        avg: 0,
+        max: 0
+      }
+    } else {
+      const values = bins.map(numeric)
+      const total = values.reduce((acc, val) => acc + val)
+      return {
+        total: total,
+        min: Math.min(...values),
+        avg: total / values.length,
+        max: Math.max(...values)
+      }
     }
+  }
+
+  static totalCapacity(bins: readonly Bin[]): number {
+    return bins.reduce((acc: number, bin: Bin) => acc + bin.capacity, 0)
+  }
+
+  static totalSlots(bins: readonly Bin[]): number {
+    return bins.reduce((acc: number, bin: Bin) => acc + bin.maxItems, 0)
   }
 }
 

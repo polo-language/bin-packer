@@ -1,4 +1,4 @@
-import { Item, Bin }  from '../common'
+import { Item, Bin, Analysis }  from '../common'
 
 interface ErrorHandler {
   handle: (message: string) => void
@@ -16,21 +16,22 @@ class ThrowingErrorHandler implements ErrorHandler {
  */
  export function checkFeasibility(bins: readonly Bin[], newItems: readonly Item[]) {
   const errorHandler = new ThrowingErrorHandler()
-  const binSpace = bins.reduce((acc: number, bin: Bin) => acc + bin.capacity, 0)
+  const binSpace = Analysis.totalCapacity(bins)
   const itemSpace =
       newItems.reduce((acc: number, item: Item) => acc + item.size, 0) +
       bins.reduce((acc: number, bin: Bin) => acc + bin.utilization, 0)
   const totalItems =
       newItems.length +
       bins.reduce((acc: number, bin: Bin) => acc + bin.itemCount, 0)
-  const totalSlots = bins.reduce((acc: number, bin: Bin) => acc + bin.maxItems, 0)
+  const totalSlots = Analysis.totalSlots(bins)
 
   if (binSpace < itemSpace) {
-    errorHandler.handle(`There is only ${binSpace} total space but ${itemSpace} of total item size ` +
-        `to be placed`)
+    errorHandler.handle(`No packing possible: There is only ${binSpace} total space but `+
+        `${itemSpace} of total item size to be placed`)
   }
   if (totalSlots < totalItems) {
-    errorHandler.handle(`There are only ${totalSlots} total slots but ${totalItems} items to be placed`)
+    errorHandler.handle(`No packing possible: There are only ${totalSlots} total slots but `+
+        `${totalItems} items to be placed`)
   }
 }
 

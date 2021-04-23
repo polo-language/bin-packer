@@ -4,14 +4,14 @@ import { greedyFillMax } from './repack/greedy-fill-max'
 import { shiftOverutilized } from './repack/shift-overutilized'
 import { swapSpace } from './repack/swap-overutilized'
 
-export function repack(bins: Bin[], newItems: Item[]): [Bin[], Analysis] {
+export function repack(bins: Bin[], newItems: Item[]): Bin[] {
   validation.checkFeasibility(bins, newItems)
-  const workingBins: Bin[] = bins.map(bin => Bin.deepClone(bin))
-  const workingNewItems: Item[] = newItems.map(item => Item.deepClone(item))
+  const workingBins: Bin[] = bins.map(bin => bin.deepClone())
+  const workingNewItems: Item[] = newItems.map(item => item.deepClone())
   repackCopies(workingBins, workingNewItems)
   validation.itemAccounting(bins, newItems, workingBins)
   // validation.validateBins(workingBins)
-  return [workingBins, new Analysis(workingBins)]
+  return workingBins
 }
 
 /** Modifies bins in-place. */
