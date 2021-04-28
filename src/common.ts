@@ -78,7 +78,7 @@ export class Bin {
     item.newBinId = this.id
   }
 
-  removeFromOverutilization(max: number) {
+  removeFromOverutilization(max: number): Item | null {
     if (this.itemCount === 0) {
       throw new Error('Can not remove item from empty bin')
     }
@@ -86,7 +86,8 @@ export class Bin {
       throw new Error('Bin is not overutilized')
     }
     if (max < this._items[0].size) {
-      throw new Error(`No item is smaller than ${max}`)
+      // No item is smaller than max.
+      return null
     }
     const softMin = this.overutilization
     const maxIndex = this._items.length - 1
@@ -115,10 +116,6 @@ export class Bin {
     return this.freeSlots > 0 && this.freeSpace > 0
   }
 
-  isFull(): boolean {
-    return !this.isOpen() && !this.isOverutilized()
-  }
-
   isOverutilized(): boolean {
     return this.maxItems < this.itemCount || this.capacity < this.utilization
   }
@@ -137,14 +134,6 @@ export class Bin {
   }
 }
 
-export class Move {
-  constructor(
-    readonly item: Item,
-    readonly fromBinId: string | undefined,
-    readonly toBinId: string
-  ) { }
-}
-
 export class Analysis {
   readonly binCount: number
   readonly totalSpace: number
@@ -156,7 +145,7 @@ export class Analysis {
   readonly itemCount: number
   readonly moveCount: number
   readonly moveRatio: number
-  readonly moves: Move[]
+  readonly movedItems: Item[]
 
   constructor(bins: readonly Bin[]) {
     this.binCount = bins.length
@@ -167,7 +156,7 @@ export class Analysis {
     let freeSpaceBins: [number, number, number] = [0, 0, 0]
     let freeSlotsBins: [number, number, number] = [0, 0, 0]
     let itemCount = 0
-    const moves: Move[] = []
+    const movedItems: Item[] = []
     for (const bin of bins) {
       ++freeSpaceBins[1 + Math.sign(bin.freeSpace)]
       ++freeSlotsBins[1 + Math.sign(bin.maxItems - bin.itemCount)]
@@ -177,14 +166,14 @@ export class Analysis {
           // if (item.newBinId === undefined) {
           //   errorHandler.handle(`Item with ID ${item.id} not assigned to a new bin`)
           // } else {
-            moves.push(new Move(item, item.originalBinId, item.newBinId!))
+            movedItems.push(item)
           // }
         }
       }
     }
-    this.moves = moves
+    this.movedItems = movedItems
     this.itemCount = itemCount
-    this.moveCount = this.moves.length
+    this.moveCount = this.movedItems.length
     this.moveRatio = this.moveCount / itemCount
     this.binsWithSpace = { '-': freeSpaceBins[0], '0': freeSpaceBins[1], '+': freeSpaceBins[2] }
     this.binsWithSlots = { '-': freeSlotsBins[0], '0': freeSlotsBins[1], '+': freeSlotsBins[2] }

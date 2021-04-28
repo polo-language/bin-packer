@@ -32,7 +32,7 @@ export function prepareValues<T>(
   return {array: array, oversized: oversized,}
 }
 
-export function toArray<T>(obj: T[]|Iterable<T>|object): T[] {
+export function toArray<T>(obj: readonly T[]|Iterable<T>|object): T[] {
   if (Array.isArray(obj)) {
     return obj
   } else {
@@ -84,13 +84,14 @@ export function sortAscending<T>(array: T[], sizeOf: ((t: T) => number)): T[] {
   return array.sort((left, right) => sizeOf(left) - sizeOf(right))
 }
 
-export function sum<T>(array: T[], sizeOf: ((t: T) => number)): number {
+export function sum<T>(array: readonly T[], sizeOf: ((t: T) => number)): number {
   return array.reduce((acc, cur) => acc += sizeOf(cur), 0)
 }
 /**
- * Performs a recursive binary search to find the index at which to apply {@param operation}.
- * The {@param array} is assumed to be sorted according to {@param leq} in relation to objects of
- * the same type as {@param item}, a property which {@param operation} is required to preserve.
+ * Performs a recursive binary search to find the smallest index for which {@param leq} is true,
+ * then applies {@param operation} there. The {@param array} is assumed to be sorted according to
+ * {@param leq} in relation to objects of the same type as {@param item}. Note that this property
+ * may no longer hold after binaryApply returns unless {@param operation} explicitly preserves it.
  * Modifies {@param array}.
  * @param {array} array         A sorted array
  * @param {*} item              The item to be 'inserted' into the array. May not be of the same
@@ -137,4 +138,26 @@ function binaryApplyRecursive<T, U>(
   } else {
     return binaryApplyRecursive(array, mid + 1, right, item, leq, operation)
   }
+}
+
+/**
+ * Adds array elements to the array in the tuple's first index if they fail the boolean test, adds
+ * them to the second index if they pass.
+ */
+export function groupByBoolean<T>(array: readonly T[], predicate: (t: T) => boolean): [T[], T[]] {
+  return array.reduce((acc: [T[], T[]], t: T) => {
+    acc[boolToInt(predicate(t))].push(t)
+    return acc
+  }, [[], []])
+}
+
+/**
+ * Maps false => 0, true => 1.
+ */
+function boolToInt(bool: boolean) {
+  return bool ? 1 : 0
+}
+
+export function move<T>(index: number, from: T[], to: T[]) {
+  to.push(from.splice(index, 1)[0])
 }

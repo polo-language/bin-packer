@@ -1,4 +1,5 @@
 import { Bin }  from '../common'
+import { move } from '../util/utils'
 
 export function shiftOverutilized(bins: Bin[]) {
   const [overBins, openBins, fullBins] =  bins.reduce(
@@ -13,7 +14,8 @@ export function shiftOverutilized(bins: Bin[]) {
       },
       [[], [], []]
   )
-  while (overBins.length > 0) {
+  let skippedBinCount = 0
+  while (overBins.length > skippedBinCount) {
     if (openBins.length < 1) {
       // The remaining overutilized bins will need to swap out items.
       return
@@ -23,25 +25,23 @@ export function shiftOverutilized(bins: Bin[]) {
     overBins.sort((a, b) => b.overutilization - a.overutilization)
     // Sort least to most freespace
     openBins.sort((a, b) => a.freeSpace - b.freeSpace)
-    const mostOverutilizedBin = overBins[0]
+    const mostOverutilizedBin = overBins[skippedBinCount]
     const itemToMove =
         mostOverutilizedBin.removeFromOverutilization(openBins[openBins.length - 1].freeSpace)
-    // Will find an insertion bin since removeFromremoveFromOverutilization throws if it can't
-    // return an item that will fit in the bin with the most open space.
-    const insertionBinIndex = openBins.findIndex(bin => itemToMove.size <= bin.freeSpace)
-    const insertionBin = openBins[insertionBinIndex]
-    insertionBin.add(itemToMove)
-    if (insertionBin.isFull()) {
-      move(insertionBinIndex, openBins, fullBins)
-    }
-    if (mostOverutilizedBin.isOpen()) {
-      move(0, overBins, openBins)
-    } else if (mostOverutilizedBin.isFull()) {
-      move(0, overBins, fullBins)
+    if (null == itemToMove) {
+      ++skippedBinCount
+    } else {
+      const insertionBinIndex = openBins.findIndex(bin => itemToMove.size <= bin.freeSpace)
+      const insertionBin = openBins[insertionBinIndex]
+      insertionBin.add(itemToMove)
+      if (!insertionBin.isOpen()) {
+        move(insertionBinIndex, openBins, fullBins)
+      }
+      if (mostOverutilizedBin.isOpen()) {
+        move(skippedBinCount, overBins, openBins)
+      } else if (!mostOverutilizedBin.isOverutilized()) {
+        move(skippedBinCount, overBins, fullBins)
+      }
     }
   }
-}
-
-function move<T>(index: number, from: T[], to: T[]) {
-  to.push(from.splice(index, 1)[0])
 }

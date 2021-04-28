@@ -1,23 +1,26 @@
-import { Item, Bin, Analysis }  from './common'
+import { Item, Bin }  from './common'
 import * as validation from './util/validation'
-import { greedyFillMax } from './repack/greedy-fill-max'
+import { greedyFillMaxSkipNonFitting } from './repack/greedy-fill-max'
 import { shiftOverutilized } from './repack/shift-overutilized'
 import { swapSpace } from './repack/swap-overutilized'
 
-export function repack(bins: Bin[], newItems: Item[]): Bin[] {
-  validation.checkFeasibility(bins, newItems)
+export function repack(bins: readonly Bin[], newItems: readonly Item[]): [Bin[], Item[]] {
+  // validation.checkFeasibility(bins, newItems)
   const workingBins: Bin[] = bins.map(bin => bin.deepClone())
   const workingNewItems: Item[] = newItems.map(item => item.deepClone())
-  repackCopies(workingBins, workingNewItems)
-  validation.itemAccounting(bins, newItems, workingBins)
+  const nonFittingItems = repackCopies(workingBins, workingNewItems)
+  validation.itemAccounting(bins, newItems, workingBins, nonFittingItems)
   // validation.validateBins(workingBins)
-  return workingBins
+  return [workingBins, nonFittingItems]
 }
 
 /** Modifies bins in-place. */
-function repackCopies(bins: Bin[], newItems: Item[]) {
+function repackCopies(bins: Bin[], newItems: Item[]): Item[] {
+  let nonFittingItems: Item[]
   if (newItems.length > 0) {
-    greedyFillMax(bins, newItems)
+    nonFittingItems = greedyFillMaxSkipNonFitting(bins, newItems)
+  } else {
+    nonFittingItems = []
   }
   if (bins.some(bin => bin.isOverutilized())) {
     shiftOverutilized(bins)
@@ -25,4 +28,9 @@ function repackCopies(bins: Bin[], newItems: Item[]) {
   if (bins.some(bin => bin.isOverutilized())) {
     swapSpace(bins)
   }
+  return nonFittingItems
 }
+
+// function anyNegativeSlots(bins: Bin[]): boolean {
+//   return bins.some(bin => bin.maxItems - bin.itemCount < 0)
+// }

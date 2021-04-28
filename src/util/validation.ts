@@ -14,7 +14,7 @@ class ThrowingErrorHandler implements ErrorHandler {
  * Throws if not all items can fit in the bins.
  * Does not modify its arguments.
  */
- export function checkFeasibility(bins: readonly Bin[], newItems: readonly Item[]) {
+export function checkFeasibility(bins: readonly Bin[], newItems: readonly Item[]) {
   const errorHandler = new ThrowingErrorHandler()
   const binSpace = Analysis.totalCapacity(bins)
   const itemSpace =
@@ -43,7 +43,8 @@ class ThrowingErrorHandler implements ErrorHandler {
 export function itemAccounting(
     beforeBins: readonly Bin[],
     newItems: readonly Item[],
-    afterBins: Bin[]) {
+    afterBins: readonly Bin[],
+    nonFittingItems: readonly Item[]) {
   const errorHandler = new ThrowingErrorHandler()
   if (beforeBins.length !== afterBins.length) {
     errorHandler.handle(`Started with ${beforeBins.length} bins, ended up with ` +
@@ -71,6 +72,7 @@ export function itemAccounting(
       }
     }
   }
+  newItemCount += nonFittingItems.length
   if (beforeItemIds.size !== newItemCount) {
     errorHandler.handle(`There were ${beforeItemIds.size} items before, but ${newItemCount} ` +
         'afterwards')
