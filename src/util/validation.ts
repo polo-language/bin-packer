@@ -19,7 +19,7 @@ export function checkFeasibility(bins: readonly Bin[], newItems: readonly Item[]
   const binSpace = Analysis.totalCapacity(bins)
   const itemSpace =
       newItems.reduce((acc: number, item: Item) => acc + item.size, 0) +
-      bins.reduce((acc: number, bin: Bin) => acc + bin.utilization, 0)
+      bins.reduce((acc: number, bin: Bin) => acc + bin.fill, 0)
   const totalItems =
       newItems.length +
       bins.reduce((acc: number, bin: Bin) => acc + bin.itemCount, 0)
@@ -89,9 +89,9 @@ export function validateBins(bins: Bin[]) {
       errorHandler.handle(`Bin ${bin.id} with max items ${bin.maxItems} contains ` +
           `${bin.itemCount} items. Full bin details: ${bin.toString()}`)
     }
-    if (bin.utilization > bin.capacity) {
+    if (bin.fill > bin.capacity) {
       errorHandler.handle(`Bin ${bin.id} with capacity ${bin.capacity} contains items with ` +
-          `${bin.utilization} total utilization. Full bin details: ${bin.toString()}`)
+          `${bin.fill} total utilization. Full bin details: ${bin.toString()}`)
     }
   }
 }

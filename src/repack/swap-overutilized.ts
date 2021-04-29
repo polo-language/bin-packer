@@ -23,7 +23,7 @@ export function swapSpace(bins: Bin[]) {
   //    Select the most overutilized bin and the bin with most free space.
   //    For each item x in the free space bin, smallest to largest, 
   //       Find the set of items in the over bin that is < x + freeSpace.
-  //       If there is an item in this set >= x + overutilization, swap it.
+  //       If there is an item in this set >= x + overfill, swap it.
   //       Else, take the largest item in the set and store as a pair [x, candidate_x].
   //    Swap the pair that maximizes candidate_x - x.
   const [negSpaceBins, noSpaceBins, posSpaceBins] =  bins.reduce(
@@ -33,8 +33,8 @@ export function swapSpace(bins: Bin[]) {
       },
       [[], [], []]
   )
-  negSpaceBins.sort((a, b) => b.utilization - a.utilization)  // Most overage to least.
-  posSpaceBins.sort((a, b) => a.utilization - b.utilization)  // Most free space to Least.
+  negSpaceBins.sort((a, b) => b.fill - a.fill)  // Most overage to least.
+  posSpaceBins.sort((a, b) => a.fill - b.fill)  // Most free space to Least.
   let fromIndex = 0
   while (negSpaceBins.length > fromIndex) {
     let foundSwap = false
@@ -66,7 +66,7 @@ function findSwapPair(fromBin: Bin, toBin: Bin): SwapPair<Entry<Item>> | null {
     const toItem = toItems[toIndex]
     const fromCandidate = findMaxPartner(fromBin, toItem.size, toItem.size + toBin.freeSpace)
     if (fromCandidate !== null) {
-      if (toItem.size + fromBin.overutilization <= fromCandidate.value.size) {
+      if (toItem.size + fromBin.overfill <= fromCandidate.value.size) {
         return new SwapPair(fromCandidate, new Entry(toIndex, toItem))
       } else {
         candidatePairs.push(new SwapPair(fromCandidate, new Entry(toIndex, toItem)))
@@ -144,7 +144,7 @@ function resortPosSpaceBin(
 }
 
 function isLessUtilized(bin: Bin, _: Bin[], otherBin: Bin): boolean {
-  return bin.utilization <= otherBin.utilization
+  return bin.fill <= otherBin.fill
 }
 
 function spliceBin(bin: Bin, bins: Bin[], targetIndex: number) {
@@ -152,7 +152,7 @@ function spliceBin(bin: Bin, bins: Bin[], targetIndex: number) {
 }
 
 function isMoreUtilizedByIndex(currentIndex: number, bins: Bin[], otherBin: Bin): boolean {
-  return bins[currentIndex].utilization >= otherBin.utilization
+  return bins[currentIndex].fill >= otherBin.fill
 }
 
 function moveBinWithin(currentIndex: number, bins: Bin[], targetIndex: number) {

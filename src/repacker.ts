@@ -1,7 +1,7 @@
 import { Item, Bin }  from './common'
 import * as validation from './util/validation'
 import { greedyFillMaxSkipNonFitting } from './repack/greedy-fill-max'
-import { shiftOverutilized } from './repack/shift-overutilized'
+import { shiftOverfull } from './repack/shift-overutilized'
 import { swapSpace } from './repack/swap-overutilized'
 
 export function repack(bins: readonly Bin[], newItems: readonly Item[]): [Bin[], Item[]] {
@@ -22,10 +22,10 @@ function repackCopies(bins: Bin[], newItems: Item[]): Item[] {
   } else {
     nonFittingItems = []
   }
-  if (bins.some(bin => bin.isOverutilized())) {
-    shiftOverutilized(bins)
+  if (bins.some(bin => bin.isOverfull())) {
+    shiftOverfull(bins)
   }
-  if (bins.some(bin => bin.isOverutilized())) {
+  if (bins.some(bin => bin.isOverfull())) {
     swapSpace(bins)
   }
   return nonFittingItems

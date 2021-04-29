@@ -30,14 +30,14 @@ export class Item {
 export class Bin {
   /** Maintained in order of increasing size. */
   private _items: Item[]
-  private _utilization: number
+  private _fill: number
 
   constructor(
       readonly id: string,
       readonly capacity: number,
       readonly maxItems: number) {
     this._items = []
-    this._utilization = 0
+    this._fill = 0
   }
 
   /** Returns a copy of the item array. */
@@ -51,19 +51,19 @@ export class Bin {
 
   /** May be negative. */
   get freeSpace() {
-    return this.capacity - this.utilization
+    return this.capacity - this.fill
   }
 
   get freeSlots() {
     return Math.max(0, this.maxItems - this.itemCount)
   }
 
-  get utilization() {
-    return this._utilization
+  get fill() {
+    return this._fill
   }
 
-  /** Always non-negative, zero for bins with no overutilization. */
-  get overutilization() {
+  /** Always non-negative, zero for bins within capacity. */
+  get overfill() {
     return Math.max(0, -1 * this.freeSpace)
   }
 
@@ -74,31 +74,45 @@ export class Bin {
         (a, _, b) => a.size <= b.size,
         (a, array, i) => { array.splice(i, 0, a) }
     )
-    this._utilization += item.size
+    this._fill += item.size
     item.newBinId = this.id
   }
 
-  removeFromOverutilization(max: number): Item | null {
+  /**
+   * Removes and returns the smallest item smaller or equal to max that is larger than the bin's
+   * overutilization. If no element is large enough to cover the overutilization, the largest
+   * possible item is removed. Returns null if all items are larger than max.
+   * May only be called on non-empty bins that are filled beyond capacity.
+   */
+  removeFromOverfill(max: number): Item | null {
     if (this.itemCount === 0) {
       throw new Error('Can not remove item from empty bin')
     }
-    if (!this.isOverutilized()) {
-      throw new Error('Bin is not overutilized')
+    if (!this.isOverfull()) {
+      throw new Error('Bin is not over capacity')
     }
     if (max < this._items[0].size) {
       // No item is smaller than max.
       return null
     }
-    const softMin = this.overutilization
+    const softMin = this.overfill
     const maxIndex = this._items.length - 1
-    const index = softMin <= max ?
-        (this._items[maxIndex].size < softMin ?
+    const index = softMin <= max
+        ? (this._items[maxIndex].size < softMin ?
             maxIndex :
-            this._items.findIndex(item => softMin <= item.size)) :
-        (this._items[maxIndex].size < max ?
-            maxIndex :
-            this._items.findIndex(item => max <= item.size) - 1) // Safe since item zero is smaller
+            Math.min(
+                this._items.findIndex(item => softMin <= item.size),
+                this.smallestIndexOfItemWithSizeLessOrEqual(max)))
+        : this.smallestIndexOfItemWithSizeLessOrEqual(max)
     return this.remove(index)
+  }
+
+  /** May only be called when at least one element is less than max. */
+  private smallestIndexOfItemWithSizeLessOrEqual(max: number): number {
+    const maxIndex = this._items.length - 1
+    return this._items[maxIndex].size <= max ?
+        maxIndex :
+        this._items.findIndex(item => max < item.size) - 1 // Safe since item zero is smaller.
   }
 
   remove(index: number): Item {
@@ -107,7 +121,7 @@ export class Bin {
           `${this._items.length}`)
     }
     const removed = this._items.splice(index, 1)[0]
-    this._utilization -= removed.size
+    this._fill -= removed.size
     removed.newBinId = undefined
     return removed
   }
@@ -116,8 +130,12 @@ export class Bin {
     return this.freeSlots > 0 && this.freeSpace > 0
   }
 
-  isOverutilized(): boolean {
-    return this.maxItems < this.itemCount || this.capacity < this.utilization
+  isOverfull(): boolean {
+    return this.capacity < this.fill
+  }
+
+  private isOverutilized(): boolean {
+    return this.maxItems < this.itemCount || this.isOverfull()
   }
 
   deepClone(): Bin {
@@ -129,7 +147,7 @@ export class Bin {
   toString(): string {
     const status = this.isOverutilized() ? 'overutilized' : (this.isOpen() ? 'open' : 'full')
     return `ID: ${this.id}, capacity: ${this.capacity}, maxItems: ${this.maxItems}, `+
-        `utilization: ${this.utilization}, itemCount: ${this.itemCount}, status: ${status}, `+
+        `utilization: ${this.fill}, itemCount: ${this.itemCount}, status: ${status}, `+
         `items: [${this._items.map(item => item.id).join(', ')}]`
   }
 }
