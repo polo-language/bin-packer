@@ -49,13 +49,14 @@ export class Bin {
     return this._items.length
   }
 
-  /** May be negative. */
+  /** Amount of free space remaining. May be negative. */
   get freeSpace() {
     return this.capacity - this.fill
   }
 
+  /** Number of free slots remaining. May be negative. */
   get freeSlots() {
-    return Math.max(0, this.maxItems - this.itemCount)
+    return this.maxItems - this.itemCount
   }
 
   get fill() {
