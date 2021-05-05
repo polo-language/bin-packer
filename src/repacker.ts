@@ -1,8 +1,8 @@
 import { Item, Bin }  from './common'
 import * as validation from './util/validation'
-import { greedyFillMaxSkipNonFitting } from './repack/greedy-fill-max'
-import { shiftOverfull } from './repack/shift-overutilized'
-import { swapSpace } from './repack/swap-overutilized'
+import { greedyFillMaxSkipNonFitting } from './repack/fill'
+import { shiftOverfull } from './repack/shift'
+import { swapSpace } from './repack/swap'
 
 export function repack(bins: readonly Bin[], newItems: readonly Item[]): [Bin[], Item[]] {
   // validation.checkFeasibility(bins, newItems)
