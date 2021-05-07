@@ -17,7 +17,7 @@ class Entry<T> {
  * Swaps items from bins with space overutilization to bins with space underutilization.
  * Disregards slot over-/underutilization.
  */
-export function swapSpace(bins: Bin[]) {
+export function swapSpace(bins: readonly Bin[]) {
   // Algorithm:
   // While there are still oversized bins:
   //    Select the most overutilized bin and the bin with most free space.
@@ -33,8 +33,8 @@ export function swapSpace(bins: Bin[]) {
       },
       [[], [], []]
   )
-  negSpaceBins.sort((a, b) => b.fill - a.fill)  // Most overage to least.
-  posSpaceBins.sort((a, b) => a.fill - b.fill)  // Most free space to Least.
+  negSpaceBins.sort((a, b) => a.freeSpace - b.freeSpace)  // Most overage to least.
+  posSpaceBins.sort((a, b) => b.freeSpace - a.freeSpace)  // Most free space to Least.
   let fromIndex = 0
   while (negSpaceBins.length > fromIndex) {
     let foundSwap = false
@@ -118,10 +118,10 @@ function resortNegSpaceBin(
     if (bin.freeSpace === 0) {
       noSpaceBins.push(bin) // Order doesn't matter.
     } else {
-      binaryApply(posSpaceBins, bin, isLessUtilized, spliceBin)
+      binaryApply(posSpaceBins, bin, isLessFilled, spliceBin)
     }
   } else {
-    binaryApply(negSpaceBins, 0, isMoreUtilizedByIndex, moveBinWithin)
+    binaryApply(negSpaceBins, 0, isMoreFilledByIndex, moveBinWithin)
   }
 }
 
@@ -139,11 +139,11 @@ function resortPosSpaceBin(
     }
     noSpaceBins.push(bin)
   } else {
-    binaryApply(posSpaceBins, entry.index, isMoreUtilizedByIndex, moveBinWithin)
+    binaryApply(posSpaceBins, entry.index, isMoreFilledByIndex, moveBinWithin)
   }
 }
 
-function isLessUtilized(bin: Bin, _: Bin[], otherBin: Bin): boolean {
+function isLessFilled(bin: Bin, _: Bin[], otherBin: Bin): boolean {
   return bin.fill <= otherBin.fill
 }
 
@@ -151,17 +151,20 @@ function spliceBin(bin: Bin, bins: Bin[], targetIndex: number) {
   bins.splice(targetIndex, 0, bin)
 }
 
-function isMoreUtilizedByIndex(currentIndex: number, bins: Bin[], otherBin: Bin): boolean {
+function isMoreFilledByIndex(currentIndex: number, bins: Bin[], otherBin: Bin): boolean {
   return bins[currentIndex].fill >= otherBin.fill
 }
 
+/**
+ * Moves the bin at currentIndex. targetIndex is the index of the smallest bin greater in sort order
+ * than the moving bin. When targetIndex <= currentIndex, the moving item ends up at targetIndex,
+ * otherwise it is moved to one position before targetIndex (since intervening bins are shifted back
+ * by one to fill in the space of the moving bin).
+ */
 function moveBinWithin(currentIndex: number, bins: Bin[], targetIndex: number) {
   if (targetIndex === currentIndex || targetIndex + 1 === currentIndex) {
     return
   }
-  // Note that in both cases, target index means the index of the frist item greater than the moving
-  // item. In the first case, the moving item ends up at the target index, in the second case it is
-  // placed one position before the target index.
   const binToMove = bins[currentIndex]
   if (targetIndex < currentIndex) {
     bins.copyWithin(targetIndex + 1, targetIndex, currentIndex)

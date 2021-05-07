@@ -1,7 +1,7 @@
 import { Bin }  from '../common'
-import { move } from '../util/utils'
+import { pushFrom } from '../util/utils'
 
-export function shiftOverfull(bins: Bin[]) {
+export function shiftOverfull(bins: readonly Bin[]) {
   // Full here means neither overfull nor fully open. Hence, either exactly space utilized and/or
   // no open slots.
   const [overBins, openBins, fullBins] =  bins.reduce(
@@ -39,12 +39,12 @@ export function shiftOverfull(bins: Bin[]) {
       const insertionBin = openBins[insertionBinIndex]
       insertionBin.add(itemToMove)
       if (!insertionBin.isOpen()) {
-        move(insertionBinIndex, openBins, fullBins)
+        pushFrom(insertionBinIndex, openBins, fullBins)
       }
       if (mostOverutilizedBin.isOpen()) {
-        move(skippedBinCount, overBins, openBins)
+        pushFrom(skippedBinCount, overBins, openBins)
       } else if (!mostOverutilizedBin.isOverfull()) {
-        move(skippedBinCount, overBins, fullBins)
+        pushFrom(skippedBinCount, overBins, fullBins)
       }
     }
   }

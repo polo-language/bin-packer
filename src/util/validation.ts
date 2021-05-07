@@ -18,7 +18,7 @@ export function checkFeasibility(bins: readonly Bin[], newItems: readonly Item[]
   const errorHandler = new ThrowingErrorHandler()
   const binSpace = Analysis.totalCapacity(bins)
   const itemSpace =
-      newItems.reduce((acc: number, item: Item) => acc + item.size, 0) +
+      Item.totalSize(newItems) +
       bins.reduce((acc: number, bin: Bin) => acc + bin.fill, 0)
   const totalItems =
       newItems.length +

@@ -25,6 +25,10 @@ export class Item {
     return `ID: ${this.id}, size: ${this.size}, fromBin: ${this.originalBinId}, `+
         `toBin: ${this.newBinId}`
   }
+
+  static totalSize(items: readonly Item[]): number {
+    return items.reduce((acc, item) => acc + item.size, 0)
+  }
 }
 
 export class Bin {
@@ -148,7 +152,10 @@ export class Bin {
   toString(): string {
     const status = this.isOverutilized() ? 'overutilized' : (this.isOpen() ? 'open' : 'full')
     return `ID: ${this.id}, capacity: ${this.capacity}, maxItems: ${this.maxItems}, `+
-        `utilization: ${this.fill}, itemCount: ${this.itemCount}, status: ${status}, `+
+        `fill: ${this.fill}, itemCount: ${this.itemCount}, status: ${status}, `+
+        `freeSlots: ${this.freeSlots}, freeSpace: ${this.freeSpace}, `+
+        `largestItemSize: ${this.itemCount === 0 ? 'n/a' : this._items[this.itemCount - 1].size}, `+
+        `smallestItemSize: ${this.itemCount === 0 ? 'n/a' : this._items[0].size}, `+
         `items: [${this._items.map(item => item.id).join(', ')}]`
   }
 }

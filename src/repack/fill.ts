@@ -1,5 +1,5 @@
 import { Item, Bin }  from '../common'
-import { binaryApply, groupByBoolean, move } from '../util/utils'
+import { binaryApply, groupByBoolean, pushFrom } from '../util/utils'
 
 /**
  * Adds newItems to bins. Returns any items that could not be placed.
@@ -29,7 +29,7 @@ export function greedyFillMaxSkipNonFitting(bins: readonly Bin[], newItems: Item
         // Move updated bin to preserve sort
         binaryApply(openBins, binIndex, hasLessFreeSpace, binResort)
       } else {
-        move(binIndex, openBins, fullBins)
+        pushFrom(binIndex, openBins, fullBins)
       }
     }
   }
@@ -53,7 +53,7 @@ export function greedyFillMaxFailNonFitting(bins: readonly Bin[], newItems: Item
       // Move updated bin to preserve sort
       binaryApply(openBins, binIndex, hasLessFreeSpace, binResort)
     } else {
-      move(binIndex, openBins, fullBins)
+      pushFrom(binIndex, openBins, fullBins)
     }
   }
 }
