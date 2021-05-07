@@ -118,10 +118,10 @@ function resortNegSpaceBin(
     if (bin.freeSpace === 0) {
       noSpaceBins.push(bin) // Order doesn't matter.
     } else {
-      binaryApply(posSpaceBins, bin, isLessFilled, spliceBin)
+      binaryApply(posSpaceBins, bin, hasMoreFreeSpace, spliceBin)
     }
   } else {
-    binaryApply(negSpaceBins, 0, isMoreFilledByIndex, moveBinWithin)
+    binaryApply(negSpaceBins, entry.index, hasLessFreeSpaceByIndex, moveBinWithin)
   }
 }
 
@@ -139,20 +139,24 @@ function resortPosSpaceBin(
     }
     noSpaceBins.push(bin)
   } else {
-    binaryApply(posSpaceBins, entry.index, isMoreFilledByIndex, moveBinWithin)
+    binaryApply(posSpaceBins, entry.index, hasMoreFreeSpaceByIndex, moveBinWithin)
   }
 }
 
-function isLessFilled(bin: Bin, _: Bin[], otherBin: Bin): boolean {
-  return bin.fill <= otherBin.fill
+function hasMoreFreeSpace(bin: Bin, _: Bin[], otherBin: Bin): boolean {
+  return otherBin.freeSpace <= bin.freeSpace
 }
 
 function spliceBin(bin: Bin, bins: Bin[], targetIndex: number) {
   bins.splice(targetIndex, 0, bin)
 }
 
-function isMoreFilledByIndex(currentIndex: number, bins: Bin[], otherBin: Bin): boolean {
-  return bins[currentIndex].fill >= otherBin.fill
+function hasLessFreeSpaceByIndex(currentIndex: number, bins: Bin[], otherBin: Bin): boolean {
+  return bins[currentIndex].freeSpace <= otherBin.freeSpace
+}
+
+function hasMoreFreeSpaceByIndex(currentIndex: number, bins: Bin[], otherBin: Bin): boolean {
+  return otherBin.freeSpace <= bins[currentIndex].freeSpace
 }
 
 /**
