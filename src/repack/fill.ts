@@ -7,7 +7,7 @@ import { binaryApply, groupByBoolean, pushFrom } from '../util/utils'
  *                    contents will be changed.
  * @param newItems    Items to be added to bins.
  */
-export function greedyFillMaxSkipNonFitting(bins: readonly Bin[], newItems: Item[]): Item[] {
+export function fill(bins: readonly Bin[], newItems: Item[]): Item[] {
   const [fullBins, openBins] = groupByBoolean(bins, bin => bin.isOpen())
   const nonFittingItems: Item[] = []
   const insertToExisting = (item: Item, array: Bin[], i: number) => {
@@ -34,28 +34,6 @@ export function greedyFillMaxSkipNonFitting(bins: readonly Bin[], newItems: Item
     }
   }
   return nonFittingItems
-}
-
-/**
- * Adds newItems to bins. Errors out if any item can not be placed.
- * @param bins        Modifies the bins in place. No bins are added or removed, but the order and
- *                    contents will be changed.
- * @param newItems    Items to be added to bins.
- */
-export function greedyFillMaxFailNonFitting(bins: readonly Bin[], newItems: Item[]) {
-  const [fullBins, openBins] = groupByBoolean(bins, bin => bin.isOpen())
-  newItems.sort((a, b) => b.size - a.size)
-  sortAscendingFreeSpace(openBins)
-  for (const item of newItems) {
-    // Insert into bin with smallest free space that can accept item.
-    const binIndex = binaryApply(openBins, item, itemFits, insertItem)
-    if (openBins[binIndex].isOpen()) {
-      // Move updated bin to preserve sort
-      binaryApply(openBins, binIndex, hasLessFreeSpace, binResort)
-    } else {
-      pushFrom(binIndex, openBins, fullBins)
-    }
-  }
 }
 
 // Only comparing freeSpace since bins with no slots aren't members of the array from which

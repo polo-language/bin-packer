@@ -1,5 +1,6 @@
 import { Item, Bin } from '../common'
 import { binaryApply } from '../util/utils'
+import * as SortUtils from './sort-utils'
 
 class SwapPair<T> {
   constructor(readonly from: T, readonly to: T) { }
@@ -118,10 +119,11 @@ function resortNegSpaceBin(
     if (bin.freeSpace === 0) {
       noSpaceBins.push(bin) // Order doesn't matter.
     } else {
-      binaryApply(posSpaceBins, bin, hasMoreFreeSpace, spliceBin)
+      binaryApply(posSpaceBins, bin, SortUtils.hasMoreFreeSpace, SortUtils.spliceOne)
     }
   } else {
-    binaryApply(negSpaceBins, entry.index, hasLessFreeSpaceByIndex, moveBinWithin)
+    binaryApply(
+        negSpaceBins, entry.index, SortUtils.hasLessFreeSpaceByIndex, SortUtils.moveWithin)
   }
 }
 
@@ -139,42 +141,7 @@ function resortPosSpaceBin(
     }
     noSpaceBins.push(bin)
   } else {
-    binaryApply(posSpaceBins, entry.index, hasMoreFreeSpaceByIndex, moveBinWithin)
-  }
-}
-
-function hasMoreFreeSpace(bin: Bin, _: Bin[], otherBin: Bin): boolean {
-  return otherBin.freeSpace <= bin.freeSpace
-}
-
-function spliceBin(bin: Bin, bins: Bin[], targetIndex: number) {
-  bins.splice(targetIndex, 0, bin)
-}
-
-function hasLessFreeSpaceByIndex(currentIndex: number, bins: Bin[], otherBin: Bin): boolean {
-  return bins[currentIndex].freeSpace <= otherBin.freeSpace
-}
-
-function hasMoreFreeSpaceByIndex(currentIndex: number, bins: Bin[], otherBin: Bin): boolean {
-  return otherBin.freeSpace <= bins[currentIndex].freeSpace
-}
-
-/**
- * Moves the bin at currentIndex. targetIndex is the index of the smallest bin greater in sort order
- * than the moving bin. When targetIndex <= currentIndex, the moving item ends up at targetIndex,
- * otherwise it is moved to one position before targetIndex (since intervening bins are shifted back
- * by one to fill in the space of the moving bin).
- */
-function moveBinWithin(currentIndex: number, bins: Bin[], targetIndex: number) {
-  if (targetIndex === currentIndex || targetIndex + 1 === currentIndex) {
-    return
-  }
-  const binToMove = bins[currentIndex]
-  if (targetIndex < currentIndex) {
-    bins.copyWithin(targetIndex + 1, targetIndex, currentIndex)
-    bins[targetIndex] = binToMove
-  } else {
-    bins.copyWithin(currentIndex, currentIndex + 1, targetIndex)
-    bins[targetIndex - 1] = binToMove
+    binaryApply(
+        posSpaceBins, entry.index, SortUtils.hasMoreFreeSpaceByIndex, SortUtils.moveWithin)
   }
 }

@@ -31,4 +31,4 @@ export { lowerBound1, lowerBound2 } from './pack/bounds'
     
 export { Item, Bin, Analysis }  from './common'
 export { repack } from './repacker'
-export { greedyFillMaxSkipNonFitting } from './repack/fill'
+export { fill } from './repack/fill'

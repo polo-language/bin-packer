@@ -1,6 +1,11 @@
-import { Bin }  from '../common'
-import { pushFrom } from '../util/utils'
+import { Item, Bin }  from '../common'
+import { binaryApply, pushFrom } from '../util/utils'
+import * as SortUtils from './sort-utils'
 
+/**
+ * Moves items from bins that are over capacity to bins that are both under capacity and have free
+ * slots.
+ */
 export function shiftOverfull(bins: readonly Bin[]) {
   // Full here means neither overfull nor fully open. Hence, either exactly space utilized and/or
   // no open slots.
@@ -48,4 +53,147 @@ export function shiftOverfull(bins: readonly Bin[]) {
       }
     }
   }
+}
+
+/**
+ * "Moves" as many slots as possible from bins with open slots to bins with space that have no open
+ * slots.
+ */
+export function shiftSlots(bins: readonly Bin[]) {
+  const [slotsBins, spaceBins, otherBins] =  bins.reduce(
+    (acc: [Bin[], Bin[], Bin[]], bin: Bin) => {
+      if (bin.freeSlots > 0) {
+        acc[0].push(bin)
+      } else if (bin.freeSpace > 0) {
+        acc[1].push(bin)
+      } else {
+        acc[2].push(bin)
+      }
+      return acc
+    },
+    [[], [], []]
+  )
+  if (slotsBins.length > 0 && spaceBins.length > 0) {
+    shiftToOpenSlots(spaceBins, slotsBins, otherBins)
+  }
+}
+
+/**
+ * Attempts to move as many items as possible from bins in spaceBins into free slots in bins in
+ * slotsBins. Counterintuitively this moves items out of the bins that currently have space, but the
+ * result is that the bins with space "receive" open slots, preparing them to be filled (presumably
+ * more space-efficiently than prior to the shift) by some other algorithm.
+ *
+ * All bins in slotsBins should have positive free slots. When this no longer holds, it is moved to
+ * otherBins. To prevent accumulating all free slots in the bin with most free space (since space
+ * bins can only increase in free space by losing items), each spaceBin is served round-robin from
+ * the slotsBins.
+ */
+function shiftToOpenSlots(spaceBins: Bin[], slotsBins: Bin[], otherBins: Bin[]) {
+  if (spaceBins.length < 1) {
+    throw new Error('Algorithm error: Can not shift items from no bins')
+  }
+  // Most free slots to least.
+  slotsBins.sort((a, b) => b.freeSlots - a.freeSlots)
+  // Most free space to least.
+  spaceBins.sort((a, b) => b.freeSpace - a.freeSpace)
+  let skippedBinCount = 0
+  while (skippedBinCount < slotsBins.length) {
+    if (!shiftFromOne(skippedBinCount, spaceBins, slotsBins, otherBins)) {
+      ++ skippedBinCount
+    }
+  }
+}
+
+/**
+ * Moves items into slotsBin from one bin in spaceBins, if possible.
+ * Returns true if items where moved, false otherwise.
+ */
+function shiftFromOne(slotsIndex: number, spaceBins: Bin[], slotsBins: Bin[], otherBins: Bin[])
+    : boolean {
+  const slotsBin = slotsBins[slotsIndex]
+  for (let spaceIndex = 0; spaceIndex < spaceBins.length; ++spaceIndex) {
+    const spaceBin = spaceBins[spaceIndex]
+    const allSourceItems = spaceBin.items
+    const n = findMaxCount(allSourceItems, slotsBin.freeSpace, slotsBin.freeSlots)
+    if (0 < n) {
+      // Find items to shift and shift them.
+      const decreasingIndexesToMove =
+          findApproxLargestIndexes(allSourceItems, slotsBin.freeSpace, n)
+          .reverse()
+      const slotsBinCopy = slotsBin.deepClone()
+      const movingItems: Item[] = decreasingIndexesToMove.reduce((acc: Item[], index: number) => {acc.push(spaceBin.items[index]); return acc}, [])
+      for (let index of decreasingIndexesToMove) {
+        slotsBin.add(spaceBin.remove(index))
+      }
+      // Re-sort modified slotsBin.
+      if (slotsBin.freeSlots < 1) {
+        const removed = slotsBins.splice(slotsIndex, 1)
+        if (removed.length != 1 || removed[0] !== slotsBin) {
+          throw new Error(`Algorithm error: Removed wrong slotsBin when moving to otherBins`)
+        }
+        otherBins.push(slotsBin)
+      } else {
+        binaryApply(slotsBins, slotsBin, SortUtils.hasMoreFreeSlots, SortUtils.spliceOne)
+      }
+      // Move the "slot receiving" bin to the end of the array so it will be the last checked in
+      // the next round.
+      pushFrom(spaceIndex, spaceBins, spaceBins)
+      return true
+    }
+  }
+  return false
+}
+
+/**
+ * Finds the largest number of items less than maxCount that have total size less than or equal to
+ * maxSize.
+ * Assumes items are ordered increasing by size, which is true of Bin items.
+ */
+function findMaxCount(items: Item[], maxSize: number, maxCount: number): number {
+  const selected = items.slice(0, Math.min(items.length, maxCount))
+  for (
+      let selectedSize = Item.totalSize(selected);
+      0 < selected.length && maxSize < selectedSize;
+      selectedSize -= selected.pop()!.size
+  ) { }
+  return selected.length
+}
+
+/**
+ * Finds the set of count items of approximately largest total size less than or equal to maxSize.
+ * Throws if no such set exists. Establish the correct count beforehand with findMaxCount.
+ * Assumes items are ordered increasing by size, which is true of Bin items.
+ */
+function findApproxLargestIndexes(items: Item[], maxSize: number, count: number): number[] {
+  if (count < 1) {
+    throw new Error(`Algorithm error: Can not generate set of size ${count} < 1`)
+  }
+  const selectedIndexes = Array.from(Array(count).keys())
+  selectedIndexes.push(Infinity) // "Index" of the "next item" after the largest selected item.
+  let selectedSize = Item.totalSize(items.slice(0, count))
+  if (maxSize < selectedSize) {
+    throw new Error(`Algorithm error: No ${count} items have total size smaller than ${maxSize}`)
+  }
+  // Start at the true largest item index, not at the dummy index at infinity.
+  for (let indexIndex = count - 1; 0 <= indexIndex; --indexIndex) {
+    const nextIndex = selectedIndexes[indexIndex + 1]
+     // Keep incrementing the item index at this selected index until it bumps up against its
+     // neighbor or causes the total sum to be too large.
+    for (let index = selectedIndexes[indexIndex];
+        index + 1 < nextIndex && index + 1 < items.length;
+        ++index) {
+      const swapSizeDifference = items[index + 1].size - items[index].size
+      if (selectedSize + swapSizeDifference <= maxSize) {
+        // Swap item at index for item at index + 1.
+        ++selectedIndexes[indexIndex]
+        selectedSize += swapSizeDifference
+      } else {
+        // Break from inner for loop at this indexIndex. Work on the next smaller indexIndex.
+        break
+      }
+    }
+  }
+  selectedIndexes.pop() // Remove the dummy index at infinity.
+  return selectedIndexes
 }
