@@ -31,3 +31,9 @@ export { lowerBound1, lowerBound2 } from './pack/bounds'
     
 export { Item, Bin, Analysis }  from './common'
 export { repack } from './repacker'
+export {
+    packFeasibility,
+    validateBins,
+    ErrorHandler,
+    ThrowingErrorHandler
+} from './util/validation'

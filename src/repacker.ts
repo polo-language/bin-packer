@@ -1,5 +1,5 @@
 import { Item, Bin }  from './common'
-import * as validation from './util/validation'
+import { itemAccounting, ThrowingErrorHandler } from './util/validation'
 import { fill } from './repack/fill'
 import { shiftOverfull, shiftSlots, unshiftMoves } from './repack/shift'
 import { swapSpace, unswapMoves } from './repack/swap'
@@ -9,7 +9,7 @@ export function repack(bins: readonly Bin[], newItems: readonly Item[]): [Bin[],
   const workingBins: Bin[] = bins.map(bin => bin.deepClone())
   const workingNewItems: Item[] = newItems.map(item => item.deepClone())
   const nonFittingItems = repackCopies(workingBins, workingNewItems)
-  validation.itemAccounting(bins, newItems, workingBins, nonFittingItems)
+  itemAccounting(bins, newItems, workingBins, nonFittingItems, new ThrowingErrorHandler())
   // validation.validateBins(workingBins)
   return [workingBins, nonFittingItems]
 }

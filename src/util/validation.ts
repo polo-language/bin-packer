@@ -1,10 +1,10 @@
 import { Item, Bin, Analysis }  from '../common'
 
-interface ErrorHandler {
+export interface ErrorHandler {
   handle: (message: string) => void
 }
 
-class ThrowingErrorHandler implements ErrorHandler {
+export class ThrowingErrorHandler implements ErrorHandler {
   handle(message: string) {
     throw new Error(message)
   }
@@ -14,8 +14,8 @@ class ThrowingErrorHandler implements ErrorHandler {
  * Throws if not all items can fit in the bins.
  * Does not modify its arguments.
  */
-export function checkFeasibility(bins: readonly Bin[], newItems: readonly Item[]) {
-  const errorHandler = new ThrowingErrorHandler()
+export function packFeasibility(
+    bins: readonly Bin[], newItems: readonly Item[], errorHandler: ErrorHandler) {
   const binSpace = Analysis.totalCapacity(bins)
   const itemSpace =
       Item.totalSize(newItems) +
@@ -36,16 +36,22 @@ export function checkFeasibility(bins: readonly Bin[], newItems: readonly Item[]
 }
 
 /**
- * Checks whether any items are missing/added between the two inputs.
+ * Checks whether any items are missing/added.
  * Checks whether any item still has an undefined newBinId.
  * Checks whether any bins have been added or removed.
+ *
+ * @param beforeBins          Bins prior to packing
+ * @param newItems            Items not in one of the beforeBins
+ * @param afterBins           Bins after packing
+ * @param nonFittingItems     Known items not added to a bin
+ * @param errorHandler        ErrorHandler
  */
 export function itemAccounting(
     beforeBins: readonly Bin[],
     newItems: readonly Item[],
     afterBins: readonly Bin[],
-    nonFittingItems: readonly Item[]) {
-  const errorHandler = new ThrowingErrorHandler()
+    nonFittingItems: readonly Item[],
+    errorHandler: ErrorHandler) {
   if (beforeBins.length !== afterBins.length) {
     errorHandler.handle(`Started with ${beforeBins.length} bins, ended up with ` +
         `${afterBins.length} bins`)
@@ -82,16 +88,15 @@ export function itemAccounting(
 /**
  * Checks whether any bin invariants are violated.
  */
-export function validateBins(bins: Bin[]) {
-  const errorHandler = new ThrowingErrorHandler()
+export function validateBins(bins: readonly Bin[], errorHandler: ErrorHandler) {
   for (const bin of bins) {
     if (bin.itemCount > bin.maxItems) {
       errorHandler.handle(`Bin ${bin.id} with max items ${bin.maxItems} contains ` +
           `${bin.itemCount} items. Full bin details: ${bin.toString()}`)
     }
     if (bin.fill > bin.capacity) {
-      errorHandler.handle(`Bin ${bin.id} with capacity ${bin.capacity} contains items with ` +
-          `${bin.fill} total utilization. Full bin details: ${bin.toString()}`)
+      errorHandler.handle(`Bin ${bin.id} with capacity ${bin.capacity} is filled to ${bin.fill}. ` +
+          `Full bin details: ${bin.toString()}`)
     }
   }
 }
