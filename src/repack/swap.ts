@@ -145,3 +145,48 @@ function resortPosSpaceBin(
         posSpaceBins, entry.index, SortUtils.hasMoreFreeSpaceByIndex, SortUtils.moveWithin)
   }
 }
+
+export function unswapMoves(bins: Bin[]) {
+  const binMap = new Map<string, Bin>(bins.map(bin => [bin.id, bin]))
+  for (let bin of Array.from(binMap.values())) {
+    // Keep trying with the same bin so long as a swap is made. Can just loop through the items
+    // since swapping reorders them.
+    while (findOneForSwap(bin, binMap)) { }
+  }
+}
+
+
+/** Tries to find an item to fin a swap for. Returns true f a swap is executed. */
+function findOneForSwap(bin: Bin, binMap: Map<string, Bin>): boolean {
+  const items = bin.items
+  for (let i = 0; i < items.length; ++i) {
+    const item = items[i]
+    if (item.originalBinId !== undefined && item.hasMoved()) {
+      // Since item has moved, we can be sure bin and originalBin aren't the same.
+      // Hence an item of originalBin with an original id equal to bin's id has moved.
+      const originalBin = binMap.get(item.originalBinId)
+      if (originalBin !== undefined) {
+        if (findSwapPartner(bin, originalBin, new Entry<Item>(i, item))) {
+          return true
+        }
+      }
+    }
+  }
+  return false
+}
+
+/** Tries to find and execute a swap for item. */
+function findSwapPartner(bin: Bin, originalBin: Bin, entry: Entry<Item>): boolean {
+  const oBinItems = originalBin.items
+  for (let i = 0; i < oBinItems.length; ++i) {
+    const oBinItem = oBinItems[i]
+    if (oBinItem.originalBinId === bin.id) {
+      if (oBinItem.size <= bin.freeSpace + entry.value.size &&
+        entry.value.size <= originalBin.freeSpace + oBinItem.size) {
+        swap(new SwapPair(bin, originalBin), new SwapPair(entry.index, i))
+        return true
+      }
+    }
+  }
+  return false
+}

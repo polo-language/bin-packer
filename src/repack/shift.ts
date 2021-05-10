@@ -197,3 +197,33 @@ function findApproxLargestIndexes(items: Item[], maxSize: number, count: number)
   selectedIndexes.pop() // Remove the dummy index at infinity.
   return selectedIndexes
 }
+
+export function unshiftMoves(bins: readonly Bin[]) {
+  const binMap = new Map<string, Bin>(bins.map(bin => [bin.id, bin]))
+  while (unshiftMovesOnce(binMap)) { }
+}
+
+function unshiftMovesOnce(binMap: Map<string, Bin>): boolean {
+  let anyMoved = false
+  for (let bin of Array.from(binMap.values())) {
+    const items = bin.items
+    // Proceed last to first so we can remove items without changing the index of subsequent items.
+    for (let i = items.length - 1; 0 <= i; --i) {
+      const item = items[i]
+      if (item.originalBinId !== undefined && item.hasMoved()) {
+        const originalBin = binMap.get(item.originalBinId)
+        if (originalBin !== undefined &&
+            0 < originalBin.freeSlots &&
+            item.size <= originalBin.freeSpace) {
+          const removedItem = bin.remove(i)
+          if (item !== removedItem) {
+            throw new Error('Algorithm error: Removed item not at the indicated index')
+          }
+          originalBin.add(item)
+          anyMoved = true
+        }
+      }
+    }
+  }
+  return anyMoved
+}

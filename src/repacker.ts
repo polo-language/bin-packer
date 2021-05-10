@@ -1,8 +1,8 @@
 import { Item, Bin }  from './common'
 import * as validation from './util/validation'
 import { fill } from './repack/fill'
-import { shiftOverfull, shiftSlots } from './repack/shift'
-import { swapSpace } from './repack/swap'
+import { shiftOverfull, shiftSlots, unshiftMoves } from './repack/shift'
+import { swapSpace, unswapMoves } from './repack/swap'
 
 export function repack(bins: readonly Bin[], newItems: readonly Item[]): [Bin[], Item[]] {
   // validation.checkFeasibility(bins, newItems)
@@ -32,5 +32,7 @@ function repackCopies(bins: Bin[], newItems: Item[]): Item[] {
     shiftSlots(bins)
     nonFittingItems = fill(bins, nonFittingItems)
   }
+  unshiftMoves(bins)
+  unswapMoves(bins)
   return nonFittingItems
 }
