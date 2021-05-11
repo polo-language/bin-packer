@@ -149,14 +149,24 @@ export class Bin {
     return cloned
   }
 
+  toJSON(key: string): any {
+    return {
+      'ID': this.id,
+      'capacity': this.capacity,
+      'maxItems': this.maxItems,
+      'fill': this.fill,
+      'itemCount': this.itemCount,
+      'status': this.isOverutilized() ? 'overutilized' : (this.isOpen() ? 'open' : 'full'),
+      'freeSlots': this.freeSlots,
+      'freeSpace': this.freeSpace,
+      'smallestItemSize': this.itemCount === 0 ? 'n/a' : this._items[0].size,
+      'largestItemSize': this.itemCount === 0 ? 'n/a' : this._items[this.itemCount - 1].size,
+      'items': this._items.map(item => item.id)
+    }
+  }
+
   toString(): string {
-    const status = this.isOverutilized() ? 'overutilized' : (this.isOpen() ? 'open' : 'full')
-    return `ID: ${this.id}, capacity: ${this.capacity}, maxItems: ${this.maxItems}, `+
-        `fill: ${this.fill}, itemCount: ${this.itemCount}, status: ${status}, `+
-        `freeSlots: ${this.freeSlots}, freeSpace: ${this.freeSpace}, `+
-        `largestItemSize: ${this.itemCount === 0 ? 'n/a' : this._items[this.itemCount - 1].size}, `+
-        `smallestItemSize: ${this.itemCount === 0 ? 'n/a' : this._items[0].size}, `+
-        `items: [${this._items.map(item => item.id).join(', ')}]`
+    return JSON.stringify(this.toJSON(''))
   }
 }
 
@@ -170,6 +180,7 @@ export class Analysis {
   readonly binsWithSlots: { '-': number, '0': number, '+': number }
   readonly itemCount: number
   readonly moveCount: number
+  readonly insertCount: number
   readonly moveRatio: number
   readonly movedItems: Item[]
 
@@ -179,9 +190,12 @@ export class Analysis {
     this.totalSlots = Analysis.totalSlots(bins)
     this.freeSlots = Analysis.calculate(bins, bin => bin.freeSlots)
     this.freeSpace = Analysis.calculate(bins, bin => bin.freeSpace)
-    let freeSpaceBins: [number, number, number] = [0, 0, 0]
-    let freeSlotsBins: [number, number, number] = [0, 0, 0]
+    const binIds = new Set(bins.map(bin => bin.id))
+    const freeSpaceBins: [number, number, number] = [0, 0, 0]
+    const freeSlotsBins: [number, number, number] = [0, 0, 0]
     let itemCount = 0
+    let moveCount = 0
+    let insertCount = 0
     const movedItems: Item[] = []
     for (const bin of bins) {
       ++freeSpaceBins[1 + Math.sign(bin.freeSpace)]
@@ -189,18 +203,20 @@ export class Analysis {
       for (const item of bin.items) {
         ++itemCount
         if (item.hasMoved()) {
-          // if (item.newBinId === undefined) {
-          //   errorHandler.handle(`Item with ID ${item.id} not assigned to a new bin`)
-          // } else {
-            movedItems.push(item)
-          // }
+          if (item.originalBinId === undefined || !binIds.has(item.originalBinId)) {
+            ++insertCount
+          } else {
+            ++moveCount
+          }
+          movedItems.push(item)
         }
       }
     }
     this.movedItems = movedItems
     this.itemCount = itemCount
-    this.moveCount = this.movedItems.length
-    this.moveRatio = this.moveCount / itemCount
+    this.moveCount = moveCount
+    this.insertCount = insertCount
+    this.moveRatio = this.moveCount / (itemCount - insertCount)
     this.binsWithSpace = { '-': freeSpaceBins[0], '0': freeSpaceBins[1], '+': freeSpaceBins[2] }
     this.binsWithSlots = { '-': freeSlotsBins[0], '0': freeSlotsBins[1], '+': freeSlotsBins[2] }
   }
