@@ -96,8 +96,8 @@ function findMaxPartner(bin: Bin, minSize: number, maxSize: number): Entry<Item>
 }
 
 function swap(binPair: SwapPair<Bin>, itemIndexPair: SwapPair<number>) {
-  binPair.from.move(itemIndexPair.from, binPair.to)
-  binPair.to.move(itemIndexPair.to, binPair.from)
+  binPair.from.moveOut(itemIndexPair.from, binPair.to)
+  binPair.to.moveOut(itemIndexPair.to, binPair.from)
 }
 
 function max<T>(array: T[], sizeOf: (t: T) => number): T {

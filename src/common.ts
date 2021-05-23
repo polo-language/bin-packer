@@ -40,7 +40,8 @@ export class Bin {
   constructor(
       readonly id: string,
       readonly capacity: number,
-      readonly maxItems: number) {
+      readonly maxItems: number,
+      readonly moveCallback: (item: Item, from: Bin | null, to: Bin) => void) {
     this._items = []
     this._fill = 0
   }
@@ -73,7 +74,18 @@ export class Bin {
     return Math.max(0, -1 * this.freeSpace)
   }
 
-  add(item: Item) {
+  moveOut(itemIndex: number, target: Bin) {
+    const item = this.remove(itemIndex)
+    target.addNonMove(item)
+    this.moveCallback(item, this, target)
+  }
+
+  moveIn(item: Item) {
+    this.addNonMove(item)
+    this.moveCallback(item, null, this)
+  }
+
+  addNonMove(item: Item) {
     binaryApply(
         this._items,
         item,
@@ -121,10 +133,6 @@ export class Bin {
         this._items.findIndex(item => max < item.size) - 1 // Safe since item zero is smaller.
   }
 
-  move(itemIndex: number, target: Bin) {
-    target.add(this.remove(itemIndex))
-  }
-
   private remove(index: number): Item {
     if (index < 0 || this._items.length - 1 < index) {
       throw new Error(`Cannot remove item at index ${index} from array of length `+
@@ -149,8 +157,8 @@ export class Bin {
   }
 
   deepClone(): Bin {
-    const cloned = new Bin(this.id, this.capacity, this.maxItems)
-    this._items.forEach(item => cloned.add(item.deepClone()))
+    const cloned = new Bin(this.id, this.capacity, this.maxItems, this.moveCallback)
+    this._items.forEach(item => cloned.addNonMove(item.deepClone()))
     return cloned
   }
 
