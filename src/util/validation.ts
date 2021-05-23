@@ -16,14 +16,14 @@ export class ThrowingErrorHandler implements ErrorHandler {
  */
 export function packFeasibility(
     bins: readonly Bin[], newItems: readonly Item[], errorHandler: ErrorHandler) {
-  const binSpace = Analysis.totalCapacity(bins)
+  const binSpace = Bin.capacityOf(bins)
   const itemSpace =
-      Item.totalSize(newItems) +
+      Item.sizeOf(newItems) +
       bins.reduce((acc: number, bin: Bin) => acc + bin.fill, 0)
   const totalItems =
       newItems.length +
       bins.reduce((acc: number, bin: Bin) => acc + bin.itemCount, 0)
-  const totalSlots = Analysis.totalSlots(bins)
+  const totalSlots = Bin.slotsIn(bins)
 
   if (binSpace < itemSpace) {
     errorHandler.handle(`No packing possible: There is only ${binSpace} total space but `+

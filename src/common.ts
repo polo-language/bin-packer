@@ -1,6 +1,7 @@
 import { binaryApply } from './util/utils'
 
 export class Item {
+  // May only be modified by the add/remove methods of Bin.
   newBinId?: string
 
   constructor(
@@ -26,7 +27,7 @@ export class Item {
         `toBin: ${this.newBinId}`
   }
 
-  static totalSize(items: readonly Item[]): number {
+  static sizeOf(items: readonly Item[]): number {
     return items.reduce((acc, item) => acc + item.size, 0)
   }
 }
@@ -84,12 +85,12 @@ export class Bin {
   }
 
   /**
-   * Removes and returns the smallest item smaller or equal to max that is larger than the bin's
-   * overutilization. If no element is large enough to cover the overutilization, the largest
-   * possible item is removed. Returns null if all items are larger than max.
+   * Returns the index and size of the smallest item smaller or equal to max that is larger than the
+   * bin's overutilization. If no element is large enough to cover the overutilization, the largest
+   * possible item is removed. Returns a tuple of nulls if all items are larger than max.
    * May only be called on non-empty bins that are filled beyond capacity.
    */
-  removeFromOverfill(max: number): Item | null {
+  largestFromOverfill(max: number): [number | null, number | null] {
     if (this.itemCount === 0) {
       throw new Error('Can not remove item from empty bin')
     }
@@ -98,7 +99,7 @@ export class Bin {
     }
     if (max < this._items[0].size) {
       // No item is smaller than max.
-      return null
+      return [null, null]
     }
     const softMin = this.overfill
     const maxIndex = this._items.length - 1
@@ -109,7 +110,7 @@ export class Bin {
                 this._items.findIndex(item => softMin <= item.size),
                 this.smallestIndexOfItemWithSizeLessOrEqual(max)))
         : this.smallestIndexOfItemWithSizeLessOrEqual(max)
-    return this.remove(index)
+    return [index, this._items[index].size]
   }
 
   /** May only be called when at least one element is less than max. */
@@ -120,7 +121,11 @@ export class Bin {
         this._items.findIndex(item => max < item.size) - 1 // Safe since item zero is smaller.
   }
 
-  remove(index: number): Item {
+  move(itemIndex: number, target: Bin) {
+    target.add(this.remove(itemIndex))
+  }
+
+  private remove(index: number): Item {
     if (index < 0 || this._items.length - 1 < index) {
       throw new Error(`Cannot remove item at index ${index} from array of length `+
           `${this._items.length}`)
@@ -149,6 +154,14 @@ export class Bin {
     return cloned
   }
 
+  static capacityOf(bins: readonly Bin[]): number {
+    return bins.reduce((acc: number, bin: Bin) => acc + bin.capacity, 0)
+  }
+
+  static slotsIn(bins: readonly Bin[]): number {
+    return bins.reduce((acc: number, bin: Bin) => acc + bin.maxItems, 0)
+  }
+
   toJSON(key: string): any {
     return {
       'ID': this.id,
@@ -166,7 +179,7 @@ export class Bin {
   }
 
   toString(): string {
-    return JSON.stringify(this.toJSON(''))
+    return JSON.stringify(this)
   }
 }
 
@@ -186,8 +199,8 @@ export class Analysis {
 
   constructor(bins: readonly Bin[]) {
     this.binCount = bins.length
-    this.totalSpace = Analysis.totalCapacity(bins)
-    this.totalSlots = Analysis.totalSlots(bins)
+    this.totalSpace = Bin.capacityOf(bins)
+    this.totalSlots = Bin.slotsIn(bins)
     this.freeSlots = Analysis.calculate(bins, bin => bin.freeSlots)
     this.freeSpace = Analysis.calculate(bins, bin => bin.freeSpace)
     const binIds = new Set(bins.map(bin => bin.id))
@@ -239,14 +252,6 @@ export class Analysis {
         max: Math.max(...values)
       }
     }
-  }
-
-  static totalCapacity(bins: readonly Bin[]): number {
-    return bins.reduce((acc: number, bin: Bin) => acc + bin.capacity, 0)
-  }
-
-  static totalSlots(bins: readonly Bin[]): number {
-    return bins.reduce((acc: number, bin: Bin) => acc + bin.maxItems, 0)
   }
 }
 

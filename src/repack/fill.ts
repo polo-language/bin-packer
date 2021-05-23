@@ -42,13 +42,6 @@ function itemFits(item: Item, _: Bin[], arrayElement: Bin): boolean {
   return item.size <= arrayElement.freeSpace
 }
 
-function insertItem(item: Item, array: Bin[], i: number) {
-  if (i === array.length) {
-    throw new Error(`Item ${item.id} with size ${item.size} does not fit in any bin`)
-  }
-  array[i].add(item)
-}
-
 // Item is an index into array.
 function hasLessFreeSpace(item: number, array: Bin[], arrayElement: Bin): boolean {
   return array[item].freeSpace <= arrayElement.freeSpace

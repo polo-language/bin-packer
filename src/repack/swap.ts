@@ -96,10 +96,8 @@ function findMaxPartner(bin: Bin, minSize: number, maxSize: number): Entry<Item>
 }
 
 function swap(binPair: SwapPair<Bin>, itemIndexPair: SwapPair<number>) {
-  const fromItem = binPair.from.remove(itemIndexPair.from)
-  const toItem = binPair.to.remove(itemIndexPair.to)
-  binPair.from.add(toItem)
-  binPair.to.add(fromItem)
+  binPair.from.move(itemIndexPair.from, binPair.to)
+  binPair.to.move(itemIndexPair.to, binPair.from)
 }
 
 function max<T>(array: T[], sizeOf: (t: T) => number): T {
@@ -148,7 +146,7 @@ function resortPosSpaceBin(
 
 export function unswapMoves(bins: Bin[]) {
   const binMap = new Map<string, Bin>(bins.map(bin => [bin.id, bin]))
-  for (let bin of Array.from(binMap.values())) {
+  for (const bin of Array.from(binMap.values())) {
     // Keep trying with the same bin so long as a swap is made. Can just loop through the items
     // since swapping reorders them.
     while (findOneForSwap(bin, binMap)) { }

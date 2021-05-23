@@ -33,16 +33,16 @@ export function shiftOverfull(bins: readonly Bin[]) {
     // Sort least to most freespace
     openBins.sort((a, b) => a.freeSpace - b.freeSpace)
     const mostOverutilizedBin = overBins[skippedBinCount]
-    const itemToMove =
-        mostOverutilizedBin.removeFromOverfill(openBins[openBins.length - 1].freeSpace)
-    if (null === itemToMove) {
+    const [indexToMove, sizeToMove] =
+        mostOverutilizedBin.largestFromOverfill(openBins[openBins.length - 1].freeSpace)
+    if (null === indexToMove) {
       ++skippedBinCount
     } else {
       // Will always find a target bin because itemToMove was restricted to being smaller than the
       // free space of the bin with the most free space.
-      const insertionBinIndex = openBins.findIndex(bin => itemToMove.size <= bin.freeSpace)
+      const insertionBinIndex = openBins.findIndex(bin => sizeToMove! <= bin.freeSpace)
       const insertionBin = openBins[insertionBinIndex]
-      insertionBin.add(itemToMove)
+      mostOverutilizedBin.move(indexToMove, insertionBin)
       if (!insertionBin.isOpen()) {
         pushFrom(insertionBinIndex, openBins, fullBins)
       }
@@ -86,8 +86,8 @@ export function shiftSlots(bins: readonly Bin[]) {
  *
  * All bins in slotsBins should have positive free slots. When this no longer holds, it is moved to
  * otherBins. To prevent accumulating all free slots in the bin with most free space (since space
- * bins can only increase in free space by losing items), each spaceBin is served round-robin from
- * the slotsBins.
+ * bins can only increase in free space by losing items), bins in spaceBins are paired up
+ * round-robin with bins in slotsBins.
  */
 function shiftToOpenSlots(spaceBins: Bin[], slotsBins: Bin[], otherBins: Bin[]) {
   if (spaceBins.length < 1) {
@@ -123,8 +123,8 @@ function shiftFromOne(slotsIndex: number, spaceBins: Bin[], slotsBins: Bin[], ot
           .reverse()
       const slotsBinCopy = slotsBin.deepClone()
       const movingItems: Item[] = decreasingIndexesToMove.reduce((acc: Item[], index: number) => {acc.push(spaceBin.items[index]); return acc}, [])
-      for (let index of decreasingIndexesToMove) {
-        slotsBin.add(spaceBin.remove(index))
+      for (const index of decreasingIndexesToMove) {
+        spaceBin.move(index, slotsBin)
       }
       // Re-sort modified slotsBin.
       if (slotsBin.freeSlots < 1) {
@@ -153,7 +153,7 @@ function shiftFromOne(slotsIndex: number, spaceBins: Bin[], slotsBins: Bin[], ot
 function findMaxCount(items: Item[], maxSize: number, maxCount: number): number {
   const selected = items.slice(0, Math.min(items.length, maxCount))
   for (
-      let selectedSize = Item.totalSize(selected);
+      let selectedSize = Item.sizeOf(selected);
       0 < selected.length && maxSize < selectedSize;
       selectedSize -= selected.pop()!.size
   ) { }
@@ -171,7 +171,7 @@ function findApproxLargestIndexes(items: Item[], maxSize: number, count: number)
   }
   const selectedIndexes = Array.from(Array(count).keys())
   selectedIndexes.push(Infinity) // "Index" of the "next item" after the largest selected item.
-  let selectedSize = Item.totalSize(items.slice(0, count))
+  let selectedSize = Item.sizeOf(items.slice(0, count))
   if (maxSize < selectedSize) {
     throw new Error(`Algorithm error: No ${count} items have total size smaller than ${maxSize}`)
   }
@@ -205,7 +205,7 @@ export function unshiftMoves(bins: readonly Bin[]) {
 
 function unshiftMovesOnce(binMap: Map<string, Bin>): boolean {
   let anyMoved = false
-  for (let bin of Array.from(binMap.values())) {
+  for (const bin of Array.from(binMap.values())) {
     const items = bin.items
     // Proceed last to first so we can remove items without changing the index of subsequent items.
     for (let i = items.length - 1; 0 <= i; --i) {
@@ -215,11 +215,7 @@ function unshiftMovesOnce(binMap: Map<string, Bin>): boolean {
         if (originalBin !== undefined &&
             0 < originalBin.freeSlots &&
             item.size <= originalBin.freeSpace) {
-          const removedItem = bin.remove(i)
-          if (item !== removedItem) {
-            throw new Error('Algorithm error: Removed item not at the indicated index')
-          }
-          originalBin.add(item)
+          bin.move(i, originalBin)
           anyMoved = true
         }
       }
