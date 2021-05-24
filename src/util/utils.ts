@@ -1,3 +1,11 @@
+export class SwapPair<T> {
+  constructor(readonly from: T, readonly to: T) { }
+
+  map<U>(f: (t: T) => U): SwapPair<U> {
+    return new SwapPair(f(this.from), f(this.to))
+  }
+}
+
 /** Sorts descending in-place. Returns the array argument for convenience. */
 export function sortDescending<T>(array: T[], sizeOf: ((t: T) => number)): T[] {
   return array.sort((left, right) => sizeOf(right) - sizeOf(left))

@@ -1,5 +1,6 @@
 import { Item }  from './item'
 import { binaryApply } from '../util/binary-apply'
+import { SwapPair } from '../util/utils'
 
 export class Bin {
   /** Maintained in order of increasing size. */
@@ -52,6 +53,13 @@ export class Bin {
   moveIn(item: Item) {
     this.addNonMove(item)
     this.moveCallback(item, null, this)
+  }
+
+  static swap(binPair: SwapPair<Bin>, itemIndexPair: SwapPair<number>) {
+    const fromItem = binPair.from.remove(itemIndexPair.from)
+    const toItem = binPair.to.remove(itemIndexPair.to)
+    binPair.from.moveIn(toItem)
+    binPair.to.moveIn(fromItem)
   }
 
   addNonMove(item: Item) {

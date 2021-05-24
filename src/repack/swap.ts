@@ -1,15 +1,8 @@
 import { Bin } from '../repack/bin'
 import { Item } from '../repack/item'
 import { binaryApply } from '../util/binary-apply'
+import { SwapPair } from '../util/utils'
 import * as SortUtils from './sort-utils'
-
-class SwapPair<T> {
-  constructor(readonly from: T, readonly to: T) { }
-
-  map<U>(f: (t: T) => U): SwapPair<U> {
-    return new SwapPair(f(this.from), f(this.to))
-  }
-}
 
 class Entry<T> {
   constructor(readonly index: number, readonly value: T) { }
@@ -45,7 +38,7 @@ export function swapSpace(bins: readonly Bin[]) {
       const toBin = posSpaceBins[toIndex]
       const pair = findSwapPair(fromBin, toBin)
       if (pair !== null) {
-        swap(new SwapPair(fromBin, toBin), pair.map(entry => entry.index))
+        Bin.swap(new SwapPair(fromBin, toBin), pair.map(entry => entry.index))
         resortNegSpaceBin(negSpaceBins, noSpaceBins, posSpaceBins, new Entry(fromIndex, fromBin))
         resortPosSpaceBin(noSpaceBins, posSpaceBins, new Entry(toIndex, toBin))
         foundSwap = true
@@ -94,11 +87,6 @@ function findMaxPartner(bin: Bin, minSize: number, maxSize: number): Entry<Item>
     }
   }
   return null
-}
-
-function swap(binPair: SwapPair<Bin>, itemIndexPair: SwapPair<number>) {
-  binPair.from.moveOut(itemIndexPair.from, binPair.to)
-  binPair.to.moveOut(itemIndexPair.to, binPair.from)
 }
 
 function max<T>(array: T[], sizeOf: (t: T) => number): T {
@@ -181,8 +169,8 @@ function findSwapPartner(bin: Bin, originalBin: Bin, entry: Entry<Item>): boolea
     const oBinItem = oBinItems[i]
     if (oBinItem.originalBinId === bin.id) {
       if (oBinItem.size <= bin.freeSpace + entry.value.size &&
-        entry.value.size <= originalBin.freeSpace + oBinItem.size) {
-        swap(new SwapPair(bin, originalBin), new SwapPair(entry.index, i))
+          entry.value.size <= originalBin.freeSpace + oBinItem.size) {
+        Bin.swap(new SwapPair(bin, originalBin), new SwapPair(entry.index, i))
         return true
       }
     }
