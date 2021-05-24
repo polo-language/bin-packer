@@ -1,4 +1,4 @@
-import { Bin }  from '../common'
+import { Bin }  from '../repack/bin'
 
 export function hasMoreFreeSpace(bin: Bin, _: Bin[], otherBin: Bin): boolean {
   return otherBin.freeSpace <= bin.freeSpace

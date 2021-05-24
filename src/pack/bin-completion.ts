@@ -1,7 +1,8 @@
 import { InputObject, PackingOutput } from '../index';
+import { prepareValues } from '../util/prepare-values';
+import { sortDescending, sum } from '../util/utils';
 import { lowerBound2Sorted } from './bounds'
 import { bestFitDecreasingSorted } from './fit-algos'
-import * as utils from '../util/utils'
 
 class CompletionNode<T> {
   accumulatedWaste: number
@@ -173,8 +174,8 @@ export function binCompletion<T>(
     sizeOf: (t: T) => number,
     capacity: number)
         : PackingOutput<T> {
-  const {array: array, oversized: oversized} = utils.prepareValues(obj, sizeOf, capacity)
-  const descending = utils.sortDescending(array, sizeOf)
+  const {array: array, oversized: oversized} = prepareValues(obj, sizeOf, capacity)
+  const descending = sortDescending(array, sizeOf)
   const lowerBound = lowerBound2Sorted(descending.slice().reverse(), sizeOf, capacity)
   const bestSolution = bestFitDecreasingSorted(descending, sizeOf, capacity)
   if (lowerBound === bestSolution.length) {
@@ -183,7 +184,7 @@ export function binCompletion<T>(
       'oversized': oversized,
     }
   } else {
-    const totalSize = utils.sum(descending, sizeOf)
+    const totalSize = sum(descending, sizeOf)
     const solutionState = new SolutionState(lowerBound, totalSize, capacity, bestSolution)
     const lowerBoundSolution = nextCompletionLevel(
               new CompletionNode([], capacity, 0, null, 0, descending, totalSize, capacity),

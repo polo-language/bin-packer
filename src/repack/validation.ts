@@ -1,4 +1,5 @@
-import { Item, Bin, Analysis }  from '../common'
+import { Bin }  from '../repack/bin'
+import { Item }  from '../repack/item'
 
 export interface ErrorHandler {
   handle: (message: string) => void

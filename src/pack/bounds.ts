@@ -1,5 +1,6 @@
 import { BoundOutput } from '../index';
-import * as utils from '../util/utils'
+import { prepareValues } from '../util/prepare-values';
+import { sortAscending, sum } from '../util/utils';
 
 /**
  * A simple-to-compute lower bound on the number of bins required by an optimal
@@ -13,9 +14,9 @@ export function lowerBound1<T>(
     sizeOf: (t: T) => number,
     capacity: number)
         : BoundOutput {
-  const {array: array, oversized: oversized} = utils.prepareValues(obj, sizeOf, capacity)
+  const {array: array, oversized: oversized} = prepareValues(obj, sizeOf, capacity)
   return {
-    'bound': Math.ceil(utils.sum(array, sizeOf) / capacity),
+    'bound': Math.ceil(sum(array, sizeOf) / capacity),
     'oversized': oversized.length,
   }
 }
@@ -33,9 +34,9 @@ export function lowerBound2<T>(
     sizeOf: (t: T) => number,
     capacity: number)
         : BoundOutput {
-  const {array: array, oversized: oversized} = utils.prepareValues(obj, sizeOf, capacity)
+  const {array: array, oversized: oversized} = prepareValues(obj, sizeOf, capacity)
   return {
-    'bound': lowerBound2Sorted(utils.sortAscending(array, sizeOf), sizeOf, capacity),
+    'bound': lowerBound2Sorted(sortAscending(array, sizeOf), sizeOf, capacity),
     'oversized': oversized.length,
   }
 }
@@ -64,7 +65,7 @@ export function lowerBound2Sorted<T>(sortedArray: T[],
         sortedArray.length :
         firstLargerThanRemainder // Not an off-by-one error :)
     const smallerTotal = smallerCount > 0 ?
-        utils.sum(sortedArray.splice(0, smallerCount), sizeOf) :
+        sum(sortedArray.splice(0, smallerCount), sizeOf) :
         0
     elementTotal += smallerTotal
     carry += smallerTotal

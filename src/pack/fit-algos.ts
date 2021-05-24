@@ -1,12 +1,14 @@
 import { InputObject, PackingOutput } from '../index';
-import * as utils from '../util/utils'
+import { binaryApply } from '../util/binary-apply'
+import { prepareValues } from '../util/prepare-values';
+import { sortDescending } from '../util/utils';
 
 export function nextFit<T>(
     obj: InputObject<T>,
     sizeOf: (t: T) => number,
     capacity: number)
         : PackingOutput<T> {
-  const {array: array, oversized: oversized} = utils.prepareValues(obj, sizeOf, capacity)
+  const {array: array, oversized: oversized} = prepareValues(obj, sizeOf, capacity)
   const bins: T[][] = []
   let currentBinUtilization = capacity + 1 // Start out with an imaginary bin that's full.
   let blockNum = -1
@@ -45,12 +47,12 @@ function firstFitArray<T>(
     sizeOf: (t: T) => number,
     capacity: number, presort: boolean)
         : PackingOutput<T> {
-  const {array: array, oversized: oversized} = utils.prepareValues(obj, sizeOf, capacity)
+  const {array: array, oversized: oversized} = prepareValues(obj, sizeOf, capacity)
   const bins: T[][] = []
   const remaining: number[] = []
 
   if (presort) {
-    utils.sortDescending(array, sizeOf)
+    sortDescending(array, sizeOf)
   }
 
   for (const value of array) {
@@ -92,9 +94,9 @@ export function bestFitDecreasing<T>(
     sizeOf: (t: T) => number,
     capacity: number)
         : PackingOutput<T> {
-  const {array: array, oversized: oversized} = utils.prepareValues(obj, sizeOf, capacity)
+  const {array: array, oversized: oversized} = prepareValues(obj, sizeOf, capacity)
   return {
-    'bins': bestFitDecreasingSorted(utils.sortDescending(array, sizeOf), sizeOf, capacity),
+    'bins': bestFitDecreasingSorted(sortDescending(array, sizeOf), sizeOf, capacity),
     'oversized': oversized,
   }
 }
@@ -138,9 +140,9 @@ export function bestFitDecreasing<T>(
   const bins: SizedBin<T>[] = []
   for (const value of sorted) {
     // Insert item into (potentially new) bin
-    const binIndex = utils.binaryApply(bins, value, itemLeq, itemInsert)
+    const binIndex = binaryApply(bins, value, itemLeq, itemInsert)
     // Move updated bin to preserve sort
-    utils.binaryApply(bins, binIndex, binMoreFull, binResort)
+    binaryApply(bins, binIndex, binMoreFull, binResort)
   }
   return SizedBin.extractBins(bins)
 }

@@ -1,5 +1,6 @@
-import { Item, Bin } from '../common'
-import { binaryApply } from '../util/utils'
+import { Bin } from '../repack/bin'
+import { Item } from '../repack/item'
+import { binaryApply } from '../util/binary-apply'
 import * as SortUtils from './sort-utils'
 
 class SwapPair<T> {

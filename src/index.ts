@@ -29,11 +29,13 @@ export { nextFit, firstFit, firstFitDecreasing, bestFitDecreasing } from './pack
 export { binCompletion } from './pack/bin-completion'
 export { lowerBound1, lowerBound2 } from './pack/bounds'
     
-export { Item, Bin, Analysis }  from './common'
+export { Bin }  from './repack/bin'
+export { Analysis }  from './repack/analysis'
+export { Item }  from './repack/item'
 export { repack } from './repacker'
 export {
     packFeasibility,
     validateBins,
     ErrorHandler,
     ThrowingErrorHandler
-} from './util/validation'
+} from './repack/validation'
