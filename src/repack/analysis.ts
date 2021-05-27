@@ -19,8 +19,8 @@ export class Analysis {
     this.binCount = bins.length
     this.totalSpace = Bin.capacityOf(bins)
     this.totalSlots = Bin.slotsIn(bins)
-    this.freeSlots = Analysis.calculate(bins, bin => bin.freeSlots)
-    this.freeSpace = Analysis.calculate(bins, bin => bin.freeSpace)
+    this.freeSlots = newMetric(bins, bin => bin.freeSlots)
+    this.freeSpace = newMetric(bins, bin => bin.freeSpace)
     const binIds = new Set(bins.map(bin => bin.id))
     const freeSpaceBins: [number, number, number] = [0, 0, 0]
     const freeSlotsBins: [number, number, number] = [0, 0, 0]
@@ -51,25 +51,15 @@ export class Analysis {
     this.binsWithSpace = { '-': freeSpaceBins[0], '0': freeSpaceBins[1], '+': freeSpaceBins[2] }
     this.binsWithSlots = { '-': freeSlotsBins[0], '0': freeSlotsBins[1], '+': freeSlotsBins[2] }
   }
+}
 
-  private static calculate(bins: readonly Bin[], numeric: (bin: Bin) => number): Metric {
-    if (0 === bins.length) {
-      return {
-        total: 0,
-        min: 0,
-        avg: 0,
-        max: 0
-      }
-    } else {
-      const values = bins.map(numeric)
-      const total = values.reduce((acc, val) => acc + val)
-      return {
-        total: total,
-        min: Math.min(...values),
-        avg: total / values.length,
-        max: Math.max(...values)
-      }
-    }
+export class ItemAnalysis {
+  readonly itemCount: number
+  readonly size: Metric
+
+  constructor(items: Item[]) {
+    this.itemCount = items.length
+    this.size = newMetric(items, item => item.size)
   }
 }
 
@@ -78,4 +68,24 @@ export interface Metric {
   readonly min: number
   readonly avg: number
   readonly max: number
+}
+
+function newMetric<T>(t: readonly T[], numeric: (t: T) => number): Metric {
+  if (0 === t.length) {
+    return {
+      total: 0,
+      min: 0,
+      avg: 0,
+      max: 0
+    }
+  } else {
+    const values = t.map(numeric)
+    const total = values.reduce((acc, val) => acc + val)
+    return {
+      total: total,
+      min: Math.min(...values),
+      avg: total / values.length,
+      max: Math.max(...values)
+    }
+  }
 }

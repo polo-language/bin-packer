@@ -30,9 +30,9 @@ export { binCompletion } from './pack/bin-completion'
 export { lowerBound1, lowerBound2 } from './pack/bounds'
     
 export { Bin }  from './repack/bin'
-export { Analysis }  from './repack/analysis'
+export { Analysis, ItemAnalysis }  from './repack/analysis'
 export { Item }  from './repack/item'
-export { repack } from './repacker'
+export { repack, packNew } from './repacker'
 export {
     packFeasibility,
     validateBins,
