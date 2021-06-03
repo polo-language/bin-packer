@@ -49,6 +49,11 @@ function hasLessFreeSpace(item: number, array: Bin[], arrayElement: Bin): boolea
   return array[item].freeSpace <= arrayElement.freeSpace
 }
 
+/**
+ * Moves the bin at index item to the index i. Only moves bins to earlier indexes because bins
+ * being moved have just had their free space decreased (possibly by zero) in an array sorted
+ * ascending by free space.
+ */
 function binResort(item: number, array: Bin[], i: number) {
   if (i === item) {
     return

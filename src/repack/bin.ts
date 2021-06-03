@@ -11,7 +11,7 @@ export class Bin {
       readonly id: string,
       readonly capacity: number,
       readonly maxItems: number,
-      readonly moveCallback: (item: Item, from: Bin | null, to: Bin) => void) {
+      readonly moveCallback: (item: Item, from: Bin | null, to: Bin | null) => void) {
     this._items = []
     this._fill = 0
   }
@@ -44,9 +44,14 @@ export class Bin {
     return Math.max(0, -1 * this.freeSpace)
   }
 
-  moveOut(itemIndex: number, target: Bin) {
+  /**
+   * Moves the item at index itemIndex to the target bin, if it is non-null.
+   */
+  moveOut(itemIndex: number, target: Bin | null) {
     const item = this.remove(itemIndex)
-    target.addNonMove(item)
+    if (target !== null) {
+      target.addNonMove(item)
+    }
     this.moveCallback(item, this, target)
   }
 
