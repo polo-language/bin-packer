@@ -1,4 +1,4 @@
-import { BoundOutput } from '../index';
+import { BoundOutput, InputObject } from '../index';
 import { prepareValues } from '../util/prepare-values';
 import { sortAscending, sum } from '../util/utils';
 
@@ -10,7 +10,7 @@ import { sortAscending, sum } from '../util/utils';
  *          'oversized' giving the number of oversized items.
  */
 export function lowerBound1<T>(
-    obj: T[]|Iterable<T>|object,
+    obj: InputObject<T>,
     sizeOf: (t: T) => number,
     capacity: number)
         : BoundOutput {
@@ -30,7 +30,7 @@ export function lowerBound1<T>(
  *          'oversized' giving the number of oversized items.
  */
 export function lowerBound2<T>(
-    obj: T[]|Iterable<T>|object,
+    obj: InputObject<T>,
     sizeOf: (t: T) => number,
     capacity: number)
         : BoundOutput {

@@ -1,9 +1,11 @@
+import { InputObject } from "../index"
+
 /**
  * Returns an object containing the input as an array less any oversized items, which are moved to
  * a second array. Throws if {@link sizeOf} does not return a number for any value of {@link obj}.
  */
- export function prepareValues<T>(
-    obj: T[]|Iterable<T>|object,
+export function prepareValues<T>(
+    obj: InputObject<T>,
     sizeOf: ((t: T) => number),
     capacity: number)
         : {array: T[], oversized: T[]} {
@@ -32,7 +34,22 @@
   return {array: array, oversized: oversized,}
 }
 
-export function toArray<T>(obj: readonly T[]|Iterable<T>|object): T[] {
+/**
+ * Returns the input object converted to an array.
+ * Throws if {@link sizeOf} does not return a number for any value of {@link obj}.
+ */
+export function prepareValuesNoCapacity<T>(obj: InputObject<T>, sizeOf: ((t: T) => number)): T[] {
+  const array = toArray(obj)
+  const iter = array.entries()
+  for (let nextObj = iter.next(); !nextObj.done; nextObj = iter.next()) {
+    const index = nextObj.value[0]
+    const element = nextObj.value[1]
+    validateNumber(sizeOf(element), index)
+  }
+  return array
+}
+
+export function toArray<T>(obj: InputObject<T>): T[] {
   if (Array.isArray(obj)) {
     return obj
   } else {
@@ -41,12 +58,11 @@ export function toArray<T>(obj: readonly T[]|Iterable<T>|object): T[] {
 }
 
 /**
-* Converts its argument to an interable if it is not one already.
-* In particular, if it is a non-iterable object, returns an array of the object's own innumerable
-* property values.
-* @param {Iterable|object} obj
-*/
-function toIterable<T>(obj: Iterable<T>|object): Iterable<T> {
+ * Converts its argument to an interable if it is not one already.
+ * In particular, if it is a non-iterable object, returns an array of the object's own innumerable
+ * property values.
+ */
+function toIterable<T>(obj: Iterable<T> | { [index: string]: T }): Iterable<T> {
   if (obj !== null) {
     if (isIterable(obj)) {
       return obj
@@ -58,18 +74,46 @@ function toIterable<T>(obj: Iterable<T>|object): Iterable<T> {
 }
 
 /** Returns whether {@link obj} is iterable. */
-function isIterable<T>(obj: any): obj is Iterable<T> {
+export function isIterable<T>(obj: any): obj is Iterable<T> {
   return typeof obj[Symbol.iterator] === 'function'
 }
 
 /**
-* Throws if {@link num} is not a {@link number}.
-* @returns {number}    The input {@link num} for chaining.
-*/
-function validateNumber(num: number, context: any): number {
+ * Throws if {@link num} is not a {@link number}.
+ * @returns {number}    The input {@link num} for chaining.
+ */
+function validateNumber(num: number, context: string | number): number {
   if (num === null || num === undefined || typeof num !== 'number') {
     throw new Error(`Expected a number for ${context}`)
   } else {
     return num
   }
+}
+
+/**
+ * Converts its argument to an iterable of numbers, if possible.
+ * The type of values returned by iterables isn't checked so as to not consume any values.
+ */
+export function adaptToNumberIterable(
+    capacity: number | Iterable<number> | (() => Iterable<number>)): Iterable<number> {
+  // Number?
+  if (typeof capacity === 'number') {
+    return (function* () {
+      while (true) {
+        yield capacity
+      }
+    })()
+  }
+  // Iterable or Generator?
+  if (isIterable(capacity)) {
+    return capacity
+  }
+  // Generator function?
+  if (typeof capacity === 'function') {
+    const called = capacity()
+    if (isIterable(called)) {
+      return called
+    }
+  }
+  throw new Error('Capacity must be one of: number, iterable, or generator')
 }

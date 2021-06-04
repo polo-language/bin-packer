@@ -28,6 +28,7 @@ export type BoundFunction<T> = (
 export { nextFit, firstFit, firstFitDecreasing, bestFitDecreasing } from './pack/fit-algos'
 export { binCompletion } from './pack/bin-completion'
 export { lowerBound1, lowerBound2 } from './pack/bounds'
+export { nextFitVarCap } from './pack/fit-variable-capacity'
     
 export { Bin }  from './repack/bin'
 export { Analysis, ItemAnalysis }  from './repack/analysis'

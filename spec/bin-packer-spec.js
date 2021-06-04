@@ -3,9 +3,11 @@
 const fs = require('fs')
     , binPacker = require('../lib/index')
     , utils = require('../lib/util/utils')
+    , prepareValues = require('../lib/util/prepare-values')
 
 class AlgorithmType {
   static APPROX_PACKING = new AlgorithmType('APPROX_PACKING')
+  static VARCAP_PACKING = new AlgorithmType('VARCAP_PACKING')
   static EXACT_PACKING = new AlgorithmType('EXACT_PACKING')
   static LOWER_BOUND = new AlgorithmType('LOWER_BOUND')
 
@@ -15,6 +17,7 @@ class AlgorithmType {
 
   static isPacking(type) {
     return type === AlgorithmType.APPROX_PACKING ||
+        type === AlgorithmType.VARCAP_PACKING ||
         type === AlgorithmType.EXACT_PACKING
   }
 }
@@ -39,7 +42,7 @@ class DataSpec {
     this.sizeOf = sizeOf
     this.capacity = capacity
     this.optimalSize = optimalSize
-    this.dataArray = utils.toArray(this.data)
+    this.dataArray = prepareValues.toArray(this.data)
     this.dataLength = this.dataArray.length
     this.oversizedInData = anyTooBigInBin(this.dataArray, sizeOf, capacity)
   }
@@ -67,6 +70,7 @@ const algorithms = [
             binPacker.firstFitDecreasing, AlgorithmType.APPROX_PACKING),
         new Algorithm('bestFitDecreasing',
             binPacker.bestFitDecreasing, AlgorithmType.APPROX_PACKING),
+        new Algorithm('nextFitVarCap', binPacker.nextFitVarCap, AlgorithmType.VARCAP_PACKING),
         new Algorithm('binCompletion', binPacker.binCompletion, AlgorithmType.EXACT_PACKING),
         new Algorithm('lowerBound1', binPacker.lowerBound1, AlgorithmType.LOWER_BOUND),
         new Algorithm('lowerBound2', binPacker.lowerBound2, AlgorithmType.LOWER_BOUND),
@@ -187,7 +191,9 @@ describe('bin-packer', function () {
       }
       
       for (const algorithm of algorithms) {
-        testPrepareValuesFor(algorithm)
+        if (AlgorithmType.VARCAP_PACKING !== algorithm.type) {
+          testPrepareValuesFor(algorithm)
+        }
       }
     })
 
@@ -245,6 +251,7 @@ describe('bin-packer', function () {
             , firstFit = findResultFor(allResults, 'firstFit').result
             , firstFitDecreasing = findResultFor(allResults, 'firstFitDecreasing').result
             , bestFitDecreasing = findResultFor(allResults, 'bestFitDecreasing').result
+            , nextFitVarCap = findResultFor(allResults, 'nextFitVarCap').result
             , binCompletion = findResultFor(allResults, 'binCompletion')?.result
             , lowerBound1 = findResultFor(allResults, 'lowerBound1').result
             , lowerBound2 = findResultFor(allResults, 'lowerBound2').result
@@ -276,6 +283,13 @@ describe('bin-packer', function () {
 
         // Note: Exact algorithms are tested against the optimal solution in
         // exactAlgorithmShouldGetExactResult
+
+        it(`firstFit length === nextFitVarCap length with constant capacity (${dataName})`, () => {
+          expect(nextFit.bins.length).toEqual(nextFitVarCap.bins.length)
+        })
+        it(`firstFit bins identical to nextFitVarCap bins with constant capacity (${dataName})`,
+            () => { expect(nextFit.bins).toEqual(nextFitVarCap.bins.map(bin => bin.items)) }
+        )
         
         it(`lowerBound1 <= lowerBound2 (${dataName})`, function () {
           expect(lowerBound1.bound).toBeLessThanOrEqual(lowerBound2.bound)
@@ -335,7 +349,10 @@ describe('bin-packer', function () {
             if (AlgorithmType.isPacking(result.algorithm.type)) {
 
               resultChecks(result)
-              resultCapacityChecks(result)
+              if (AlgorithmType.VARCAP_PACKING !== result.algorithm.type) {
+                resultCapacityChecks(result)
+              }
+
               if (AlgorithmType.EXACT_PACKING === result.algorithm.type) {
                 exactAlgorithmShouldGetExactResult(result)
               }
@@ -401,5 +418,47 @@ describe('utils', function () {
       })
     }
     dataSpecs.forEach(spec => sortOrder(spec))
+  })
+})
+
+describe('prepareValues', function () {
+  describe('adaptToNumberIterable', function () {
+    it('should adapt number to iterable', function () {
+      const constantSeed = 300.123
+      const iterableCapacity = prepareValues.adaptToNumberIterable(constantSeed)
+      expect(prepareValues.isIterable(iterableCapacity)).toBeTrue()
+      let i = 0
+      for (const value of iterableCapacity) {
+        if (i >= 1_000) {
+          break
+        }
+        expect(value).toEqual(constantSeed)
+        ++i
+      }
+    })
+    it('should return iterable unchanged', function () {
+      const iterable = {
+        [Symbol.iterator]: function () {
+          let i = 0
+          return {
+            next: function () {
+              return {
+                value: Math.random(),
+                done: i++ < 100
+              }
+            }
+          }
+        }
+      }
+      expect(prepareValues.adaptToNumberIterable(iterable)).toBe(iterable)
+    })
+    it('should adapt generator to iterable', function () {
+      const genFunc = function* () { yield Math.random() }
+      expect(prepareValues.isIterable(prepareValues.adaptToNumberIterable(genFunc))).toBeTrue()
+    })
+    it('should not accept just any old function', function () {
+      expect(() => prepareValues.adaptToNumberIterable(function () { return 2 }))
+          .toThrowError('Capacity must be one of: number, iterable, or generator')
+    })
   })
 })
