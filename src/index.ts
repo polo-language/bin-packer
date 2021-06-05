@@ -35,6 +35,7 @@ export { Analysis, ItemAnalysis }  from './repack/analysis'
 export { Item }  from './repack/item'
 export { repack, packNew } from './repacker'
 export { remove, removeAll } from './repack/remove'
+export { fill } from './repack/fill'
 export {
     packFeasibility,
     validateBins,
