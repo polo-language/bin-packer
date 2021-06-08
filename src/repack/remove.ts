@@ -38,7 +38,7 @@ export function removeAll(bins: readonly Bin[], items: Item[]): Item[] {
       throw new Error(`Item with ID ${item.id} claims to belongs to bin ${binId}, but is not `+
           `present`)
     }
-    bin.moveOut(index, null)
+    bin.moveOut(index, null, 'remove')
   }
   return items
 }

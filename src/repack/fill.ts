@@ -17,7 +17,7 @@ export function fill(bins: readonly Bin[], newItems: Item[]): Item[] {
       // Item is too large to fit in any bin.
       nonFittingItems.push(item)
     } else {
-      array[i].moveIn(item)
+      array[i].moveIn(item, 'fill')
     }
   }
   newItems.sort((a, b) => b.size - a.size)

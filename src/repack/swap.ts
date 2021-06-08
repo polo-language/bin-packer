@@ -38,7 +38,7 @@ export function swapSpace(bins: readonly Bin[]) {
       const toBin = posSpaceBins[toIndex]
       const pair = findSwapPair(fromBin, toBin)
       if (pair !== null) {
-        Bin.swap(new SwapPair(fromBin, toBin), pair.map(entry => entry.index))
+        Bin.swap(new SwapPair(fromBin, toBin), pair.map(entry => entry.index), 'swapSpace')
         resortNegSpaceBin(negSpaceBins, noSpaceBins, posSpaceBins, new Entry(fromIndex, fromBin))
         resortPosSpaceBin(noSpaceBins, posSpaceBins, new Entry(toIndex, toBin))
         foundSwap = true
@@ -170,7 +170,7 @@ function findSwapPartner(bin: Bin, originalBin: Bin, entry: Entry<Item>): boolea
     if (oBinItem.originalBinId === bin.id) {
       if (oBinItem.size <= bin.freeSpace + entry.value.size &&
           entry.value.size <= originalBin.freeSpace + oBinItem.size) {
-        Bin.swap(new SwapPair(bin, originalBin), new SwapPair(entry.index, i))
+        Bin.swap(new SwapPair(bin, originalBin), new SwapPair(entry.index, i), 'unswapMoves')
         return true
       }
     }

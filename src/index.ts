@@ -30,7 +30,7 @@ export { binCompletion } from './pack/bin-completion'
 export { lowerBound1, lowerBound2 } from './pack/bounds'
 export { nextFitVarCap } from './pack/fit-variable-capacity'
     
-export { Bin }  from './repack/bin'
+export { Bin, MoveCallback }  from './repack/bin'
 export { Analysis, ItemAnalysis }  from './repack/analysis'
 export { Item }  from './repack/item'
 export { repack, packNew } from './repacker'

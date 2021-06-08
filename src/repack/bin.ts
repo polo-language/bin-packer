@@ -2,6 +2,9 @@ import { Item }  from './item'
 import { binaryApply } from '../util/binary-apply'
 import { SwapPair } from '../util/utils'
 
+export type MoveCallback =
+    (item: Item, from: Bin | null, to: Bin | null, stage: string, action: string) => void
+
 export class Bin {
   /** Maintained in order of increasing size. */
   private _items: Item[]
@@ -11,7 +14,7 @@ export class Bin {
       readonly id: string,
       readonly capacity: number,
       readonly maxItems: number,
-      readonly moveCallback: (item: Item, from: Bin | null, to: Bin | null) => void) {
+      readonly moveCallback: MoveCallback) {
     this._items = []
     this._fill = 0
   }
@@ -47,24 +50,24 @@ export class Bin {
   /**
    * Moves the item at index itemIndex to the target bin, if it is non-null.
    */
-  moveOut(itemIndex: number, target: Bin | null) {
+  moveOut(itemIndex: number, target: Bin | null, stage: string) {
     const item = this.remove(itemIndex)
     if (target !== null) {
       target.addNonMove(item)
     }
-    this.moveCallback(item, this, target)
+    this.moveCallback(item, this, target, stage, 'moveOut')
   }
 
-  moveIn(item: Item) {
+  moveIn(item: Item, stage: string, action?: string) {
     this.addNonMove(item)
-    this.moveCallback(item, null, this)
+    this.moveCallback(item, null, this, stage, action === undefined ? 'moveIn' : action)
   }
 
-  static swap(binPair: SwapPair<Bin>, itemIndexPair: SwapPair<number>) {
+  static swap(binPair: SwapPair<Bin>, itemIndexPair: SwapPair<number>, stage: string) {
     const fromItem = binPair.from.remove(itemIndexPair.from)
     const toItem = binPair.to.remove(itemIndexPair.to)
-    binPair.from.moveIn(toItem)
-    binPair.to.moveIn(fromItem)
+    binPair.from.moveIn(toItem, stage, 'swap')
+    binPair.to.moveIn(fromItem, stage, 'swap')
   }
 
   addNonMove(item: Item) {
