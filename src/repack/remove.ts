@@ -24,7 +24,7 @@ export function remove(
 export function removeAll(bins: readonly Bin[], items: Item[]): Item[] {
   const binMap = new Map<string, Bin>(bins.map(bin => [bin.id, bin]))
   for (const item of items) {
-    const binId = item.newBinId ? item.newBinId : item.originalBinId
+    const binId = item.currentBinId
     if (binId === undefined) {
       throw new Error(`Item with ID ${item.id} does not belong to a bin and hence can not be `
           +`removed`)

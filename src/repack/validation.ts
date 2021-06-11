@@ -54,7 +54,7 @@ export function itemAccounting(
     nonFittingItems: readonly Item[],
     errorHandler: ErrorHandler) {
   if (beforeBins.length !== afterBins.length) {
-    errorHandler.handle(`Started with ${beforeBins.length} bins, ended up with ` +
+    errorHandler.handle(`Started with ${beforeBins.length} bins, ended up with `+
         `${afterBins.length} bins`)
   }
   const beforeBinIds = new Set(beforeBins.map(bin => bin.id))
@@ -73,15 +73,15 @@ export function itemAccounting(
       if (!beforeItemIds.has(item.id)) {
         errorHandler.handle(`Item with ID ${item.id} was not present in the original data`)
       }
-      if (item.newBinId === undefined) {
-        errorHandler.handle(`Item with ID ${item.id} and original bin ID ${item.originalBinId} ` +
+      if (item.currentBinId === undefined) {
+        errorHandler.handle(`Item with ID ${item.id} and original bin ID ${item.originalBinId} `+
             'has not been assigned a new bin ID')
       }
     }
   }
   newItemCount += nonFittingItems.length
   if (beforeItemIds.size !== newItemCount) {
-    errorHandler.handle(`There were ${beforeItemIds.size} items before, but ${newItemCount} ` +
+    errorHandler.handle(`There were ${beforeItemIds.size} items before, but ${newItemCount} `+
         'afterwards')
   }
 }
@@ -92,11 +92,11 @@ export function itemAccounting(
 export function validateBins(bins: readonly Bin[], errorHandler: ErrorHandler) {
   for (const bin of bins) {
     if (bin.itemCount > bin.maxItems) {
-      errorHandler.handle(`Bin ${bin.id} with max items ${bin.maxItems} contains ` +
+      errorHandler.handle(`Bin ${bin.id} with max items ${bin.maxItems} contains `+
           `${bin.itemCount} items. Full bin details: ${bin.toString()}`)
     }
     if (bin.fill > bin.capacity) {
-      errorHandler.handle(`Bin ${bin.id} with capacity ${bin.capacity} is filled to ${bin.fill}. ` +
+      errorHandler.handle(`Bin ${bin.id} with capacity ${bin.capacity} is filled to ${bin.fill}. `+
           `Full bin details: ${bin.toString()}`)
     }
   }

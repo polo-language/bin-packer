@@ -3,7 +3,7 @@ import { binaryApply } from '../util/binary-apply'
 import { SwapPair } from '../util/utils'
 
 export type MoveCallback =
-    (item: Item, from: Bin | null, to: Bin | null, stage: string, action: string) => void
+    (item: Item, from: string | null, to: string | null, stage: string, action: string) => void
 
 export class Bin {
   /** Maintained in order of increasing size. */
@@ -55,12 +55,18 @@ export class Bin {
     if (target !== null) {
       target.addNonMove(item)
     }
-    this.moveCallback(item, this, target, stage, 'moveOut')
+    this.moveCallback(item, this.id, target ? target.id : null, stage, 'moveOut')
   }
 
   moveIn(item: Item, stage: string, action?: string) {
+    const priorBinId = item.currentBinId ? item.currentBinId : null
     this.addNonMove(item)
-    this.moveCallback(item, null, this, stage, action === undefined ? 'moveIn' : action)
+    this.moveCallback(
+        item,
+        priorBinId,
+        this.id,
+        stage,
+        action === undefined ? 'moveIn' : action)
   }
 
   static swap(binPair: SwapPair<Bin>, itemIndexPair: SwapPair<number>, stage: string) {
@@ -78,7 +84,7 @@ export class Bin {
         (a, array, i) => { array.splice(i, 0, a) }
     )
     this._fill += item.size
-    item.newBinId = this.id
+    item.currentBinId = this.id
   }
 
   /**
@@ -125,7 +131,7 @@ export class Bin {
     }
     const removed = this._items.splice(index, 1)[0]
     this._fill -= removed.size
-    removed.newBinId = undefined
+    removed.currentBinId = undefined
     return removed
   }
 

@@ -1,28 +1,30 @@
 export class Item {
   // May only be modified by the add/remove methods of Bin.
-  newBinId?: string
+  currentBinId?: string
 
   constructor(
       readonly id: string,
       readonly size: number,
       readonly originalBinId?: string
-  ) { }
+  ) {
+    this.currentBinId = originalBinId
+  }
 
   deepClone(): Item {
     const cloned = new Item(this.id, this.size, this.originalBinId)
-    if (this.newBinId !== undefined) {
-      cloned.newBinId = this.newBinId
+    if (this.currentBinId !== undefined) {
+      cloned.currentBinId = this.currentBinId
     }
     return cloned
   }
 
   hasMoved(): boolean {
-    return this.originalBinId !== this.newBinId
+    return this.originalBinId !== this.currentBinId
   }
 
   toString(): string {
     return `ID: ${this.id}, size: ${this.size}, fromBin: ${this.originalBinId}, `+
-        `toBin: ${this.newBinId}`
+        `toBin: ${this.currentBinId}`
   }
 
   static sizeOf(items: readonly Item[]): number {
