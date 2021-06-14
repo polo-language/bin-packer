@@ -24,13 +24,21 @@ export type BoundFunction<T> = (
     sizeOf: (item: T) => number,
     capacity: number
 ) => BoundOutput
+
+export type MoveCallback = (
+    itemId: string,
+    fromBinId: string | null,
+    toBinId: string | null,
+    stage: string,
+    action: string
+) => void
     
 export { nextFit, firstFit, firstFitDecreasing, bestFitDecreasing } from './pack/fit-algos'
 export { binCompletion } from './pack/bin-completion'
 export { lowerBound1, lowerBound2 } from './pack/bounds'
 export { nextFitVarCap } from './pack/fit-variable-capacity'
     
-export { Bin, MoveCallback }  from './repack/bin'
+export { Bin }  from './repack/bin'
 export { Analysis, ItemAnalysis }  from './repack/analysis'
 export { Item }  from './repack/item'
 export { repack, packNew } from './repacker'

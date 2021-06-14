@@ -1,3 +1,4 @@
+import { MoveCallback } from '../index'
 import { Bin } from '../repack/bin'
 import { Item } from '../repack/item'
 import { binaryApply } from '../util/binary-apply'
@@ -12,7 +13,7 @@ class Entry<T> {
  * Swaps items from bins with space overutilization to bins with space underutilization.
  * Disregards slot over-/underutilization.
  */
-export function swapSpace(bins: readonly Bin[]) {
+export function swapSpace(bins: readonly Bin[], moveCallback: MoveCallback) {
   // Algorithm:
   // While there are still oversized bins:
   //    Select the most overutilized bin and the bin with most free space.
@@ -38,7 +39,11 @@ export function swapSpace(bins: readonly Bin[]) {
       const toBin = posSpaceBins[toIndex]
       const pair = findSwapPair(fromBin, toBin)
       if (pair !== null) {
-        Bin.swap(new SwapPair(fromBin, toBin), pair.map(entry => entry.index), 'swapSpace')
+        Bin.swap(
+            new SwapPair(fromBin, toBin),
+            pair.map(entry => entry.index),
+            moveCallback,
+            'swapSpace')
         resortNegSpaceBin(negSpaceBins, noSpaceBins, posSpaceBins, new Entry(fromIndex, fromBin))
         resortPosSpaceBin(noSpaceBins, posSpaceBins, new Entry(toIndex, toBin))
         foundSwap = true
@@ -133,18 +138,22 @@ function resortPosSpaceBin(
   }
 }
 
-export function unswapMoves(bins: Bin[]) {
+/**
+ * Looks for pairs of items in different bins that were originally in the current bin of the other
+ * item, then swaps each back to its original bin if space restrictions allow.
+ */
+export function unswapMoves(bins: Bin[], moveCallback: MoveCallback) {
   const binMap = new Map<string, Bin>(bins.map(bin => [bin.id, bin]))
   for (const bin of Array.from(binMap.values())) {
-    // Keep trying with the same bin so long as a swap is made. Can just loop through the items
+    // Keep trying with the same bin so long as a swap is made. Cannot just loop through the items
     // since swapping reorders them.
-    while (findOneForSwap(bin, binMap)) { }
+    while (findOneForSwap(bin, binMap, moveCallback)) { }
   }
 }
 
 
-/** Tries to find an item to fin a swap for. Returns true f a swap is executed. */
-function findOneForSwap(bin: Bin, binMap: Map<string, Bin>): boolean {
+/** Tries to find and execute a swap for each moved item. */
+function findOneForSwap(bin: Bin, binMap: Map<string, Bin>, moveCallback: MoveCallback): boolean {
   const items = bin.items
   for (let i = 0; i < items.length; ++i) {
     const item = items[i]
@@ -153,7 +162,7 @@ function findOneForSwap(bin: Bin, binMap: Map<string, Bin>): boolean {
       // Hence an item of originalBin with an original id equal to bin's id has moved.
       const originalBin = binMap.get(item.originalBinId)
       if (originalBin !== undefined) {
-        if (findSwapPartner(bin, originalBin, new Entry<Item>(i, item))) {
+        if (findSwapPartner(bin, originalBin, new Entry<Item>(i, item), moveCallback)) {
           return true
         }
       }
@@ -162,15 +171,24 @@ function findOneForSwap(bin: Bin, binMap: Map<string, Bin>): boolean {
   return false
 }
 
-/** Tries to find and execute a swap for item. */
-function findSwapPartner(bin: Bin, originalBin: Bin, entry: Entry<Item>): boolean {
-  const oBinItems = originalBin.items
-  for (let i = 0; i < oBinItems.length; ++i) {
-    const oBinItem = oBinItems[i]
-    if (oBinItem.originalBinId === bin.id) {
-      if (oBinItem.size <= bin.freeSpace + entry.value.size &&
-          entry.value.size <= originalBin.freeSpace + oBinItem.size) {
-        Bin.swap(new SwapPair(bin, originalBin), new SwapPair(entry.index, i), 'unswapMoves')
+/**
+ * Tries to find an item in binB that was originally in binA, and swaps it with the item in
+ * entry if doing so won't violate space restrictions.
+ * Entry must contain an item in binA that was originaly in binB.
+ */
+function findSwapPartner(binA: Bin, binB: Bin, entry: Entry<Item>, moveCallback: MoveCallback)
+    : boolean {
+  const binBItems = binB.items
+  for (let i = 0; i < binBItems.length; ++i) {
+    const oBinItem = binBItems[i]
+    if (oBinItem.originalBinId === binA.id) {
+      if (oBinItem.size <= binA.freeSpace + entry.value.size &&
+          entry.value.size <= binB.freeSpace + oBinItem.size) {
+        Bin.swap(
+            new SwapPair(binA, binB),
+            new SwapPair(entry.index, i),
+            moveCallback,
+            'unswapMoves')
         return true
       }
     }

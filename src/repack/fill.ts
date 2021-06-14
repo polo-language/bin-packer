@@ -1,3 +1,4 @@
+import { MoveCallback } from '../index'
 import { Bin }  from '../repack/bin'
 import { Item }  from '../repack/item'
 import { groupByBoolean, pushFrom } from '../util/utils'
@@ -9,7 +10,7 @@ import { binaryApply } from '../util/binary-apply'
  *                    contents will be changed.
  * @param newItems    Items to be added to bins.
  */
-export function fill(bins: readonly Bin[], newItems: Item[]): Item[] {
+export function fill(bins: readonly Bin[], newItems: Item[], moveCallback: MoveCallback): Item[] {
   const [fullBins, openBins] = groupByBoolean(bins, bin => bin.isOpen())
   const nonFittingItems: Item[] = []
   const insertToExisting = (item: Item, array: Bin[], i: number) => {
@@ -17,7 +18,7 @@ export function fill(bins: readonly Bin[], newItems: Item[]): Item[] {
       // Item is too large to fit in any bin.
       nonFittingItems.push(item)
     } else {
-      array[i].moveIn(item, 'fill')
+      array[i].moveIn(item, moveCallback, 'fill')
     }
   }
   newItems.sort((a, b) => b.size - a.size)

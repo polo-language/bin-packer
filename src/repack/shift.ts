@@ -1,3 +1,4 @@
+import { MoveCallback } from '../index'
 import { Bin }  from '../repack/bin'
 import { Item }  from '../repack/item'
 import { pushFrom } from '../util/utils'
@@ -8,7 +9,7 @@ import * as SortUtils from './sort-utils'
  * Moves items from bins that are over capacity to bins that are both under capacity and have free
  * slots.
  */
-export function shiftOverfull(bins: readonly Bin[]) {
+export function shiftOverfull(bins: readonly Bin[], moveCallback: MoveCallback) {
   // Full here means neither overfull nor fully open. Hence, either exactly space utilized and/or
   // no open slots.
   const [overBins, openBins, fullBins] =  bins.reduce(
@@ -44,7 +45,7 @@ export function shiftOverfull(bins: readonly Bin[]) {
       // free space of the bin with the most free space.
       const insertionBinIndex = openBins.findIndex(bin => sizeToMove! <= bin.freeSpace)
       const insertionBin = openBins[insertionBinIndex]
-      mostOverutilizedBin.moveOut(indexToMove, insertionBin, 'shiftOverfull')
+      mostOverutilizedBin.moveOut(indexToMove, insertionBin, moveCallback, 'shiftOverfull')
       if (!insertionBin.isOpen()) {
         pushFrom(insertionBinIndex, openBins, fullBins)
       }
@@ -61,7 +62,7 @@ export function shiftOverfull(bins: readonly Bin[]) {
  * "Moves" as many slots as possible from bins with open slots to bins with space that have no open
  * slots.
  */
-export function shiftSlots(bins: readonly Bin[]) {
+export function shiftSlots(bins: readonly Bin[], moveCallback: MoveCallback) {
   const [slotsBins, spaceBins, otherBins] =  bins.reduce(
     (acc: [Bin[], Bin[], Bin[]], bin: Bin) => {
       if (bin.freeSlots > 0) {
@@ -76,7 +77,7 @@ export function shiftSlots(bins: readonly Bin[]) {
     [[], [], []]
   )
   if (slotsBins.length > 0 && spaceBins.length > 0) {
-    shiftToOpenSlots(spaceBins, slotsBins, otherBins)
+    shiftToOpenSlots(spaceBins, slotsBins, otherBins, moveCallback)
   }
 }
 
@@ -91,7 +92,8 @@ export function shiftSlots(bins: readonly Bin[]) {
  * bins can only increase in free space by losing items), bins in spaceBins are paired up
  * round-robin with bins in slotsBins.
  */
-function shiftToOpenSlots(spaceBins: Bin[], slotsBins: Bin[], otherBins: Bin[]) {
+function shiftToOpenSlots(
+    spaceBins: Bin[], slotsBins: Bin[], otherBins: Bin[], moveCallback: MoveCallback) {
   if (spaceBins.length < 1) {
     throw new Error('Algorithm error: Can not shift items from no bins')
   }
@@ -101,7 +103,7 @@ function shiftToOpenSlots(spaceBins: Bin[], slotsBins: Bin[], otherBins: Bin[]) 
   spaceBins.sort((a, b) => b.freeSpace - a.freeSpace)
   let skippedBinCount = 0
   while (skippedBinCount < slotsBins.length) {
-    if (!shiftFromOne(skippedBinCount, spaceBins, slotsBins, otherBins)) {
+    if (!shiftFromOne(skippedBinCount, spaceBins, slotsBins, otherBins, moveCallback)) {
       ++ skippedBinCount
     }
   }
@@ -111,8 +113,12 @@ function shiftToOpenSlots(spaceBins: Bin[], slotsBins: Bin[], otherBins: Bin[]) 
  * Moves items into slotsBin from one bin in spaceBins, if possible.
  * Returns true if items where moved, false otherwise.
  */
-function shiftFromOne(slotsIndex: number, spaceBins: Bin[], slotsBins: Bin[], otherBins: Bin[])
-    : boolean {
+function shiftFromOne(
+    slotsIndex: number,
+    spaceBins: Bin[],
+    slotsBins: Bin[],
+    otherBins: Bin[],
+    moveCallback: MoveCallback): boolean {
   const slotsBin = slotsBins[slotsIndex]
   for (let spaceIndex = 0; spaceIndex < spaceBins.length; ++spaceIndex) {
     const spaceBin = spaceBins[spaceIndex]
@@ -126,7 +132,7 @@ function shiftFromOne(slotsIndex: number, spaceBins: Bin[], slotsBins: Bin[], ot
       const slotsBinCopy = slotsBin.deepClone()
       const movingItems: Item[] = decreasingIndexesToMove.reduce((acc: Item[], index: number) => {acc.push(spaceBin.items[index]); return acc}, [])
       for (const index of decreasingIndexesToMove) {
-        spaceBin.moveOut(index, slotsBin, 'shiftSlots')
+        spaceBin.moveOut(index, slotsBin, moveCallback, 'shiftSlots')
       }
       // Re-sort modified slotsBin.
       if (slotsBin.freeSlots < 1) {
@@ -200,12 +206,12 @@ function findApproxLargestIndexes(items: Item[], maxSize: number, count: number)
   return selectedIndexes
 }
 
-export function unshiftMoves(bins: readonly Bin[]) {
+export function unshiftMoves(bins: readonly Bin[], moveCallback: MoveCallback) {
   const binMap = new Map<string, Bin>(bins.map(bin => [bin.id, bin]))
-  while (unshiftMovesOnce(binMap)) { }
+  while (unshiftMovesOnce(binMap, moveCallback)) { }
 }
 
-function unshiftMovesOnce(binMap: Map<string, Bin>): boolean {
+function unshiftMovesOnce(binMap: Map<string, Bin>, moveCallback: MoveCallback): boolean {
   let anyMoved = false
   for (const bin of Array.from(binMap.values())) {
     const items = bin.items
@@ -217,7 +223,7 @@ function unshiftMovesOnce(binMap: Map<string, Bin>): boolean {
         if (originalBin !== undefined &&
             0 < originalBin.freeSlots &&
             item.size <= originalBin.freeSpace) {
-          bin.moveOut(i, originalBin, 'unshiftMoves')
+          bin.moveOut(i, originalBin, moveCallback, 'unshiftMoves')
           anyMoved = true
         }
       }

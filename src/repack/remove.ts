@@ -1,3 +1,4 @@
+import { MoveCallback } from '../index'
 import { Bin }  from '../repack/bin'
 import { Item }  from '../repack/item'
 import { sortAscending } from '../util/utils'
@@ -7,21 +8,23 @@ export function remove(
     bins: readonly Bin[],
     candidateItems: Item[],
     minSizeToRemove: number,
-    minCountToRemove: number): Item[] {
+    minCountToRemove: number,
+    moveCallback: MoveCallback): Item[] {
   return removeAll(
       bins,
       selectCovering(
           sortAscending(candidateItems, item => item.size),
           minSizeToRemove,
           minCountToRemove)
-              .map(index => candidateItems[index]))
+              .map(index => candidateItems[index]),
+      moveCallback)
 }
 
 /**
  * Removes all provided items from bins.
  * Returns items for convenience.
  */
-export function removeAll(bins: readonly Bin[], items: Item[]): Item[] {
+export function removeAll(bins: readonly Bin[], items: Item[], moveCallback: MoveCallback): Item[] {
   const binMap = new Map<string, Bin>(bins.map(bin => [bin.id, bin]))
   for (const item of items) {
     const binId = item.currentBinId
@@ -38,7 +41,7 @@ export function removeAll(bins: readonly Bin[], items: Item[]): Item[] {
       throw new Error(`Item with ID ${item.id} claims to belongs to bin ${binId}, but is not `+
           `present`)
     }
-    bin.moveOut(index, null, 'remove')
+    bin.moveOut(index, null, moveCallback, 'remove')
   }
   return items
 }

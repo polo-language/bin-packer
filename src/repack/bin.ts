@@ -1,9 +1,7 @@
 import { Item }  from './item'
 import { binaryApply } from '../util/binary-apply'
 import { SwapPair } from '../util/utils'
-
-export type MoveCallback =
-    (item: Item, from: string | null, to: string | null, stage: string, action: string) => void
+import { MoveCallback } from '../index'
 
 export class Bin {
   /** Maintained in order of increasing size. */
@@ -13,8 +11,7 @@ export class Bin {
   constructor(
       readonly id: string,
       readonly capacity: number,
-      readonly maxItems: number,
-      readonly moveCallback: MoveCallback) {
+      readonly maxItems: number) {
     this._items = []
     this._fill = 0
   }
@@ -50,30 +47,34 @@ export class Bin {
   /**
    * Moves the item at index itemIndex to the target bin, if it is non-null.
    */
-  moveOut(itemIndex: number, target: Bin | null, stage: string) {
+  moveOut(itemIndex: number, target: Bin | null, moveCallback: MoveCallback, stage: string) {
     const item = this.remove(itemIndex)
     if (target !== null) {
       target.addNonMove(item)
     }
-    this.moveCallback(item, this.id, target ? target.id : null, stage, 'moveOut')
+    moveCallback(item.id, this.id, target ? target.id : null, stage, 'moveOut')
   }
 
-  moveIn(item: Item, stage: string, action?: string) {
+  moveIn(item: Item, moveCallback: MoveCallback, stage: string, action?: string) {
     const priorBinId = item.currentBinId ? item.currentBinId : null
     this.addNonMove(item)
-    this.moveCallback(
-        item,
+    moveCallback(
+        item.id,
         priorBinId,
         this.id,
         stage,
         action === undefined ? 'moveIn' : action)
   }
 
-  static swap(binPair: SwapPair<Bin>, itemIndexPair: SwapPair<number>, stage: string) {
+  static swap(
+      binPair: SwapPair<Bin>,
+      itemIndexPair: SwapPair<number>,
+      moveCallback: MoveCallback,
+      stage: string) {
     const fromItem = binPair.from.remove(itemIndexPair.from)
     const toItem = binPair.to.remove(itemIndexPair.to)
-    binPair.from.moveIn(toItem, stage, 'swap')
-    binPair.to.moveIn(fromItem, stage, 'swap')
+    binPair.from.moveIn(toItem, moveCallback, stage, 'swap')
+    binPair.to.moveIn(fromItem, moveCallback, stage, 'swap')
   }
 
   addNonMove(item: Item) {
@@ -148,7 +149,7 @@ export class Bin {
   }
 
   deepClone(): Bin {
-    const cloned = new Bin(this.id, this.capacity, this.maxItems, this.moveCallback)
+    const cloned = new Bin(this.id, this.capacity, this.maxItems)
     this._items.forEach(item => cloned.addNonMove(item.deepClone()))
     return cloned
   }
