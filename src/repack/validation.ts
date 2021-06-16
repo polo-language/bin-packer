@@ -12,7 +12,7 @@ export class ThrowingErrorHandler implements ErrorHandler {
 }
 
 /**
- * Throws if not all items can fit in the bins.
+ * Checks whether all items can fit in the bins.
  * Does not modify its arguments.
  */
 export function packFeasibility(
@@ -99,5 +99,10 @@ export function validateBins(bins: readonly Bin[], errorHandler: ErrorHandler) {
       errorHandler.handle(`Bin ${bin.id} with capacity ${bin.capacity} is filled to ${bin.fill}. `+
           `Full bin details: ${bin.toString()}`)
     }
+  }
+  const uniqeIds = new Set<string>(bins.map(bin => bin.id))
+  if (uniqeIds.size !== bins.length) {
+    errorHandler.handle(`Duplicate bins: There are ${uniqeIds.size} unique bin ids `+
+        `while the bin array contains ${bins.length} bins`)
   }
 }

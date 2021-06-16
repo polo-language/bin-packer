@@ -24,7 +24,7 @@ export function repack(bins: Bin[], moveCallback: MoveCallback) {
  */
 export function packNew(bins: Bin[], newItems: Item[], moveCallback: MoveCallback): Item[] {
   let nonFittingItems: Item[]
-  if (newItems.length > 0) {
+  if (0 < newItems.length) {
     nonFittingItems = fill(bins, newItems, moveCallback)
   } else {
     nonFittingItems = []
@@ -33,7 +33,10 @@ export function packNew(bins: Bin[], newItems: Item[], moveCallback: MoveCallbac
     shiftSlots(bins, moveCallback)
     nonFittingItems = fill(bins, nonFittingItems, moveCallback)
   }
+  return nonFittingItems
+}
+
+export function unMove(bins: Bin[], moveCallback: MoveCallback) {
   unshiftMoves(bins, moveCallback)
   unswapMoves(bins, moveCallback)
-  return nonFittingItems
 }

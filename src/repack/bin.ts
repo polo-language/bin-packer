@@ -44,12 +44,14 @@ export class Bin {
     return Math.max(0, -1 * this.freeSpace)
   }
 
-  /**
-   * Moves the item at index itemIndex to the target bin, if it is non-null.
-   */
+  /** Removes the item at index itemIndex. Adds it to the target bin, if target is non-null. */
   moveOut(itemIndex: number, target: Bin | null, moveCallback: MoveCallback, stage: string) {
     const item = this.remove(itemIndex)
     if (target !== null) {
+      if (this.id === target.id) {
+        throw new Error(`Algorithm error: `+
+            `Trying to move item ${item.id} out from bin ${this.id} to itself`)
+      }
       target.addNonMove(item)
     }
     moveCallback(item.id, this.id, target ? target.id : null, stage, 'moveOut')
@@ -57,6 +59,10 @@ export class Bin {
 
   moveIn(item: Item, moveCallback: MoveCallback, stage: string, action?: string) {
     const priorBinId = item.currentBinId ? item.currentBinId : null
+    if (priorBinId === this.id) {
+      throw new Error(`Algorithm error: `+
+          `Trying to move item ${item.id} in from bin ${this.id} to itself`)
+    }
     this.addNonMove(item)
     moveCallback(
         item.id,
@@ -71,6 +77,10 @@ export class Bin {
       itemIndexPair: SwapPair<number>,
       moveCallback: MoveCallback,
       stage: string) {
+    if (binPair.from.id === binPair.to.id) {
+      throw new Error(`Algorithm error: `+
+          `Trying to swap items between bin ${binPair.from.id} and itself`)
+    }
     const fromItem = binPair.from.remove(itemIndexPair.from)
     const toItem = binPair.to.remove(itemIndexPair.to)
     binPair.from.moveIn(toItem, moveCallback, stage, 'swap')
