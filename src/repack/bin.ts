@@ -50,7 +50,7 @@ export class Bin {
     if (target !== null) {
       if (this.id === target.id) {
         throw new Error(`Algorithm error: `+
-            `Trying to move item ${item.id} out from bin ${this.id} to itself`)
+            `Trying to move item ${item.id} 'out' from bin ${this.id} to itself`)
       }
       target.addNonMove(item)
     }
@@ -59,9 +59,9 @@ export class Bin {
 
   moveIn(item: Item, moveCallback: MoveCallback, stage: string, action?: string) {
     const priorBinId = item.currentBinId ? item.currentBinId : null
-    if (priorBinId === this.id) {
+    if (this._items.includes(item)) {
       throw new Error(`Algorithm error: `+
-          `Trying to move item ${item.id} in from bin ${this.id} to itself`)
+          `Trying to move item ${item.id} 'in' from bin ${this.id} to itself`)
     }
     this.addNonMove(item)
     moveCallback(

@@ -12,9 +12,7 @@ export class Item {
 
   deepClone(): Item {
     const cloned = new Item(this.id, this.size, this.originalBinId)
-    if (this.currentBinId !== undefined) {
-      cloned.currentBinId = this.currentBinId
-    }
+    cloned.currentBinId = this.currentBinId
     return cloned
   }
 
