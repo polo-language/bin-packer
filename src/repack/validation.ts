@@ -1,5 +1,6 @@
 import { Bin }  from '../repack/bin'
 import { Item }  from '../repack/item'
+import { duplicates, missing } from '../util/utils'
 
 export interface ErrorHandler {
   handle: (message: string) => void
@@ -39,6 +40,7 @@ export function packFeasibility(
 /**
  * Checks whether any items are missing/added.
  * Checks whether any item still has an undefined newBinId.
+ * Checks whether any item appears more than once.
  * Checks whether any bins have been added or removed.
  *
  * @param beforeBins          Bins prior to packing
@@ -63,13 +65,11 @@ export function itemAccounting(
   }
   const beforeItemIds = new Set(beforeBins.flatMap(bin => bin.items.map(item => item.id)))
   newItems.forEach(item => beforeItemIds.add(item.id))
-  let newItemCount = 0
   for (const bin of afterBins) {
     if (!beforeBinIds.has(bin.id)) {
       errorHandler.handle(`Bin with ID ${bin.id} was not present in the original data`)
     }
     for (const item of bin.items) {
-      ++newItemCount
       if (!beforeItemIds.has(item.id)) {
         errorHandler.handle(`Item with ID ${item.id} was not present in the original data`)
       }
@@ -79,10 +79,30 @@ export function itemAccounting(
       }
     }
   }
-  newItemCount += nonFittingItems.length
-  if (beforeItemIds.size !== newItemCount) {
-    errorHandler.handle(`There were ${beforeItemIds.size} items before, but ${newItemCount} `+
-        'afterwards')
+  // Check for duplicates in the input items.
+  const beforeItems = beforeBins.flatMap(bin => bin.items).concat(newItems)
+  const beforeItemDuplicates = duplicates(beforeItems, item => item.id)
+  if (0 < beforeItemDuplicates.length) {
+    errorHandler.handle(`There are ${beforeItemDuplicates.length} duplicates in the input items: `+
+        beforeItemDuplicates.join(', '))
+  }
+  // Check for duplicates in the output items.
+  const afterItems = afterBins.flatMap(bin => bin.items).concat(nonFittingItems)
+  const afterItemDuplicates = duplicates(afterItems, item => item.id)
+  if (0 < afterItemDuplicates.length) {
+    errorHandler.handle(`There are ${afterItemDuplicates.length} duplicates in the output items: `+
+        afterItemDuplicates.join(', '))
+  }
+  if (beforeItems.length !== afterItems.length) {
+    if (beforeItems.length < afterItems.length) {
+      errorHandler.handle(`There were ${beforeItems.length} input items but ${afterItems.length} `+
+          `output items. Items missing in input: `+
+          missing(afterItems, beforeItems, item => item.id).map(item => item.id).join(', '))
+    } else {
+      errorHandler.handle(`There were ${beforeItems.length} input items but ${afterItems.length} `+
+          `output items. Items missing in output: `+
+          missing(beforeItems, afterItems, item => item.id).map(item => item.id).join(', '))
+    }
   }
 }
 
@@ -100,9 +120,9 @@ export function validateBins(bins: readonly Bin[], errorHandler: ErrorHandler) {
           `Full bin details: ${bin.toString()}`)
     }
   }
-  const uniqeIds = new Set<string>(bins.map(bin => bin.id))
-  if (uniqeIds.size !== bins.length) {
-    errorHandler.handle(`Duplicate bins: There are ${uniqeIds.size} unique bin ids `+
-        `while the bin array contains ${bins.length} bins`)
+  const duplicateBins = duplicates(bins, bin => bin.id)
+  if (0 < duplicateBins.length) {
+    errorHandler.handle(`Duplicate bins: There are ${duplicateBins.length} duplicate bins: `+
+        duplicateBins.map(bin => bin.id).join(', '))
   }
 }

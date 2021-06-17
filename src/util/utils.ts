@@ -41,3 +41,25 @@ function boolToInt(bool: boolean) {
 export function pushFrom<T>(index: number, from: T[], to: T[]) {
   to.push(from.splice(index, 1)[0])
 }
+
+/**
+ * Returns all items that appear more than once in array. An item appearing n times in the output
+ * appears n + 1 times in the input.
+ */
+export function duplicates<T, H extends number | string>(array: readonly T[], hash: (t: T) => H)
+    : T[] {
+  const duplicates = Array.from(array)
+  new Map<H, T>(array.map(t => [hash(t), t])).forEach((_t, h) => {
+    duplicates.splice(duplicates.findIndex(dupT => h === hash(dupT)), 1)
+  })
+  return duplicates
+}
+
+export function missing<T, H extends number | string>(all: T[], subset: T[], hash: (t: T) => H)
+    : T[] {
+  const missing = Array.from(all)
+  for (const t of subset) {
+    missing.splice(missing.findIndex(other => hash(other) === hash(t)), 1)
+  }
+  return missing
+}
