@@ -57,8 +57,16 @@ export class Bin {
     moveCallback(item.id, this.id, target ? target.id : null, stage, 'moveOut')
   }
 
-  moveIn(item: Item, moveCallback: MoveCallback, stage: string, action?: string) {
-    const priorBinId = item.currentBinId ? item.currentBinId : null
+  moveIn(item: Item, moveCallback: MoveCallback, stage: string, action?: string, fromBin?: Bin) {
+    if (fromBin !== undefined &&
+        item.currentBinId !== undefined &&
+        fromBin.id !== item.currentBinId) {
+      throw new Error(`Algorithm error: fromBin ${fromBin.id} not the same as item currentBinId `+
+          item.currentBinId)
+    }
+    const priorBinId = fromBin !== undefined ?
+        fromBin.id :
+        (item.currentBinId !== undefined ? item.currentBinId : null)
     if (this._items.includes(item)) {
       throw new Error(`Algorithm error: `+
           `Trying to move item ${item.id} 'in' from bin ${this.id} to itself`)
@@ -83,8 +91,8 @@ export class Bin {
     }
     const fromItem = binPair.from.remove(itemIndexPair.from)
     const toItem = binPair.to.remove(itemIndexPair.to)
-    binPair.from.moveIn(toItem, moveCallback, stage, 'swap')
-    binPair.to.moveIn(fromItem, moveCallback, stage, 'swap')
+    binPair.from.moveIn(toItem, moveCallback, stage, 'swap', binPair.to)
+    binPair.to.moveIn(fromItem, moveCallback, stage, 'swap', binPair.from)
   }
 
   addNonMove(item: Item) {
