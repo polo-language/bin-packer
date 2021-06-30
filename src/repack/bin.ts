@@ -17,35 +17,35 @@ export class Bin {
   }
 
   /** Returns a copy of the item array. */
-  get items() {
+  get items(): Item[] {
     return this._items.slice()
   }
 
-  get itemCount() {
+  get itemCount(): number {
     return this._items.length
   }
 
   /** Amount of free space remaining. May be negative. */
-  get freeSpace() {
+  get freeSpace(): number {
     return this.capacity - this.fill
   }
 
   /** Number of free slots remaining. May be negative. */
-  get freeSlots() {
+  get freeSlots(): number {
     return this.maxItems - this.itemCount
   }
 
-  get fill() {
+  get fill(): number {
     return this._fill
   }
 
   /** Always non-negative, zero for bins within capacity. */
-  get overfill() {
+  get overfill(): number {
     return Math.max(0, -1 * this.freeSpace)
   }
 
   /** Removes the item at index itemIndex. Adds it to the target bin, if target is non-null. */
-  moveOut(itemIndex: number, target: Bin | null, moveCallback: MoveCallback, stage: string) {
+  moveOut(itemIndex: number, target: Bin | null, moveCallback: MoveCallback, stage: string): void {
     const item = this.remove(itemIndex)
     if (target !== null) {
       if (this.id === target.id) {
@@ -57,7 +57,8 @@ export class Bin {
     moveCallback(item.id, this.id, target ? target.id : null, stage, 'moveOut')
   }
 
-  moveIn(item: Item, moveCallback: MoveCallback, stage: string, action?: string, fromBin?: Bin) {
+  moveIn(item: Item, moveCallback: MoveCallback, stage: string, action?: string, fromBin?: Bin)
+      : void {
     if (fromBin !== undefined &&
         item.currentBinId !== undefined &&
         fromBin.id !== item.currentBinId) {
@@ -84,7 +85,7 @@ export class Bin {
       binPair: SwapPair<Bin>,
       itemIndexPair: SwapPair<number>,
       moveCallback: MoveCallback,
-      stage: string) {
+      stage: string): void {
     if (binPair.from.id === binPair.to.id) {
       throw new Error(`Algorithm error: `+
           `Trying to swap items between bin ${binPair.from.id} and itself`)
@@ -95,7 +96,7 @@ export class Bin {
     binPair.to.moveIn(fromItem, moveCallback, stage, 'swap', binPair.from)
   }
 
-  addNonMove(item: Item) {
+  addNonMove(item: Item): void {
     binaryApply(
         this._items,
         item,
@@ -112,7 +113,7 @@ export class Bin {
    * possible item is removed. Returns a tuple of nulls if all items are larger than max.
    * May only be called on non-empty bins that are filled beyond capacity.
    */
-  largestFromOverfill(max: number): [number | null, number | null] {
+  largestFromOverfill(max: number): { index: number, size: number } | null {
     if (this.itemCount === 0) {
       throw new Error('Can not remove item from empty bin')
     }
@@ -121,7 +122,7 @@ export class Bin {
     }
     if (max < this._items[0].size) {
       // No item is smaller than max.
-      return [null, null]
+      return null
     }
     const softMin = this.overfill
     const maxIndex = this._items.length - 1
@@ -132,7 +133,7 @@ export class Bin {
                 this._items.findIndex(item => softMin <= item.size),
                 this.smallestIndexOfItemWithSizeLessOrEqual(max)))
         : this.smallestIndexOfItemWithSizeLessOrEqual(max)
-    return [index, this._items[index].size]
+    return { index: index, size: this._items[index].size }
   }
 
   /** May only be called when at least one element is less than max. */
@@ -180,7 +181,8 @@ export class Bin {
     return bins.reduce((acc: number, bin: Bin) => acc + bin.maxItems, 0)
   }
 
-  toJSON(key: string): any {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
+  toJSON(_key: string): any {
     return {
       'ID': this.id,
       'capacity': this.capacity,

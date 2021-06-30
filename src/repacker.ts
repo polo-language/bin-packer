@@ -9,7 +9,7 @@ import { swapSpace, unswapMoves } from './repack/swap'
  * Moves items between bins to reduce overage of slot and/or space usage.
  * Modifies bins in-place.
  */
-export function repack(bins: Bin[], moveCallback: MoveCallback) {
+export function repack(bins: Bin[], moveCallback: MoveCallback): void {
   if (bins.some(bin => bin.isOverfull())) {
     shiftOverfull(bins, moveCallback)
   }
@@ -36,7 +36,7 @@ export function packNew(bins: Bin[], newItems: Item[], moveCallback: MoveCallbac
   return nonFittingItems
 }
 
-export function unMove(bins: Bin[], moveCallback: MoveCallback) {
+export function unMove(bins: Bin[], moveCallback: MoveCallback): void {
   unshiftMoves(bins, moveCallback)
   unswapMoves(bins, moveCallback)
 }

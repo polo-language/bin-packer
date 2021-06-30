@@ -55,6 +55,7 @@ export function lowerBound2Sorted<T>(sortedArray: T[],
   let elementTotal = 0
   const constSizeOf = sizeOf // const for linter.
   while (sortedArray.length > 0) {
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const largestSize = sizeOf(sortedArray.pop()!)
     elementTotal += largestSize
     const remainder = capacity - largestSize

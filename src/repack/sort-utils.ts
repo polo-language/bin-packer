@@ -16,7 +16,7 @@ export function hasMoreFreeSlots(bin: Bin, _: Bin[], otherBin: Bin): boolean {
   return otherBin.freeSlots <= bin.freeSlots
 }
 
-export function spliceOne<T>(bin: T, bins: T[], targetIndex: number) {
+export function spliceOne<T>(bin: T, bins: T[], targetIndex: number): void {
   bins.splice(targetIndex, 0, bin)
 }
 
@@ -26,7 +26,7 @@ export function spliceOne<T>(bin: T, bins: T[], targetIndex: number) {
  * one position before targetIndex (since intervening objs are shifted back by one to fill in the
  * space of the moving obj).
  */
-export function moveWithin<T>(currentIndex: number, t: T[], targetIndex: number) {
+export function moveWithin<T>(currentIndex: number, t: T[], targetIndex: number): void {
   if (targetIndex === currentIndex || targetIndex + 1 === currentIndex) {
     return
   }

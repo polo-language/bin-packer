@@ -288,7 +288,7 @@ describe('bin-packer', function () {
           expect(nextFit.bins.length).toEqual(nextFitVarCap.bins.length)
         })
         it(`firstFit bins identical to nextFitVarCap bins with constant capacity (${dataName})`,
-            () => { expect(nextFit.bins).toEqual(nextFitVarCap.bins.map(bin => bin.items)) }
+            () => { expect(nextFit.bins).toEqual(nextFitVarCap.bins) }
         )
         
         it(`lowerBound1 <= lowerBound2 (${dataName})`, function () {

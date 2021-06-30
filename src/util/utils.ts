@@ -38,7 +38,7 @@ function boolToInt(bool: boolean) {
   return bool ? 1 : 0
 }
 
-export function pushFrom<T>(index: number, from: T[], to: T[]) {
+export function pushFrom<T>(index: number, from: T[], to: T[]): void {
   to.push(from.splice(index, 1)[0])
 }
 

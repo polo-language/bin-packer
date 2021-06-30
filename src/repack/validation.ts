@@ -7,7 +7,7 @@ export interface ErrorHandler {
 }
 
 export class ThrowingErrorHandler implements ErrorHandler {
-  handle(message: string) {
+  handle(message: string): never {
     throw new Error(message)
   }
 }
@@ -17,7 +17,7 @@ export class ThrowingErrorHandler implements ErrorHandler {
  * Does not modify its arguments.
  */
 export function packFeasibility(
-    bins: readonly Bin[], newItems: readonly Item[], errorHandler: ErrorHandler) {
+    bins: readonly Bin[], newItems: readonly Item[], errorHandler: ErrorHandler): void {
   const binSpace = Bin.capacityOf(bins)
   const itemSpace =
       Item.sizeOf(newItems) +
@@ -54,7 +54,7 @@ export function itemAccounting(
     newItems: readonly Item[],
     afterBins: readonly Bin[],
     nonFittingItems: readonly Item[],
-    errorHandler: ErrorHandler) {
+    errorHandler: ErrorHandler): void {
   if (beforeBins.length !== afterBins.length) {
     errorHandler.handle(`Started with ${beforeBins.length} bins, ended up with `+
         `${afterBins.length} bins`)
@@ -109,7 +109,7 @@ export function itemAccounting(
 /**
  * Checks whether any bin invariants are violated.
  */
-export function validateBins(bins: readonly Bin[], errorHandler: ErrorHandler) {
+export function validateBins(bins: readonly Bin[], errorHandler: ErrorHandler): void {
   for (const bin of bins) {
     if (bin.itemCount > bin.maxItems) {
       errorHandler.handle(`Bin ${bin.id} with max items ${bin.maxItems} contains `+

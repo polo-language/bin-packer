@@ -1,6 +1,7 @@
 export interface PackingOutput<T> {
     bins: T[][]
     oversized: T[]
+    unpacked?: T[]
 }
 
 export interface BoundOutput {

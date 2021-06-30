@@ -1,6 +1,6 @@
-import { InputObject } from "../index"
-import { adaptToNumberIterable, prepareValuesNoCapacity } from "../util/prepare-values"
-import { sortAscending } from "../util/utils"
+import { InputObject, PackingOutput } from '../index'
+import { adaptToNumberIterable, prepareValuesNoCapacity } from '../util/prepare-values'
+import { sortAscending } from '../util/utils'
 
 class Bin<T> {
   utilization: number
@@ -31,6 +31,7 @@ class Bin<T> {
   }
 }
 
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 /**
  * 
  * @param {*} obj 
@@ -40,11 +41,11 @@ class Bin<T> {
  export function nextFitVarCap<T>(
     obj: InputObject<T>,
     sizeOf: (t: T) => number,
-    capacities: number | Iterable<number> | (() => Iterable<number>)) {
+    capacities: number | Iterable<number> | (() => Iterable<number>)): PackingOutput<T> {
   const array = prepareValuesNoCapacity(obj, sizeOf)
   const bins = []
   const oversized = []
-  const unreached = []
+  const unpacked: T[] = []
   const nextBin = (function () {
     const capacitiesIter = adaptToNumberIterable(capacities)[Symbol.iterator]()
     let nextBinId = 0
@@ -66,7 +67,7 @@ class Bin<T> {
   for (const item of array) {
     // Received the 'shut down' signal?
     if (drainToUnreached) {
-      unreached.push(item)
+      unpacked.push(item)
     } else {
       const size = sizeOf(item)
       // Add it to the current bin if it fits.
@@ -101,8 +102,9 @@ class Bin<T> {
     bins.push(currentBin)
   }
   return {
-    bins: sortAscending(bins, bin => bin.id), // Sorted by bin creation order.
+    bins: sortAscending(bins, bin => bin.id).map(bin => bin.items), // Sorted by bin creation order.
     oversized: oversized,
-    unreached: unreached
+    unpacked: unpacked
   }
 }
+/* eslint-enable @typescript-eslint/no-non-null-assertion */

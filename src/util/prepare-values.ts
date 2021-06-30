@@ -74,6 +74,7 @@ function toIterable<T>(obj: Iterable<T> | { [index: string]: T }): Iterable<T> {
 }
 
 /** Returns whether {@link obj} is iterable. */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/explicit-module-boundary-types
 export function isIterable<T>(obj: any): obj is Iterable<T> {
   return typeof obj[Symbol.iterator] === 'function'
 }

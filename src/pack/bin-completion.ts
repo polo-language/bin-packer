@@ -45,6 +45,7 @@ class CompletionNode<T> {
   /** Walks up the tree, assembling itself and its parents into an array. */
   assemblePacking(): T[][] {
     const packing: T[][] = []
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
     let node: CompletionNode<T> = this
     while (node.parent !== null) {
         packing.push(node.bin)

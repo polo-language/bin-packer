@@ -16,7 +16,8 @@
   "scripts": {
     "build": "tsc",
     "test": "npx jasmine",
-    "prepare": "npm run build"
+    "prepare": "npm run build",
+    "lint": "npx eslint . --ext .js,.jsx,.ts,.tsx"
   },
   "files": [
     "lib/**/*"
@@ -30,7 +31,10 @@
     "sort"
   ],
   "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^4.28.1",
+    "@typescript-eslint/parser": "^4.28.1",
+    "eslint": "^7.29.0",
     "jasmine": "^3.7.0",
-    "typescript": "^4.2.4"
+    "typescript": "^4.3.4"
   }
 }

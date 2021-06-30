@@ -13,7 +13,7 @@ class Entry<T> {
  * Swaps items from bins with space overutilization to bins with space underutilization.
  * Disregards slot over-/underutilization.
  */
-export function swapSpace(bins: readonly Bin[], moveCallback: MoveCallback) {
+export function swapSpace(bins: readonly Bin[], moveCallback: MoveCallback): void {
   // Algorithm:
   // While there are still oversized bins:
   //    Select the most overutilized bin and the bin with most free space.
@@ -142,12 +142,12 @@ function resortPosSpaceBin(
  * Looks for pairs of items in different bins that were originally in the current bin of the other
  * item, then swaps each back to its original bin if space restrictions allow.
  */
-export function unswapMoves(bins: Bin[], moveCallback: MoveCallback) {
+export function unswapMoves(bins: Bin[], moveCallback: MoveCallback): void {
   const binMap = new Map<string, Bin>(bins.map(bin => [bin.id, bin]))
   for (const bin of Array.from(binMap.values())) {
     // Keep trying with the same bin so long as a swap is made. Cannot just loop through the items
     // since swapping reorders them.
-    while (findOneForSwap(bin, binMap, moveCallback)) { }
+    while (findOneForSwap(bin, binMap, moveCallback)) { /* do nothing */ }
   }
 }
 
