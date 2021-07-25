@@ -44,7 +44,7 @@ export class Bin {
     return Math.max(0, -1 * this.freeSpace)
   }
 
-  /** Removes the item at index itemIndex. Adds it to the target bin, if target is non-null. */
+  /** Removes the item at itemIndex. Adds it to the target bin if target is non-null. */
   moveOut(itemIndex: number, target: Bin | null, moveCallback: MoveCallback, stage: string): void {
     const item = this.remove(itemIndex)
     if (target !== null) {

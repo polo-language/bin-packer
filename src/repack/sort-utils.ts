@@ -3,6 +3,9 @@ import { Bin }  from '../repack/bin'
 export function hasMoreFreeSpace(bin: Bin, _: Bin[], otherBin: Bin): boolean {
   return otherBin.freeSpace <= bin.freeSpace
 }
+export function hasLessFreeSpace(bin: Bin, _: Bin[], otherBin: Bin): boolean {
+  return bin.freeSpace <= otherBin.freeSpace
+}
 
 export function hasLessFreeSpaceByIndex(currentIndex: number, bins: Bin[], otherBin: Bin): boolean {
   return bins[currentIndex].freeSpace <= otherBin.freeSpace
@@ -10,6 +13,10 @@ export function hasLessFreeSpaceByIndex(currentIndex: number, bins: Bin[], other
 
 export function hasMoreFreeSpaceByIndex(currentIndex: number, bins: Bin[], otherBin: Bin): boolean {
   return otherBin.freeSpace <= bins[currentIndex].freeSpace
+}
+
+export function hasMoreOverfillByIndex(currentIndex: number, bins: Bin[], otherBin: Bin): boolean {
+  return otherBin.overfill <= bins[currentIndex].overfill
 }
 
 export function hasMoreFreeSlots(bin: Bin, _: Bin[], otherBin: Bin): boolean {

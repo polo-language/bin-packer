@@ -24,17 +24,16 @@ export function shiftOverfull(bins: readonly Bin[], moveCallback: MoveCallback):
       },
       [[], [], []]
   )
+  // Sort most to least overutilized
+  overBins.sort((a, b) => b.overfill - a.overfill)
+  // Sort least to most freespace
+  openBins.sort((a, b) => a.freeSpace - b.freeSpace)
   let skippedBinCount = 0
   while (overBins.length > skippedBinCount) {
     if (openBins.length < 1) {
       // The remaining overutilized bins will need to swap out items.
       return
     }
-    // TODO: Keep bins sorted more efficiently.
-    // Sort most to least overutilized
-    overBins.sort((a, b) => b.overfill - a.overfill)
-    // Sort least to most freespace
-    openBins.sort((a, b) => a.freeSpace - b.freeSpace)
     const mostOverutilizedBin = overBins[skippedBinCount]
     const toMove =
         mostOverutilizedBin.largestFromOverfill(openBins[openBins.length - 1].freeSpace)
@@ -43,16 +42,24 @@ export function shiftOverfull(bins: readonly Bin[], moveCallback: MoveCallback):
     } else {
       // Will always find a target bin because itemToMove was restricted to being smaller than the
       // free space of the bin with the most free space.
-      const insertionBinIndex = openBins.findIndex(bin => toMove.size <= bin.freeSpace)
-      const insertionBin = openBins[insertionBinIndex]
-      mostOverutilizedBin.moveOut(toMove.index, insertionBin, moveCallback, 'shiftOverfull')
-      if (!insertionBin.isOpen()) {
-        pushFrom(insertionBinIndex, openBins, fullBins)
+      const targetBinIndex = openBins.findIndex(bin => toMove.size <= bin.freeSpace)
+      const targetBin = openBins[targetBinIndex]
+      mostOverutilizedBin.moveOut(toMove.index, targetBin, moveCallback, 'shiftOverfull')
+      if (!targetBin.isOpen()) {
+        pushFrom(targetBinIndex, openBins, fullBins)
+      } else {
+        binaryApply(
+            openBins, targetBinIndex, SortUtils.hasLessFreeSpaceByIndex, SortUtils.moveWithin)
       }
       if (mostOverutilizedBin.isOpen()) {
-        pushFrom(skippedBinCount, overBins, openBins)
+        // Splice mostOverutilizedBin out this time.
+        const mostOverutilizedBin = overBins.splice(skippedBinCount, 1)[0]
+        binaryApply(openBins, mostOverutilizedBin, SortUtils.hasLessFreeSpace, SortUtils.spliceOne)
       } else if (!mostOverutilizedBin.isOverfull()) {
         pushFrom(skippedBinCount, overBins, fullBins)
+      } else {
+        binaryApply(
+            overBins, skippedBinCount, SortUtils.hasMoreOverfillByIndex, SortUtils.moveWithin)
       }
     }
   }
