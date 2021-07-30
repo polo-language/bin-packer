@@ -2,6 +2,7 @@ import { Item }  from './item'
 import { binaryApply } from '../util/binary-apply'
 import { SwapPair } from '../util/utils'
 import { MoveCallback } from '../index'
+import { Move } from '../sequence/move'
 
 export class Bin {
   /** Maintained in order of increasing size. */
@@ -42,6 +43,13 @@ export class Bin {
   /** Always non-negative, zero for bins within capacity. */
   get overfill(): number {
     return Math.max(0, -1 * this.freeSpace)
+  }
+
+  moveOutItem(item: Item, target: Bin, moveCallback: MoveCallback, stage: string): void {
+    return this.moveOut(
+        this._items.findIndex(otherItem => item.id == otherItem.id),
+        target, moveCallback,
+        stage)
   }
 
   /** Removes the item at itemIndex. Adds it to the target bin if target is non-null. */
@@ -105,6 +113,26 @@ export class Bin {
     )
     this._fill += item.size
     item.currentBinId = this.id
+  }
+
+  /**
+   * Executes the move on this bin if it is a move to or from this bin.
+   * Throws if it is a move both to and from, or neither to nor from this bin.
+   */
+  executeMove(move: Move, moveCallback: MoveCallback, stage: string): void {
+    const isFrom = this.id === move.from.id
+    const isTo = this.id === move.to.id
+    if (!isFrom && !isTo) {
+      throw new Error(`Can not execute move neither to nor from this bin`)
+    }
+    if (isFrom && isTo) {
+      throw new Error(`Can not execute move to and from the same bin`)
+    }
+    if (isFrom) {
+      this.moveOutItem(move.item, move.to, moveCallback, stage)
+    } else {
+      this.moveIn(move.item, moveCallback, stage)
+    }
   }
 
   /**

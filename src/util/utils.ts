@@ -63,3 +63,32 @@ export function missing<T, H extends number | string>(all: T[], subset: T[], has
   }
   return missing
 }
+
+/**
+ * Returns the mapping for key in map if it exists. Otherwise generates a new mapping from the
+ * valueSupplier and, if an initializer is provided, it is applied to the new value.
+ */
+export function getOrCreate<K, V>(
+    map: Map<K, V>,
+    key: K,
+    valueSupplier: () => V,
+    initializer?: (value: V) => void): V {
+  let value = map.get(key)
+  if (value == undefined) {
+    value = valueSupplier()
+    map.set(key, value)
+    if (initializer !== undefined) {
+      initializer(value)
+    }
+  }
+  return value
+}
+
+/** Like getOrCreate, but if a new value is created, it is returned without being set on the map. */
+export function getOrNew<K, V>(
+    map: /*readonly*/ Map<K, V>,
+    key: K,
+    valueSupplier: () => V,) {
+  const value = map.get(key)
+  return value !== undefined ? value : valueSupplier()
+}
