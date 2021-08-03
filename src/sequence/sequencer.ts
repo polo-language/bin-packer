@@ -10,18 +10,22 @@ import { BinMoves, Move } from './move'
  */
 export function sequence(bins: Bin[], moves: Move[]): Move[] {
   const moveCallback: MoveCallback = (_itemId, _fromBinId, _toBinId, _stage, _action) => {}
-  return prelude(bins, moves, moveCallback, [])
+  const sequencedMoves: Move[] =[]
+  prelude(bins, moves, sequencedMoves, moveCallback)
+  stage1(moves, sequencedMoves, moveCallback)
+  return sequencedMoves
 }
 
 /**
  * Recursive.
- * Modifies bin contents.
+ * Modifies bin contents and move arrays.
+ * Returns sequenced moves.
  */
 function prelude(
     bins: readonly Bin[],
     remainingMoves: Move[],
-    moveCallback: MoveCallback,
-    sequencedMoves: Move[]): Move[] {
+    sequencedMoves: Move[],
+    moveCallback: MoveCallback) {
   const binMovesAll = assignMoves(bins, remainingMoves)
   const slotFails = binMovesAll.filter(binMove => slotFailPredicate(binMove))
   if (0 < slotFails.length) {
@@ -30,29 +34,24 @@ function prelude(
   }
   const binMoves = binMovesAll.filter(binsMoves =>
       0 !== binsMoves.incoming.length || 0 !== binsMoves.outgoing.length)
-  const actionableBinMoves = binMoves.filter(binMoves =>
+  const inNoOutBinMoves = binMoves.filter(binMoves =>
       0 < binMoves.incoming.length && 0 === binMoves.outgoing.length)
-  if (0 === actionableBinMoves.length) {
-    return sequencedMoves
+  if (0 === inNoOutBinMoves.length) {
+    return
   } else {
     // Execute moves on bins.
-    for (const actionable of actionableBinMoves) {
-      for (const incoming of actionable.incoming) {
-        actionable.bin.executeMove(incoming, moveCallback, 'prelude')
+    for (const binMove of inNoOutBinMoves) {
+      for (const incoming of binMove.incoming) {
+        binMove.bin.executeMove(incoming, moveCallback, 'sequencer_prelude')
       }
     }
-    const actionableMoves = actionableBinMoves.flatMap(binMoves => binMoves.incoming)
-    const otherMoves = remainingMoves.filter(move => !actionableMoves.includes(move))
-    for (const move of actionableMoves) {
+    const toExecute = inNoOutBinMoves.flatMap(binMoves => binMoves.incoming)
+    splice(remainingMoves, sequencedMoves, toExecute)
+    for (const move of toExecute) {
       sequencedMoves.push(move)
     }
-    return prelude(bins, otherMoves, moveCallback, sequencedMoves)
+    prelude(bins, remainingMoves, sequencedMoves, moveCallback)
   }
-}
-
-function inNoOutBins(movesForBins: BinMoves[]): BinMoves[] {
-  return movesForBins.filter(binMoves =>
-      0 < binMoves.incoming.length && 0 === binMoves.outgoing.length)
 }
 
 /**
@@ -78,4 +77,35 @@ function assignMoves(bins: readonly Bin[], moves: readonly Move[]): BinMoves[] {
 
 function slotFailPredicate(binMoves: BinMoves): boolean {
   return binMoves.bin.freeSlots + binMoves.outgoing.length < binMoves.incoming.length
+}
+
+function splice(from: Move[], to: Move[], fromSubset: Move[]) {
+  for (const move of fromSubset) {
+    spliceOne(from, to, move)
+  }
+}
+
+function spliceOne(from: Move[], to: Move[], fromMove: Move) {
+  const index = from.findIndex(move => fromMove.id === move.id)
+  if (index === -1) {
+    throw new Error(`Move with ID ${fromMove.id} not in 'from'`)
+  }
+  to.push(from.splice(index, 1)[0])
+}
+
+function stage1(
+    remainingMoves: Move[],
+    sequencedMoves: Move[],
+    moveCallback: MoveCallback) {
+  let moveMade
+  do {
+    moveMade = false
+    for (const move of remainingMoves) {
+      if (0 < move.to.freeSlots) {
+        moveMade = true
+        move.from.executeMove(move, moveCallback, 'sequencer_stage1')
+        spliceOne(remainingMoves, sequencedMoves, move)
+      }
+    }
+  } while (moveMade)
 }

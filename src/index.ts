@@ -52,3 +52,5 @@ export {
     ErrorHandler,
     ThrowingErrorHandler
 } from './repack/validation'
+export { Move } from './sequence/move'
+export { sequence } from './sequence/sequencer'
