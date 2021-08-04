@@ -8,9 +8,8 @@ import { BinMoves, Move } from './move'
  * bins) that, when applied one-by-one, never violates a Bin invariant.
  * Currently checks slot invariants only, ignoring size invariants.
  */
-export function sequence(bins: Bin[], moves: Move[]): Move[] {
-  const moveCallback: MoveCallback = (_itemId, _fromBinId, _toBinId, _stage, _action) => {}
-  const sequencedMoves: Move[] =[]
+export function sequence(bins: Bin[], moves: Move[], moveCallback: MoveCallback): Move[] {
+  const sequencedMoves: Move[] = []
   prelude(bins, moves, sequencedMoves, moveCallback)
   stage1(moves, sequencedMoves, moveCallback)
   return sequencedMoves
@@ -47,9 +46,6 @@ function prelude(
     }
     const toExecute = inNoOutBinMoves.flatMap(binMoves => binMoves.incoming)
     splice(remainingMoves, sequencedMoves, toExecute)
-    for (const move of toExecute) {
-      sequencedMoves.push(move)
-    }
     prelude(bins, remainingMoves, sequencedMoves, moveCallback)
   }
 }
