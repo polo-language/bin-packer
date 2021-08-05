@@ -45,7 +45,7 @@ export class Bin {
     return Math.max(0, -1 * this.freeSpace)
   }
 
-  moveOutItem(item: Item, target: Bin, moveCallback: MoveCallback, stage: string): void {
+  moveOutItem(item: Item, target: Bin | null, moveCallback: MoveCallback, stage: string): void {
     return this.moveOut(
         this._items.findIndex(otherItem => item.id == otherItem.id),
         target, moveCallback,
