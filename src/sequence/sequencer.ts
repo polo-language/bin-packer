@@ -6,9 +6,11 @@ import { BinMoves, Move } from './move'
  * Generates a sequence of moves equivalent to the provided moves argument (meaning the result of
  * applying either of the input or output Move arrays to the bins argument results in identical
  * bins) that, when applied one-by-one, never violates a Bin invariant.
- * Currently checks slot invariants only, ignoring size invariants.
+ * Checks slot invariants only, ignoring size invariants.
+ * Consumes the moves argument. If not all moves can be sequenced, the remaining moves are left in
+ * this array. Hence this argument should be checked to be empty after sequence returns.
  */
-export function sequence(bins: Bin[], moves: Move[], moveCallback: MoveCallback): Move[] {
+export function sequence(bins: readonly Bin[], moves: Move[], moveCallback: MoveCallback): Move[] {
   const sequencedMoves: Move[] = []
   prelude(bins, moves, sequencedMoves, moveCallback)
   stage1(moves, sequencedMoves, moveCallback)
@@ -18,7 +20,6 @@ export function sequence(bins: Bin[], moves: Move[], moveCallback: MoveCallback)
 /**
  * Recursive.
  * Modifies bin contents and move arrays.
- * Returns sequenced moves.
  */
 function prelude(
     bins: readonly Bin[],
@@ -40,8 +41,8 @@ function prelude(
   } else {
     // Execute moves on bins.
     for (const binMove of inNoOutBinMoves) {
-      for (const incoming of binMove.incoming) {
-        binMove.bin.executeMove(incoming, moveCallback, 'sequencer_prelude')
+      for (const move of binMove.incoming) {
+        Bin.executeMove(move, moveCallback, 'sequencer_prelude')
       }
     }
     const toExecute = inNoOutBinMoves.flatMap(binMoves => binMoves.incoming)
@@ -89,6 +90,11 @@ function spliceOne(from: Move[], to: Move[], fromMove: Move) {
   to.push(from.splice(index, 1)[0])
 }
 
+/**
+ * While there exists a move whose target has an open slot
+ * Arbitrarily select and execute such a move (order may matter but stage1 just tries its luck).
+ * Worst case time is O(n^2) in the number of remaining moves.
+ */
 function stage1(
     remainingMoves: Move[],
     sequencedMoves: Move[],
@@ -98,9 +104,13 @@ function stage1(
     moveMade = false
     for (const move of remainingMoves) {
       if (0 < move.to.freeSlots) {
-        moveMade = true
-        move.from.executeMove(move, moveCallback, 'sequencer_stage1')
+        Bin.executeMove(move, moveCallback, 'sequencer_stage1')
         spliceOne(remainingMoves, sequencedMoves, move)
+        moveMade = true
+        // Start over so we don't modify remainingMoves during iteration.
+        // Can't mark moves here and process after inner loop since one move may fill a space
+        // required for another move.
+        break
       }
     }
   } while (moveMade)

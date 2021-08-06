@@ -49,44 +49,52 @@ export class Bin {
     return this.moveOut(
         this._items.findIndex(otherItem => item.id == otherItem.id),
         target, moveCallback,
-        stage)
+        stage,
+        item.id)
   }
 
   /** Removes the item at itemIndex. Adds it to the target bin if target is non-null. */
-  moveOut(itemIndex: number, target: Bin | null, moveCallback: MoveCallback, stage: string): void {
-    const item = this.remove(itemIndex)
+  moveOut(
+      itemIndex: number,
+      target: Bin | null,
+      moveCallback: MoveCallback,
+      stage: string,
+      itemId?: string): void {
+    const action = 'moveOut'
+    const item = this.remove(itemIndex, stage, action, itemId)
     if (target !== null) {
       if (this.id === target.id) {
-        throw new Error(`Algorithm error: `+
-            `Trying to move item ${item.id} 'out' from bin ${this.id} to itself`)
+        throw new Error(`Algorithm error: Trying to move item ${item.id} 'out' from bin `+
+            `${this.id} to itself during stage ${stage}, action ${action}`)
       }
       target.addNonMove(item)
     }
-    moveCallback(item.id, this.id, target ? target.id : null, stage, 'moveOut')
+    moveCallback(item.id, this.id, target ? target.id : null, stage, action)
   }
 
+  /**
+   * Moves item into this bin. Does not remove the item from its current bin, hence either only call
+   * on items not in a known bin, or ensure removal is executed separately.
+   */
   moveIn(item: Item, moveCallback: MoveCallback, stage: string, action?: string, fromBin?: Bin)
       : void {
+    const acton = action === undefined ? 'moveIn' : action
     if (fromBin !== undefined &&
         item.currentBinId !== undefined &&
         fromBin.id !== item.currentBinId) {
-      throw new Error(`Algorithm error: fromBin ${fromBin.id} not the same as item currentBinId `+
-          item.currentBinId)
+      throw new Error(`Algorithm error: moveIn fromBin ${fromBin.id} not the same as item `+
+          `currentBinId ${item.currentBinId} during action ${action}, stage ${stage}, action `+
+          action)
     }
     const priorBinId = fromBin !== undefined ?
         fromBin.id :
         (item.currentBinId !== undefined ? item.currentBinId : null)
     if (this._items.includes(item)) {
-      throw new Error(`Algorithm error: `+
-          `Trying to move item ${item.id} 'in' from bin ${this.id} to itself`)
+      throw new Error(`Algorithm error: Trying to move item ${item.id} 'in' from bin ${this.id} `+
+          `to itself during stage ${stage}, action ${action}`)
     }
     this.addNonMove(item)
-    moveCallback(
-        item.id,
-        priorBinId,
-        this.id,
-        stage,
-        action === undefined ? 'moveIn' : action)
+    moveCallback(item.id, priorBinId, this.id, stage, acton)
   }
 
   static swap(
@@ -94,14 +102,15 @@ export class Bin {
       itemIndexPair: SwapPair<number>,
       moveCallback: MoveCallback,
       stage: string): void {
+    const action = 'swap'
     if (binPair.from.id === binPair.to.id) {
-      throw new Error(`Algorithm error: `+
-          `Trying to swap items between bin ${binPair.from.id} and itself`)
+      throw new Error(`Algorithm error: Trying to swap items between bin ${binPair.from.id} and `+
+          `itself during stage ${stage}, action ${action}`)
     }
-    const fromItem = binPair.from.remove(itemIndexPair.from)
-    const toItem = binPair.to.remove(itemIndexPair.to)
-    binPair.from.moveIn(toItem, moveCallback, stage, 'swap', binPair.to)
-    binPair.to.moveIn(fromItem, moveCallback, stage, 'swap', binPair.from)
+    const fromItem = binPair.from.remove(itemIndexPair.from, stage, action)
+    const toItem = binPair.to.remove(itemIndexPair.to, stage, action)
+    binPair.from.moveIn(toItem, moveCallback, stage, action, binPair.to)
+    binPair.to.moveIn(fromItem, moveCallback, stage, action, binPair.from)
   }
 
   addNonMove(item: Item): void {
@@ -116,23 +125,15 @@ export class Bin {
   }
 
   /**
-   * Executes the move on this bin if it is a move to or from this bin.
-   * Throws if it is a move both to and from, or neither to nor from this bin.
+   * Executes the move.
+   * Throws if it is a move to and from the same bin.
    */
-  executeMove(move: Move, moveCallback: MoveCallback, stage: string): void {
-    const isFrom = this.id === move.from.id
-    const isTo = this.id === move.to.id
-    if (!isFrom && !isTo) {
-      throw new Error(`Can not execute move neither to nor from this bin`)
+  static executeMove(move: Move, moveCallback: MoveCallback, stage: string): void {
+    if (move.from.id === move.to.id) {
+      throw new Error(`Trying to execute move ${move.id} of item ${move.item.id} from bin `+
+          `${move.from.id} to itself during stage ${stage}, action executeMove`)
     }
-    if (isFrom && isTo) {
-      throw new Error(`Can not execute move to and from the same bin`)
-    }
-    if (isFrom) {
-      this.moveOutItem(move.item, move.to, moveCallback, stage)
-    } else {
-      this.moveIn(move.item, moveCallback, stage)
-    }
+    move.from.moveOutItem(move.item, move.to, moveCallback, stage)
   }
 
   /**
@@ -172,10 +173,10 @@ export class Bin {
         this._items.findIndex(item => max < item.size) - 1 // Safe since item zero is smaller.
   }
 
-  private remove(index: number): Item {
+  private remove(index: number, stage: string, action?: string, itemId?: string): Item {
     if (index < 0 || this._items.length - 1 < index) {
-      throw new Error(`Cannot remove item at index ${index} from array of length `+
-          `${this._items.length}`)
+      throw new Error(`Invalid index ${index} for item ${itemId} from array of length `+
+          `${this._items.length} from bin ${this.id} during stage ${stage}, action ${action}`)
     }
     const removed = this._items.splice(index, 1)[0]
     this._fill -= removed.size
