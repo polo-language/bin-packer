@@ -9,7 +9,7 @@ export function remove(
     candidateItems: Item[],
     minSizeToRemove: number,
     minCountToRemove: number,
-    moveCallback: MoveCallback): Item[] {
+    moveCallback?: MoveCallback): Item[] {
   return removeAll(
       bins,
       selectCovering(
@@ -24,7 +24,7 @@ export function remove(
  * Removes all provided items from bins.
  * Returns items for convenience.
  */
-export function removeAll(bins: readonly Bin[], items: Item[], moveCallback: MoveCallback): Item[] {
+export function removeAll(bins: readonly Bin[], items: Item[], moveCallback?: MoveCallback): Item[] {
   const binMap = new Map<string, Bin>(bins.map(bin => [bin.id, bin]))
   for (const item of items) {
     const binId = item.currentBinId
@@ -41,7 +41,7 @@ export function removeAll(bins: readonly Bin[], items: Item[], moveCallback: Mov
       throw new Error(`Item with ID ${item.id} claims to belongs to bin ${binId}, but is not `+
           `present`)
     }
-    bin.moveOut(index, null, moveCallback, 'remove')
+    bin.moveOut(index, null, 'remove', moveCallback)
   }
   return items
 }

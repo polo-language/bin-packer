@@ -45,11 +45,12 @@ export class Bin {
     return Math.max(0, -1 * this.freeSpace)
   }
 
-  moveOutItem(item: Item, target: Bin | null, moveCallback: MoveCallback, stage: string): void {
+  moveOutItem(item: Item, target: Bin | null, stage: string, moveCallback?: MoveCallback): void {
     return this.moveOut(
         this._items.findIndex(otherItem => item.id == otherItem.id),
-        target, moveCallback,
+        target,
         stage,
+        moveCallback,
         item.id)
   }
 
@@ -57,8 +58,8 @@ export class Bin {
   moveOut(
       itemIndex: number,
       target: Bin | null,
-      moveCallback: MoveCallback,
       stage: string,
+      moveCallback?: MoveCallback,
       itemId?: string): void {
     const action = 'moveOut'
     const item = this.remove(itemIndex, stage, action, itemId)
@@ -69,14 +70,16 @@ export class Bin {
       }
       target.addNonMove(item)
     }
-    moveCallback(item.id, this.id, target ? target.id : null, stage, action)
+    if (moveCallback !== undefined) {
+      moveCallback(item.id, this.id, target ? target.id : null, stage, action)
+    }
   }
 
   /**
    * Moves item into this bin. Does not remove the item from its current bin, hence either only call
    * on items not in a known bin, or ensure removal is executed separately.
    */
-  moveIn(item: Item, moveCallback: MoveCallback, stage: string, action?: string, fromBin?: Bin)
+  moveIn(item: Item, stage: string, action?: string, fromBin?: Bin, moveCallback?: MoveCallback)
       : void {
     const acton = action === undefined ? 'moveIn' : action
     if (fromBin !== undefined &&
@@ -94,14 +97,16 @@ export class Bin {
           `to itself during stage ${stage}, action ${action}`)
     }
     this.addNonMove(item)
-    moveCallback(item.id, priorBinId, this.id, stage, acton)
+    if (moveCallback !== undefined) {
+      moveCallback(item.id, priorBinId, this.id, stage, acton)
+    }
   }
 
   static swap(
       binPair: SwapPair<Bin>,
       itemIndexPair: SwapPair<number>,
-      moveCallback: MoveCallback,
-      stage: string): void {
+      stage: string,
+      moveCallback?: MoveCallback): void {
     const action = 'swap'
     if (binPair.from.id === binPair.to.id) {
       throw new Error(`Algorithm error: Trying to swap items between bin ${binPair.from.id} and `+
@@ -109,8 +114,8 @@ export class Bin {
     }
     const fromItem = binPair.from.remove(itemIndexPair.from, stage, action)
     const toItem = binPair.to.remove(itemIndexPair.to, stage, action)
-    binPair.from.moveIn(toItem, moveCallback, stage, action, binPair.to)
-    binPair.to.moveIn(fromItem, moveCallback, stage, action, binPair.from)
+    binPair.from.moveIn(toItem, stage, action, binPair.to, moveCallback)
+    binPair.to.moveIn(fromItem, stage, action, binPair.from, moveCallback)
   }
 
   addNonMove(item: Item): void {
@@ -128,12 +133,12 @@ export class Bin {
    * Executes the move.
    * Throws if it is a move to and from the same bin.
    */
-  static executeMove(move: Move, moveCallback: MoveCallback, stage: string): void {
+  static executeMove(move: Move, stage: string, moveCallback?: MoveCallback): void {
     if (move.from.id === move.to.id) {
       throw new Error(`Trying to execute move ${move.id} of item ${move.item.id} from bin `+
           `${move.from.id} to itself during stage ${stage}, action executeMove`)
     }
-    move.from.moveOutItem(move.item, move.to, moveCallback, stage)
+    move.from.moveOutItem(move.item, move.to, stage, moveCallback)
   }
 
   /**

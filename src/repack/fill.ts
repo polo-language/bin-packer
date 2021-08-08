@@ -10,7 +10,7 @@ import { binaryApply } from '../util/binary-apply'
  *                    contents will be changed.
  * @param newItems    Items to be added to bins.
  */
-export function fill(bins: readonly Bin[], newItems: Item[], moveCallback: MoveCallback): Item[] {
+export function fill(bins: readonly Bin[], newItems: Item[], moveCallback?: MoveCallback): Item[] {
   const [fullBins, openBins] = groupByBoolean(bins, bin => bin.isOpen())
   const nonFittingItems: Item[] = []
   const insertToExisting = (item: Item, array: Bin[], i: number) => {
@@ -18,7 +18,7 @@ export function fill(bins: readonly Bin[], newItems: Item[], moveCallback: MoveC
       // Item is too large to fit in any bin.
       nonFittingItems.push(item)
     } else {
-      array[i].moveIn(item, moveCallback, 'fill')
+      array[i].moveIn(item, 'fill', undefined, undefined, moveCallback)
     }
   }
   newItems.sort((a, b) => b.size - a.size)

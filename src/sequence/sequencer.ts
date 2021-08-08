@@ -10,7 +10,7 @@ import { BinMoves, Move } from './move'
  * Consumes the moves argument. If not all moves can be sequenced, the remaining moves are left in
  * this array. Hence this argument should be checked to be empty after sequence returns.
  */
-export function sequence(bins: readonly Bin[], moves: Move[], moveCallback: MoveCallback): Move[] {
+export function sequence(bins: readonly Bin[], moves: Move[], moveCallback?: MoveCallback): Move[] {
   const sequencedMoves: Move[] = []
   prelude(bins, moves, sequencedMoves, moveCallback)
   stage1(moves, sequencedMoves, moveCallback)
@@ -25,12 +25,12 @@ function prelude(
     bins: readonly Bin[],
     remainingMoves: Move[],
     sequencedMoves: Move[],
-    moveCallback: MoveCallback) {
+    moveCallback?: MoveCallback) {
   const binMovesAll = assignMoves(bins, remainingMoves)
   const slotFails = binMovesAll.filter(binMove => slotFailPredicate(binMove))
   if (0 < slotFails.length) {
     throw new Error(`There are ${slotFails.length} bins for which there are more incoming items `+
-        `than free slots and/or outgoing items. They are: ${slotFails.map(bM => bM.bin.id)}`)
+        `than free slots and outgoing items. They are: ${slotFails.map(bM => bM.bin.id)}`)
   }
   const binMoves = binMovesAll.filter(binsMoves =>
       0 !== binsMoves.incoming.length || 0 !== binsMoves.outgoing.length)
@@ -42,7 +42,7 @@ function prelude(
     // Execute moves on bins.
     for (const binMove of inNoOutBinMoves) {
       for (const move of binMove.incoming) {
-        Bin.executeMove(move, moveCallback, 'sequencer_prelude')
+        Bin.executeMove(move, 'sequencer_prelude', moveCallback)
       }
     }
     const toExecute = inNoOutBinMoves.flatMap(binMoves => binMoves.incoming)
@@ -98,13 +98,13 @@ function spliceOne(from: Move[], to: Move[], fromMove: Move) {
 function stage1(
     remainingMoves: Move[],
     sequencedMoves: Move[],
-    moveCallback: MoveCallback) {
+    moveCallback?: MoveCallback) {
   let moveMade
   do {
     moveMade = false
     for (const move of remainingMoves) {
       if (0 < move.to.freeSlots) {
-        Bin.executeMove(move, moveCallback, 'sequencer_stage1')
+        Bin.executeMove(move, 'sequencer_stage1', moveCallback)
         spliceOne(remainingMoves, sequencedMoves, move)
         moveMade = true
         // Start over so we don't modify remainingMoves during iteration.
