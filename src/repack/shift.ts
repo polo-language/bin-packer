@@ -44,7 +44,7 @@ export function shiftOverfull(bins: readonly Bin[], moveCallback?: MoveCallback)
       // free space of the bin with the most free space.
       const targetBinIndex = openBins.findIndex(bin => toMove.size <= bin.freeSpace)
       const targetBin = openBins[targetBinIndex]
-      mostOverutilizedBin.moveOut(toMove.index, targetBin, 'shiftOverfull', moveCallback)
+      mostOverutilizedBin.moveOut(toMove.index, targetBin, 'shiftOverfull', true, moveCallback)
       if (!targetBin.isOpen()) {
         pushFrom(targetBinIndex, openBins, fullBins)
       } else {
@@ -137,7 +137,7 @@ function shiftFromOne(
           findApproxLargestIndexes(allSourceItems, slotsBin.freeSpace, n)
           .reverse()
       for (const index of decreasingIndexesToMove) {
-        spaceBin.moveOut(index, slotsBin, 'shiftSlots', moveCallback)
+        spaceBin.moveOut(index, slotsBin, 'shiftSlots', true, moveCallback)
       }
       // Re-sort modified slotsBin.
       if (slotsBin.freeSlots < 1) {
@@ -228,7 +228,7 @@ function unshiftMovesOnce(binMap: Map<string, Bin>, moveCallback?: MoveCallback)
         if (originalBin !== undefined &&
             0 < originalBin.freeSlots &&
             item.size <= originalBin.freeSpace) {
-          bin.moveOut(i, originalBin, 'unshiftMoves', moveCallback)
+          bin.moveOut(i, originalBin, 'unshiftMoves', true, moveCallback)
           anyMoved = true
         }
       }

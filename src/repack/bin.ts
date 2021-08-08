@@ -45,11 +45,13 @@ export class Bin {
     return Math.max(0, -1 * this.freeSpace)
   }
 
-  moveOutItem(item: Item, target: Bin | null, stage: string, moveCallback?: MoveCallback): void {
+  moveOutItem(item: Item, target: Bin | null, stage: string, modifyCurrent?: boolean,
+      moveCallback?: MoveCallback): void {
     return this.moveOut(
         this._items.findIndex(otherItem => item.id == otherItem.id),
         target,
         stage,
+        modifyCurrent,
         moveCallback,
         item.id)
   }
@@ -59,10 +61,11 @@ export class Bin {
       itemIndex: number,
       target: Bin | null,
       stage: string,
+      modifyCurrent?: boolean,
       moveCallback?: MoveCallback,
       itemId?: string): void {
     const action = 'moveOut'
-    const item = this.remove(itemIndex, stage, action, itemId)
+    const item = this.remove(itemIndex, stage, action, modifyCurrent, itemId)
     if (target !== null) {
       if (this.id === target.id) {
         throw new Error(`Algorithm error: Trying to move item ${item.id} 'out' from bin `+
@@ -89,6 +92,7 @@ export class Bin {
           `currentBinId ${item.currentBinId} during action ${action}, stage ${stage}, action `+
           action)
     }
+    // Calculate priorBinId prior to moveing item! (May not end up getting used.)
     const priorBinId = fromBin !== undefined ?
         fromBin.id :
         (item.currentBinId !== undefined ? item.currentBinId : null)
@@ -112,8 +116,8 @@ export class Bin {
       throw new Error(`Algorithm error: Trying to swap items between bin ${binPair.from.id} and `+
           `itself during stage ${stage}, action ${action}`)
     }
-    const fromItem = binPair.from.remove(itemIndexPair.from, stage, action)
-    const toItem = binPair.to.remove(itemIndexPair.to, stage, action)
+    const fromItem = binPair.from.remove(itemIndexPair.from, stage, action, true)
+    const toItem = binPair.to.remove(itemIndexPair.to, stage, action, true)
     binPair.from.moveIn(toItem, stage, action, binPair.to, moveCallback)
     binPair.to.moveIn(fromItem, stage, action, binPair.from, moveCallback)
   }
@@ -138,7 +142,7 @@ export class Bin {
       throw new Error(`Trying to execute move ${move.id} of item ${move.item.id} from bin `+
           `${move.from.id} to itself during stage ${stage}, action executeMove`)
     }
-    move.from.moveOutItem(move.item, move.to, stage, moveCallback)
+    move.from.moveOutItem(move.item, move.to, stage, true, moveCallback)
   }
 
   /**
@@ -178,14 +182,18 @@ export class Bin {
         this._items.findIndex(item => max < item.size) - 1 // Safe since item zero is smaller.
   }
 
-  private remove(index: number, stage: string, action?: string, itemId?: string): Item {
+  private remove(
+      index: number, stage: string, action?: string, modifyCurrent?: boolean, itemId?: string)
+      : Item {
     if (index < 0 || this._items.length - 1 < index) {
       throw new Error(`Invalid index ${index} for item ${itemId} from array of length `+
           `${this._items.length} from bin ${this.id} during stage ${stage}, action ${action}`)
     }
     const removed = this._items.splice(index, 1)[0]
     this._fill -= removed.size
-    removed.currentBinId = undefined
+    if (modifyCurrent) {
+      removed.currentBinId = undefined
+    }
     return removed
   }
 

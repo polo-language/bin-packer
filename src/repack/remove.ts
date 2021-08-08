@@ -41,7 +41,7 @@ export function removeAll(bins: readonly Bin[], items: Item[], moveCallback?: Mo
       throw new Error(`Item with ID ${item.id} claims to belongs to bin ${binId}, but is not `+
           `present`)
     }
-    bin.moveOut(index, null, 'remove', moveCallback)
+    bin.moveOut(index, null, 'remove', true, moveCallback)
   }
   return items
 }
