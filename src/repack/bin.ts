@@ -13,6 +13,12 @@ export class Bin {
       readonly id: string,
       readonly capacity: number,
       readonly maxItems: number) {
+    if (capacity < 0) {
+      throw new Error(`Bin ${id} was constructed with negative capacity`)
+    }
+    if (maxItems < 0) {
+      throw new Error(`Bin ${id} was constructed with negative maxItems`)
+    }
     this._items = []
     this._fill = 0
   }
@@ -153,10 +159,10 @@ export class Bin {
    */
   largestFromOverfill(max: number): { index: number, size: number } | null {
     if (this.itemCount === 0) {
-      throw new Error('Can not remove item from empty bin')
+      throw new Error(`Bin ${this.id} is empty, no items in overfill`)
     }
     if (!this.isOverfull()) {
-      throw new Error('Bin is not over capacity')
+      throw new Error(`Bin ${this.id} is not over capacity, no items in overfill`)
     }
     if (max < this._items[0].size) {
       // No item is smaller than max.

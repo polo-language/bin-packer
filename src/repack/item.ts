@@ -5,8 +5,10 @@ export class Item {
   constructor(
       readonly id: string,
       readonly size: number,
-      readonly originalBinId?: string
-  ) {
+      readonly originalBinId?: string) {
+    if (size < 0) {
+      throw new Error(`Item ${id} was constructed with negative size`)
+    }
     this.currentBinId = originalBinId
   }
 
