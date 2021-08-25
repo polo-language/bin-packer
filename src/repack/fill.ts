@@ -11,7 +11,8 @@ import { binaryApply } from '../util/binary-apply'
  * @param newItems    Items to be added to bins.
  */
 export function fill(bins: readonly Bin[], newItems: Item[], moveCallback?: MoveCallback): Item[] {
-  const [fullBins, openBins] = groupByBoolean(bins, bin => bin.isOpen())
+  const isAccepting = (bin: Bin) => 0 < bin.freeSlots && 0 <= bin.freeSpace
+  const [fullBins, acceptingBins] = groupByBoolean(bins, isAccepting)
   const nonFittingItems: Item[] = []
   const insertToExisting = (item: Item, array: Bin[], i: number) => {
     if (i === array.length) {
@@ -22,17 +23,17 @@ export function fill(bins: readonly Bin[], newItems: Item[], moveCallback?: Move
     }
   }
   newItems.sort((a, b) => b.size - a.size)
-  sortAscendingFreeSpace(openBins)
+  sortAscendingFreeSpace(acceptingBins)
   for (const item of newItems) {
     // Insert into bin with smallest free space that can accept item.
-    const binIndex = binaryApply(openBins, item, itemFits, insertToExisting)
-    if (binIndex < openBins.length) {
+    const binIndex = binaryApply(acceptingBins, item, itemFits, insertToExisting)
+    if (binIndex < acceptingBins.length) {
       // (Otherwise item was added to nonFittingItems, no bins were modified.)
-      if (openBins[binIndex].isOpen()) {
+      if (isAccepting(acceptingBins[binIndex])) {
         // Move updated bin to preserve sort
-        binaryApply(openBins, binIndex, hasLessFreeSpace, binResort)
+        binaryApply(acceptingBins, binIndex, hasLessFreeSpace, binResort)
       } else {
-        pushFrom(binIndex, openBins, fullBins)
+        pushFrom(binIndex, acceptingBins, fullBins)
       }
     }
   }
