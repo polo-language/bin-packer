@@ -77,8 +77,9 @@ export function selectCovering(items: readonly Item[], minSize: number, minCount
     if (minSize === 0) {
       return []
     } else {
-      // Since we'll need to find at least one item anyway.
-      minCount = 1
+      // Set minCount to 1 since we'll need to find at least one item anyway.
+      // Recurse so updated minCount passes through above validation.
+      return selectCovering(items, minSize, 1)
     }
   }
   return minimizeTotal(
