@@ -64,54 +64,66 @@ function indexesOfLargest(items: readonly Item[], count: number, targetItemMin: 
 }
 
 /**
- * Modifies indexes in place by potentially prepending additional indexes until the total size of
- * items indexed by indexes is at least totalMin.
+ * Returns a copy of indexes with additional indexes potentially prepending so that the total size
+ * of items indexed is at least totalMin.
  * Assumes indexes is non-empty and contains sequential integer indexes into items.
  * If totalMin is not already acheived, then assumes indexes are the highest indexes of items.
  * Assumes items contains enough total item size to satisfy totalMin and may fail with an array
  * index out of bound error otherwise.
  * Returns indexes for convenience.
  */
-function ensureMin(items: readonly Item[], indexes: number[], totalMin: number): number[] {
-  let currentTotal = Item.sizeOf(indexes.map(index => items[index]))
-  if (currentTotal < totalMin && indexes[indexes.length - 1] !== items.length - 1) {
+function ensureMin(items: readonly Item[], indexes: readonly number[], totalMin: number): number[] {
+  const iCopy = [...indexes]
+  let currentTotal = Item.sizeOf(iCopy.map(index => items[index]))
+  if (currentTotal < totalMin && iCopy[iCopy.length - 1] !== items.length - 1) {
     throw new Error(`If items indexed by indexes are not yet large enough, they should have been `+
         `chosen to be the largest items available`)
   }
   while (currentTotal < totalMin) {
     const deficit = totalMin - currentTotal
     const firstSmaller = items.findIndex(item => deficit < item.size)
-    const nextI = firstSmaller === -1 || indexes[0] <= firstSmaller ? indexes[0] - 1 : firstSmaller
-    indexes.unshift(nextI)
+    const nextI = firstSmaller === -1 || iCopy[0] <= firstSmaller ? iCopy[0] - 1 : firstSmaller
+    iCopy.unshift(nextI)
     currentTotal += items[nextI].size
   }
-  return indexes
+  return iCopy
 }
 
 /**
- * Walks the indexes down round-robin until decreasing an index would cause the total size of items
- * indexed by indexes to be less than totalMin.
+ * Walks the indexes down round-robin until decreasing any index would cause the total size of items
+ * indexed to be less than totalMin.
  * Assumes items and indexes are sorted ascending.
  * Returns indexes for convenience.
  */
-function minimizeTotal(items: readonly Item[], indexes: number[], totalMin: number): number[] {
+function minimizeTotal(items: readonly Item[], indexes: number[], min: number): number[] {
   let currentTotal = Item.sizeOf(indexes.map(index => items[index]))
-  if (currentTotal < totalMin) {
+  if (currentTotal < min) {
     throw new Error(`Selected items size (${currentTotal}) must already be at least the target `+
-        `minimum ${totalMin}`)
+        `minimum ${min}`)
   }
-  for (let nextIndex = 0; totalMin < currentTotal; nextIndex = (nextIndex + 1) % indexes.length) {
+  let failures = 0
+  let nextIndex = 0
+  while (failures < indexes.length) {
     if (indexes[nextIndex] === 0) {
       // No more smaller items to swap with.
-      break
+      failures += 1
+      continue
+    }
+    if (0 < nextIndex && indexes[nextIndex - 1] === indexes[nextIndex] - 1) {
+      // Don't increment failures just because this index had no place to go. If all indexes end up
+      // stacked up next to each other, failures will still keep accruing at the smallest index.
+      continue
     }
     const swapDifference = items[indexes[nextIndex] - 1].size - items[indexes[nextIndex]].size
-    if (currentTotal + swapDifference < totalMin) {
+    if (currentTotal + swapDifference < min) {
       // That would be too small.
-      break
+      failures += 1
+      continue
     }
+    failures = 0
     indexes[nextIndex] -= 1
     currentTotal += swapDifference
+    nextIndex = (nextIndex + 1) % indexes.length
   }
   return indexes
 }

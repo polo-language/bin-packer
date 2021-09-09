@@ -4,6 +4,7 @@ import { Item }  from './repack/item'
 import { fill } from './repack/fill'
 import { shiftOverfull, shiftSlots, unshiftMoves } from './repack/shift'
 import { swapSpace, unswapMoves } from './repack/swap'
+// import { slotSwap } from './repack/slot-swap'
 
 /**
  * Moves items between bins to reduce overage of slot and/or space usage.
@@ -33,6 +34,13 @@ export function packNew(bins: Bin[], newItems: Item[], moveCallback?: MoveCallba
     shiftSlots(bins, moveCallback)
     nonFittingItems = fill(bins, nonFittingItems, moveCallback)
   }
+  // if (0 < nonFittingItems.length) {
+  //   slotSwap(
+  //       bins,
+  //       Math.min.apply(null, nonFittingItems.map(item => item.size)),
+  //       moveCallback)
+  //   nonFittingItems = fill(bins, nonFittingItems, moveCallback)
+  // }
   return nonFittingItems
 }
 

@@ -1,7 +1,7 @@
 import { MoveCallback } from '../index'
 import { Bin }  from '../repack/bin'
 import { Item }  from '../repack/item'
-import { pushFrom } from '../util/utils'
+import { groupByThree, pushFrom } from '../util/utils'
 import { binaryApply } from '../util/binary-apply'
 import * as SortUtils from './sort-utils'
 
@@ -70,19 +70,15 @@ export function shiftOverfull(bins: readonly Bin[], moveCallback?: MoveCallback)
  * slots.
  */
 export function shiftSlots(bins: readonly Bin[], moveCallback?: MoveCallback): void {
-  const [slotsBins, spaceBins, otherBins] =  bins.reduce(
-    (acc: [Bin[], Bin[], Bin[]], bin: Bin) => {
-      if (bin.freeSlots > 0) {
-        acc[0].push(bin)
-      } else if (bin.freeSpace > 0) {
-        acc[1].push(bin)
-      } else {
-        acc[2].push(bin)
-      }
-      return acc
-    },
-    [[], [], []]
-  )
+  const [slotsBins, spaceBins, otherBins] = groupByThree(bins, bin => {
+    if (bin.freeSlots > 0) {
+      return 0
+    } else if (bin.freeSpace > 0) {
+      return 1
+    } else {
+      return 2
+    }
+  })
   if (slotsBins.length > 0 && spaceBins.length > 0) {
     shiftToOpenSlots(spaceBins, slotsBins, otherBins, moveCallback)
   }

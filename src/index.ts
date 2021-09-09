@@ -45,6 +45,7 @@ export { Item }  from './repack/item'
 export { repack, packNew, unMove } from './repacker'
 export { remove, removeAll } from './repack/remove'
 export { fill } from './repack/fill'
+export { slotSwap } from './repack/slot-swap'
 export {
     packFeasibility,
     validateBins,

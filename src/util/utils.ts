@@ -20,6 +20,10 @@ export function sum<T>(array: readonly T[], sizeOf: ((t: T) => number)): number 
   return array.reduce((acc, cur) => acc += sizeOf(cur), 0)
 }
 
+export function modulo(dividend: number, divisor: number): number {
+  return ((dividend % divisor) + divisor) % divisor
+}
+
 /**
  * Adds array elements to the array in the tuple's first index if they fail the boolean test, adds
  * them to the second index if they pass.
@@ -36,6 +40,13 @@ export function groupByBoolean<T>(array: readonly T[], predicate: (t: T) => bool
  */
 function boolToInt(bool: boolean) {
   return bool ? 1 : 0
+}
+
+export function groupByThree<T>(array: readonly T[], index: (t: T) => 0 | 1 | 2): [T[], T[], T[]] {
+  return array.reduce((acc: [T[], T[], T[]], t: T) => {
+    acc[index(t)].push(t)
+    return acc
+  }, [[], [], []])
 }
 
 export function pushFrom<T>(index: number, from: T[], to: T[]): void {
@@ -85,10 +96,19 @@ export function getOrCreate<K, V>(
 }
 
 /** Like getOrCreate, but if a new value is created, it is returned without being set on the map. */
-export function getOrNew<K, V>(
-    map: /*readonly*/ Map<K, V>,
-    key: K,
-    valueSupplier: () => V,) {
+export function getOrNew<K, V>(map: /*readonly*/ Map<K, V>, key: K, valueSupplier: () => V): V {
   const value = map.get(key)
   return value !== undefined ? value : valueSupplier()
+}
+
+export function findIndexFromRight<T>(arr: readonly T[], condition: (t: T) => boolean): number {
+  if (arr.length === 0) {
+    return -1
+  }
+  for (let i = arr.length - 1; 0 <= i; --i) {
+    if (condition(arr[i])) {
+      return i
+    }
+  }
+  return -1
 }
