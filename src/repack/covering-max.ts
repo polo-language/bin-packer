@@ -147,13 +147,14 @@ function preventMax(
       throw new NoSolutionError(`No items in count range are less than the maximum`)
     } else {
       // Only possible to get here if removing from the right dropped the sum below sizeRange.low.
-      return indexes.slice(lastRemovedLeft, indexes.length)
+      return indexes.slice(lastRemovedLeft + 1, indexes.length)
     }
-  }
-  if (lastRemovedLeft === -1 || lastRemovedLeft === indexes.length - 1) {
-    return indexes.slice(0, lastRemovedRight)
   } else {
-    return indexes.slice(lastRemovedLeft, indexes.length)
+    if (lastRemovedLeft === -1 || lastRemovedLeft === indexes.length - 1) {
+      return indexes.slice(0, lastRemovedRight)
+    } else {
+      return indexes.slice(lastRemovedLeft + 1, indexes.length)
+    }
   }
 }
 

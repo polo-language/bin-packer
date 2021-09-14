@@ -47,27 +47,28 @@ function slotSwapSinglePass(
       // Wasn't able to find a swap parnter for slotBin.
       pushFrom(slotIndex, slotBins, otherBins)
       spaceIndex = 0
-    }
-    const slotsBin = slotBins[slotIndex]
-    const spaceBin = spaceBins[spaceIndex]
-    // TODO: Should be concerned if slotsBin has space overutilization?
-    if (slotSwapOne(spaceBin, slotsBin, sizeThreshold, avgFreeSlotSize, moveCallback)) {
-      if (spaceBin.freeSpace < sizeThreshold) {
-        throw new Error(`Algorithm error: Should not decrease a space bin below the threshold`)
-      }
-      // Note: Can end up with non-positive slots in spaceBin if slotsBin had fewer free slots
-      // than spaceBin's slot overage. Hence not checking as an error condition.
-      if (slotsBin.freeSlots < 0) {
-        throw new Error(`Algorithm error: Should not introduce negative free slots in slots bin`)
-      }
-      // For simplicity's sake, only swap from/to a given bin once, regardless of whether or not
-      // the slot swap target was met.
-      pushFrom(spaceIndex, spaceBins, otherBins)
-      pushFrom(slotIndex, slotBins, otherBins)
-      madeASwap = true
     } else {
-      // Try the next space bin as a swap partner.
-      ++spaceIndex
+      const slotsBin = slotBins[slotIndex]
+      const spaceBin = spaceBins[spaceIndex]
+      // TODO: Should be concerned if slotsBin has space overutilization?
+      if (slotSwapOne(spaceBin, slotsBin, sizeThreshold, avgFreeSlotSize, moveCallback)) {
+        if (spaceBin.freeSpace < sizeThreshold) {
+          throw new Error(`Algorithm error: Should not decrease a space bin below the threshold`)
+        }
+        // Note: Can end up with non-positive slots in spaceBin if slotsBin had fewer free slots
+        // than spaceBin's slot overage. Hence not checking as an error condition.
+        if (slotsBin.freeSlots < 0) {
+          throw new Error(`Algorithm error: Should not introduce negative free slots in slots bin`)
+        }
+        // For simplicity's sake, only swap from/to a given bin once, regardless of whether or not
+        // the slot swap target was met.
+        pushFrom(spaceIndex, spaceBins, otherBins)
+        pushFrom(slotIndex, slotBins, otherBins)
+        madeASwap = true
+      } else {
+        // Try the next space bin as a swap partner.
+        ++spaceIndex
+      }
     }
   }
   return madeASwap
