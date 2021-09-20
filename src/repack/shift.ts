@@ -12,18 +12,15 @@ import * as SortUtils from './sort-utils'
 export function shiftOverfull(bins: readonly Bin[], moveCallback?: MoveCallback): void {
   // Full here means neither overfull nor fully open. Hence, either exactly space utilized and/or
   // no open slots.
-  const [overBins, openBins, fullBins] =  bins.reduce(
-      (acc: [Bin[], Bin[], Bin[]], bin: Bin) => {
-        if (bin.isOverfull()) {
-          acc[0].push(bin)
-        } else if (bin.isOpen()) {
-          acc[1].push(bin)
-        } else {
-          acc[2].push(bin)}
-        return acc
-      },
-      [[], [], []]
-  )
+  const [overBins, openBins, fullBins] =  groupByThree(bins, bin => {
+    if (bin.isOverfull()) {
+      return 0
+    } else if (bin.isOpen()) {
+      return 1
+    } else {
+      return 2
+    }
+  })
   // Sort most to least overutilized
   overBins.sort((a, b) => b.overfill - a.overfill)
   // Sort least to most freespace

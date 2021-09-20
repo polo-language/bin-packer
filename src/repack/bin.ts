@@ -32,6 +32,10 @@ export class Bin {
     return this._items.length
   }
 
+  get minItemSize(): number {
+    return this._items[0].size
+  }
+
   /** Amount of free space remaining. May be negative. */
   get freeSpace(): number {
     return this.capacity - this.fill
@@ -211,8 +215,12 @@ export class Bin {
     return this.capacity < this.fill
   }
 
+  isOverslots(): boolean {
+    return this.maxItems < this.itemCount
+  }
+
   private isOverutilized(): boolean {
-    return this.maxItems < this.itemCount || this.isOverfull()
+    return this.isOverslots() || this.isOverfull()
   }
 
   deepClone(): Bin {
@@ -240,7 +248,7 @@ export class Bin {
       'status': this.isOverutilized() ? 'overutilized' : (this.isOpen() ? 'open' : 'full'),
       'freeSlots': this.freeSlots,
       'freeSpace': this.freeSpace,
-      'smallestItemSize': this.itemCount === 0 ? 'n/a' : this._items[0].size,
+      'smallestItemSize': this.itemCount === 0 ? 'n/a' : this.minItemSize,
       'largestItemSize': this.itemCount === 0 ? 'n/a' : this._items[this.itemCount - 1].size,
       'items': this._items.map(item => item.id)
     }

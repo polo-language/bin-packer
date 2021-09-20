@@ -5,6 +5,7 @@ import { fill } from './repack/fill'
 import { shiftOverfull, shiftSlots, unshiftMoves } from './repack/shift'
 import { swapSpace, unswapMoves } from './repack/swap'
 import { slotSwap } from './repack/slot-swap'
+import { shiftOverslots } from './repack/shift-slots'
 
 /**
  * Moves items between bins to reduce overage of slot and/or space usage.
@@ -16,6 +17,9 @@ export function repack(bins: Bin[], moveCallback?: MoveCallback): void {
   }
   if (bins.some(bin => bin.isOverfull())) {
     swapSpace(bins, moveCallback)
+  }
+  if (bins.some(bin => bin.isOverslots())) {
+    shiftOverslots(bins, moveCallback)
   }
 }
 
