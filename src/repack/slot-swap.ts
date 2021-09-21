@@ -4,26 +4,32 @@ import { Bin } from './bin'
 import { NoSolutionError, Range, selectRangeCovering } from './covering-max'
 
 /**
- * Tries to swap few items from bins with empty space for many items from bins with empty slots to
+ * Tries to swap many items from bins with empty space for few items from bins with empty slots to
  * effectively 'move' slots into the bins with space. Afterwards, the bins that 'receive' slots
  * should still contain at least sizeThreshold free space.
+ *
+ * Returns whether or not any swap was made.
  */
 export function slotSwap(
     bins: readonly Bin[],
     sizeThreshold: number,
-    moveCallback?: MoveCallback): void {
+    moveCallback?: MoveCallback): boolean {
+  let madeASwap = false
   while (slotSwapSinglePass(bins, sizeThreshold, moveCallback)) {
-    // loop
+    madeASwap = true
   }
+  return madeASwap
 }
 
 /**
- * Tries to swap few items from bins with empty space for many items from bins with empty slots to
- * effectively 'move' slots into the bins with space. Afterwards, the bins that 'receive' slots
+ * Tries to swap many items from bins with empty space for a single items from bins with empty slots
+ * to effectively 'move' slots into the bins with space. Afterwards, the bins that 'receive' slots
  * should still contain at least sizeThreshold free space.
  *
  * Only swaps to/from a given bin once, regardless of whether or not all slots were moved out of
  * the bin originally containing slots.
+ *
+ * Returns whether or not any swap was made.
  */
 function slotSwapSinglePass(
     bins: readonly Bin[],
