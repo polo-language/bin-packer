@@ -15,7 +15,7 @@ export function shiftOverslots(bins: readonly Bin[], moveCallback?: MoveCallback
   const [overBins, underBins, otherBins] = groupByThree(bins, bin => {
     if (bin.isOverslots()) {
       return 0
-    } else if (bin.isOpen()) {
+    } else if (bin.isOpen()) { // TODO: Should allow zero size bins too.
       return 1
     } else {
       return 2
@@ -35,7 +35,7 @@ export function shiftOverslots(bins: readonly Bin[], moveCallback?: MoveCallback
           pushFrom(overBinIndex, overBins, otherBins)
         }
         if (!underBin.isOpen()) {
-          pushFrom(underIndex, overBins, otherBins)
+          pushFrom(underIndex, underBins, otherBins)
         }
         didMove = true
         break // for loop
@@ -46,7 +46,6 @@ export function shiftOverslots(bins: readonly Bin[], moveCallback?: MoveCallback
       pushFrom(overBinIndex, overBins, otherBins)
     }
   }
-
 }
 
 function largestSmallest(bins: readonly Bin[]): [number, Bin] {
