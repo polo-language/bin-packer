@@ -39,11 +39,16 @@ export function packNew(bins: Bin[], newItems: Item[], moveCallback?: MoveCallba
     nonFittingItems = fill(bins, nonFittingItems, moveCallback)
   }
   if (0 < nonFittingItems.length) {
-    slotSwap(
-        bins,
-        Math.min.apply(null, nonFittingItems.map(item => item.size)),
-        moveCallback)
-    nonFittingItems = fill(bins, nonFittingItems, moveCallback)
+    let beforeLength: number
+    do {
+      beforeLength = nonFittingItems.length
+      if (slotSwap(
+          bins,
+          Math.min.apply(null, nonFittingItems.map(item => item.size)),
+          moveCallback)) {
+        nonFittingItems = fill(bins, nonFittingItems, moveCallback)
+      }
+    } while (nonFittingItems.length < beforeLength)
   }
   return nonFittingItems
 }

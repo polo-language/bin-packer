@@ -15,7 +15,7 @@ export function shiftOverslots(bins: readonly Bin[], moveCallback?: MoveCallback
   const [overBins, underBins, otherBins] = groupByThree(bins, bin => {
     if (bin.isOverslots()) {
       return 0
-    } else if (bin.isOpen()) { // TODO: Should allow zero size bins too.
+    } else if (bin.isOpen()) {
       return 1
     } else {
       return 2

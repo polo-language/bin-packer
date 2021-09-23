@@ -211,14 +211,17 @@ export class Bin {
     return this.freeSlots > 0 && this.freeSpace > 0
   }
 
+  /** Whether the bin is filled beyond capacity. */
   isOverfull(): boolean {
     return this.capacity < this.fill
   }
 
+  /** Whether the bin contains more than maxItems. */
   isOverslots(): boolean {
     return this.maxItems < this.itemCount
   }
 
+  /** Whether the bin is either filled beyond capacity or contains more than maxItems. */
   private isOverutilized(): boolean {
     return this.isOverslots() || this.isOverfull()
   }
