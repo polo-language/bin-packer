@@ -18,8 +18,16 @@ export function sequence(bins: readonly Bin[], moves: Move[], moveCallback?: Mov
 }
 
 /**
- * Recursive.
- * Modifies bin contents and move arrays.
+ * Recursively executes all moves into bins that have no outgoing moves. Checks first that there is
+ * no bin that will be overfilled by the net in/out moves and current items. Since there are no out
+ * moves for the target bins of such moves, the incoming moves must all fit, and may freely be taken
+ * prior to any other remaining moves.
+ *
+ * An incoming move for one bin is an outgoing move for another. After a move is executed,
+ * the bin for which it was outgoing may no longer have any (remaining) outgoing moves,
+ * hence iteration may discover new bins whose incoming moves may then be freely executed.
+ *
+ * Modifies bin contents and both move arrays.
  */
 function prelude(
     bins: readonly Bin[],
@@ -91,7 +99,7 @@ function spliceOne(from: Move[], to: Move[], fromMove: Move) {
 }
 
 /**
- * While there exists a move whose target has an open slot
+ * While there exists a move whose target has an open slot.
  * Arbitrarily select and execute such a move (order may matter but stage1 just tries its luck).
  * Worst case time is O(n^2) in the number of remaining moves.
  */
