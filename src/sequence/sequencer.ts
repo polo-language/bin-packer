@@ -1,5 +1,5 @@
 import { Bin, MoveCallback } from '../index'
-import { getOrCreate, getOrNew } from '../util/utils'
+import { getOrCreate, getOrNew, groupByBoolean } from '../util/utils'
 import { BinMoves, Move } from './move'
 
 /**
@@ -7,24 +7,69 @@ import { BinMoves, Move } from './move'
  * applying either of the input or output Move arrays to the bins argument results in identical
  * bins) that, when applied one-by-one, never violates a Bin invariant.
  * Checks slot invariants only, ignoring size invariants.
- * Consumes the moves argument. If not all moves can be sequenced, the remaining moves are left in
- * this array. Hence this argument should be checked to be empty after sequence returns.
+ * May not be able to sequence all moves (e.g. due to a cycle).
+ * Returns a tuple of Move arrays of the form [sequenced, unsequenced].
  */
-export function sequence(bins: readonly Bin[], moves: Move[], moveCallback?: MoveCallback): Move[] {
-  const binMoves = prevalidate(assignMoves(bins, moves))
-  const sequencedMoves: Move[] = []
-  prelude(bins, binMoves, moves, sequencedMoves, moveCallback)
-  executeArbitrary(binMoves, moves, sequencedMoves, moveCallback)
-  return sequencedMoves
+export function sequence(bins: readonly Bin[], moves: readonly Move[], moveCallback?: MoveCallback)
+    : [Move[], Move[]] {
+  const copies1 = copyInputs(bins, moves)
+  const [binMoves1, remainingMoves1, sequencedMoves1] =
+      prelude(copies1[0], copies1[1], true, moveCallback)
+  executeArbitrary(binMoves1, remainingMoves1, sequencedMoves1, moveCallback)
+  if (0 === remainingMoves1.length) {
+    return [mapToOriginals(moves, sequencedMoves1), mapToOriginals(moves, remainingMoves1)]
+  } else {
+    // Start over and try to execute these moves first. Then proceed with executeArbitrary.
+    const copies2 = copyInputs(bins, moves)
+    const [binMoves2, remainingMoves2All, sequencedMoves2] =
+        prelude(copies2[0], copies2[1], false, moveCallback)
+    const remainingMoves1Ids = new Set(remainingMoves1.map(move => move.id))
+    const [remainingMoves2, firstRoundFails2] =
+        groupByBoolean(remainingMoves2All, move => remainingMoves1Ids.has(move.id))
+    executeArbitrary(binMoves2, firstRoundFails2, sequencedMoves2, moveCallback)
+    if (0 < firstRoundFails2.length) {
+      Array.prototype.push.apply(remainingMoves2, firstRoundFails2)
+    }
+    executeArbitrary(binMoves2, remainingMoves2, sequencedMoves2, moveCallback)
+    return [mapToOriginals(moves, sequencedMoves2), mapToOriginals(moves, remainingMoves2)]
+  }
 }
 
-function prevalidate(binMoves: Map<string, BinMoves>): Map<string, BinMoves> {
+function mapToOriginals(moves: readonly Move[], copyMoves: Move[]): Move[] {
+  return copyMoves.map(copy => moves.find(m => m.id === copy.id)!)
+}
+
+/**
+ * Genertes a map of BinMoves from a new copy of bins.
+ * Executes only moves that are known to be safe.
+ */
+function prelude(
+    bins: readonly Bin[],
+    moves: Move[],
+    shouldValidate: boolean,
+    moveCallback?: MoveCallback)
+    : [Map<string, BinMoves>, Move[], Move[]] {
+  const binMoves = assignMoves(bins, moves)
+  if (shouldValidate) {
+    prevalidate(binMoves)
+  }
+  const sequencedMoves: Move[] = []
+  executeInNoOut(binMoves, moves, sequencedMoves, moveCallback)
+  return [binMoves, moves, sequencedMoves]
+}
+
+function copyInputs(bins: readonly Bin[], moves: readonly Move[]): [Bin[], Move[]] {
+  const binsCopy = bins.map(bin => bin.deepClone())
+  const binMap = new Map<string, Bin>(binsCopy.map(bin => [bin.id, bin]))
+  return [binsCopy, moves.map(move => move.deepCopy(Map.prototype.get.bind(binMap)))]
+}
+
+function prevalidate(binMoves: Map<string, BinMoves>): void {
   const slotFails = [...binMoves.entries()].filter(entry => slotFailPredicate(entry[1]))
   if (0 < slotFails.length) {
     throw new Error(`There are ${slotFails.length} bins for which there are more incoming items `+
         `than free slots and outgoing items. They are: ${slotFails.map(entry => entry[0])}`)
   }
-  return binMoves
 }
 
 /**
@@ -39,25 +84,24 @@ function prevalidate(binMoves: Map<string, BinMoves>): Map<string, BinMoves> {
  *
  * Modifies bin contents and both move arrays.
  */
-function prelude(
-    bins: readonly Bin[],
+function executeInNoOut(
     binMoves: Map<string, BinMoves>,
     remainingMoves: Move[],
     sequencedMoves: Move[],
     moveCallback?: MoveCallback) {
-  const inNoOut = [...binMoves.values()].filter(binMoves =>
+  const inNoOutBinMoves = [...binMoves.values()].filter(binMoves =>
       0 < binMoves.incoming.length && 0 === binMoves.outgoing.length)
-  if (0 === inNoOut.length) {
+  if (0 === inNoOutBinMoves.length) {
     return
   } else {
     // Execute moves on bins.
-    for (const binMove of inNoOut) {
+    for (const binMove of inNoOutBinMoves) {
       // Copy array since it will be modified in execute.
       for (const move of [...binMove.incoming]) {
         execute(move, binMoves, remainingMoves, sequencedMoves, 'sequencer_prelude', moveCallback)
       }
     }
-    prelude(bins, binMoves, remainingMoves, sequencedMoves, moveCallback)
+    executeInNoOut(binMoves, remainingMoves, sequencedMoves, moveCallback)
   }
 }
 
@@ -157,14 +201,16 @@ function spliceOne(from: Move[], to: Move[], fromMove: Move) {
 
 /**
  * While there exists a move whose target has an open slot.
- * Arbitrarily select and execute such a move (order may matter but stage1 just tries its luck).
+ * Arbitrarily select and execute such a move (order may matter but here it just tries its luck).
  * Worst case time is O(n^2) in the number of remaining moves.
+ * Returns whether or not it made any moves.
  */
 function executeArbitrary(
     binMoves: Map<string, BinMoves>,
     remainingMoves: Move[],
     sequencedMoves: Move[],
-    moveCallback?: MoveCallback) {
+    moveCallback?: MoveCallback): boolean {
+  let everMoveMade = false
   let moveMade
   do {
     moveMade = false
@@ -178,6 +224,7 @@ function executeArbitrary(
             'sequencer_executeArbitrary',
             moveCallback)
         moveMade = true
+        everMoveMade = true
         // Start over so we don't modify remainingMoves during iteration.
         // Can't mark moves here and process after inner loop since one move may fill a space
         // required for another move.
@@ -185,4 +232,5 @@ function executeArbitrary(
       }
     }
   } while (moveMade)
+  return everMoveMade
 }
