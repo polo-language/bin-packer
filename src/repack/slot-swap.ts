@@ -1,6 +1,7 @@
-import { Item, MoveCallback } from '../index'
+import { MoveCallback } from '../index'
 import { groupByThree, pushFrom, SwapPair } from '../util/utils'
 import { Bin } from './bin'
+import { Item } from './item'
 import { NoSolutionError, Range, selectRangeCovering } from './covering-max'
 
 /**

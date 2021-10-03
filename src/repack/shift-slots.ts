@@ -1,6 +1,7 @@
-import { Item, MoveCallback } from '../index'
+import { MoveCallback } from '../index'
 import { findIndexFromRight, groupByThree, pushFrom } from '../util/utils'
 import { Bin } from './bin'
+import { Item } from './item'
 
 /**
  * Move items from bins with slot overages.

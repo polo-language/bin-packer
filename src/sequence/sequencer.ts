@@ -1,4 +1,5 @@
-import { Bin, MoveCallback } from '../index'
+import { Bin } from '../repack/bin'
+import { MoveCallback } from '../index'
 import { getOrCreate, getOrNew, groupByBoolean } from '../util/utils'
 import { BinMoves, Move } from './move'
 
