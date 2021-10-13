@@ -65,8 +65,11 @@ export function shiftOverfull(bins: readonly Bin[], moveCallback?: MoveCallback)
 /**
  * "Moves" as many slots as possible from bins with open slots to bins with space that have no open
  * slots.
+ *
+ * Returns how many items were moved.
  */
-export function shiftSlots(bins: readonly Bin[], moveCallback?: MoveCallback): void {
+export function shiftSlots(
+    bins: readonly Bin[], sizeThreshold: number, moveCallback?: MoveCallback): number {
   const [slotsBins, spaceBins, otherBins] = groupByThree(bins, bin => {
     if (bin.freeSlots > 0) {
       return 0
@@ -76,9 +79,9 @@ export function shiftSlots(bins: readonly Bin[], moveCallback?: MoveCallback): v
       return 2
     }
   })
-  if (slotsBins.length > 0 && spaceBins.length > 0) {
-    shiftToOpenSlots(spaceBins, slotsBins, otherBins, moveCallback)
-  }
+  return slotsBins.length > 0 && spaceBins.length > 0 ?
+      shiftToOpenSlots(spaceBins, slotsBins, otherBins, sizeThreshold, moveCallback) :
+      0
 }
 
 /**
@@ -91,9 +94,15 @@ export function shiftSlots(bins: readonly Bin[], moveCallback?: MoveCallback): v
  * otherBins. To prevent accumulating all free slots in the bin with most free space (since space
  * bins can only increase in free space by losing items), bins in spaceBins are paired up
  * round-robin with bins in slotsBins.
+ *
+ * Returns how many items were moved.
  */
 function shiftToOpenSlots(
-    spaceBins: Bin[], slotsBins: Bin[], otherBins: Bin[], moveCallback?: MoveCallback): void {
+    spaceBins: Bin[],
+    slotsBins: Bin[],
+    otherBins: Bin[],
+    sizeThreshold: number,
+    moveCallback?: MoveCallback): number {
   if (spaceBins.length < 1) {
     throw new Error('Algorithm error: Can not shift items from no bins')
   }
@@ -102,23 +111,30 @@ function shiftToOpenSlots(
   // Most free space to least.
   spaceBins.sort((a, b) => b.freeSpace - a.freeSpace)
   let skippedBinCount = 0
+  let totalMoved = 0
   while (skippedBinCount < slotsBins.length) {
-    if (!shiftFromOne(skippedBinCount, spaceBins, slotsBins, otherBins, moveCallback)) {
-      ++ skippedBinCount
+    const numMoved =
+        shiftFromOne(skippedBinCount, spaceBins, slotsBins, otherBins, sizeThreshold, moveCallback)
+    if (0 < numMoved) {
+      totalMoved += numMoved
+    } else {
+      ++skippedBinCount
     }
   }
+  return totalMoved
 }
 
 /**
  * Moves items into slotsBin from one bin in spaceBins, if possible.
- * Returns whether items were moved.
+ * Returns how many items were moved.
  */
 function shiftFromOne(
     slotsIndex: number,
     spaceBins: Bin[],
     slotsBins: Bin[],
     otherBins: Bin[],
-    moveCallback?: MoveCallback): boolean {
+    sizeThreshold: number,
+    moveCallback?: MoveCallback): number {
   const slotsBin = slotsBins[slotsIndex]
   for (let spaceIndex = 0; spaceIndex < spaceBins.length; ++spaceIndex) {
     const spaceBin = spaceBins[spaceIndex]
@@ -129,26 +145,31 @@ function shiftFromOne(
       const decreasingIndexesToMove =
           findApproxLargestIndexes(allSourceItems, slotsBin.freeSpace, n)
           .reverse()
-      for (const index of decreasingIndexesToMove) {
-        spaceBin.moveOut(index, slotsBin, 'shiftSlots', true, moveCallback)
-      }
-      // Re-sort modified slotsBin.
-      if (slotsBin.freeSlots < 1) {
-        const removed = slotsBins.splice(slotsIndex, 1)
-        if (removed.length != 1 || removed[0] !== slotsBin) {
-          throw new Error(`Algorithm error: Removed wrong slotsBin when moving to otherBins`)
+      // Only execute the moves if the bin receiving the slots will end up with enough space.
+      const afterSpace = spaceBin.freeSpace + decreasingIndexesToMove.reduce(
+          (acc, index) => acc + allSourceItems[index].size, 0)
+      if (sizeThreshold <= afterSpace) {
+        for (const index of decreasingIndexesToMove) {
+          spaceBin.moveOut(index, slotsBin, 'shiftSlots', true, moveCallback)
         }
-        otherBins.push(slotsBin)
-      } else {
-        binaryApply(slotsBins, slotsBin, SortUtils.hasMoreFreeSlots, SortUtils.spliceOne)
+        // Re-sort modified slotsBin.
+        if (slotsBin.freeSlots < 1) {
+          const removed = slotsBins.splice(slotsIndex, 1)
+          if (removed.length != 1 || removed[0] !== slotsBin) {
+            throw new Error(`Algorithm error: Removed wrong slotsBin when moving to otherBins`)
+          }
+          otherBins.push(slotsBin)
+        } else {
+          binaryApply(slotsBins, slotsBin, SortUtils.hasMoreFreeSlots, SortUtils.spliceOne)
+        }
+        // Move the "slot receiving" bin to the end of the array so it will be the last checked in
+        // the next round.
+        pushFrom(spaceIndex, spaceBins, spaceBins)
+        return decreasingIndexesToMove.length
       }
-      // Move the "slot receiving" bin to the end of the array so it will be the last checked in
-      // the next round.
-      pushFrom(spaceIndex, spaceBins, spaceBins)
-      return true
     }
   }
-  return false
+  return 0
 }
 
 /**

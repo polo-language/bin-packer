@@ -35,8 +35,9 @@ export function packNew(bins: Bin[], newItems: Item[], moveCallback?: MoveCallba
     nonFittingItems = []
   }
   if (0 < nonFittingItems.length) {
-    shiftSlots(bins, moveCallback)
-    nonFittingItems = fill(bins, nonFittingItems, moveCallback)
+    if (0 < shiftSlots(bins, minSize(nonFittingItems), moveCallback)) {
+      nonFittingItems = fill(bins, nonFittingItems, moveCallback)
+    }
   }
   if (0 < nonFittingItems.length) {
     let beforeLength: number
@@ -51,6 +52,10 @@ export function packNew(bins: Bin[], newItems: Item[], moveCallback?: MoveCallba
     } while (nonFittingItems.length < beforeLength)
   }
   return nonFittingItems
+}
+
+function minSize(items: Item[]): number {
+  return Math.min.apply(null, items.map(item => item.size))
 }
 
 export function unMove(bins: Bin[], moveCallback?: MoveCallback): void {
