@@ -18,7 +18,9 @@ export function sequence(bins: readonly Bin[], moves: readonly Move[], moveCallb
       prelude(copies1[0], copies1[1], true, moveCallback)
   executeArbitrary(binMoves1, remainingMoves1, sequencedMoves1, moveCallback)
   if (0 === remainingMoves1.length) {
-    return [mapToOriginals(moves, sequencedMoves1), mapToOriginals(moves, remainingMoves1)]
+    return [
+        Move.setOrder(mapToOriginals(moves, sequencedMoves1)),
+        mapToOriginals(moves, remainingMoves1)]
   } else {
     // Start over and try to execute these moves first. Then proceed with executeArbitrary.
     const copies2 = copyInputs(bins, moves)
@@ -32,7 +34,9 @@ export function sequence(bins: readonly Bin[], moves: readonly Move[], moveCallb
       Array.prototype.push.apply(remainingMoves2, firstRoundFails2)
     }
     executeArbitrary(binMoves2, remainingMoves2, sequencedMoves2, moveCallback)
-    return [mapToOriginals(moves, sequencedMoves2), mapToOriginals(moves, remainingMoves2)]
+    return [
+        Move.setOrder(mapToOriginals(moves, sequencedMoves2)),
+        mapToOriginals(moves, remainingMoves2)]
   }
 }
 
