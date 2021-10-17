@@ -25,7 +25,7 @@ export function packFeasibility(
   const totalItems =
       newItems.length +
       bins.reduce((acc: number, bin: Bin) => acc + bin.itemCount, 0)
-  const totalSlots = Bin.slotsIn(bins)
+  const totalSlots = Bin.totalSlots(bins)
 
   if (binSpace < itemSpace) {
     errorHandler.handle(`No packing possible: There is only ${binSpace} total space but `+
@@ -112,12 +112,17 @@ export function itemAccounting(
 export function validateBins(bins: readonly Bin[], errorHandler: ErrorHandler): void {
   for (const bin of bins) {
     if (bin.itemCount > bin.maxItems) {
-      errorHandler.handle(`Bin ${bin.id} with max items ${bin.maxItems} contains `+
-          `${bin.itemCount} items. Full bin details: ${bin.toString()}`)
+      if (bin.displayMaxItems !== bin.maxItems) {
+        errorHandler.handle(`Bin ${bin.id} with max items ${bin.displayMaxItems} and `+
+            `target max items ${bin.maxItems} contains `+
+            `${bin.itemCount} items.`)
+      } else {
+        errorHandler.handle(`Bin ${bin.id} with max items ${bin.maxItems} contains `+
+            `${bin.itemCount} items.`)
+      }
     }
     if (bin.fill > bin.capacity) {
-      errorHandler.handle(`Bin ${bin.id} with capacity ${bin.capacity} is filled to ${bin.fill}. `+
-          `Full bin details: ${bin.toString()}`)
+      errorHandler.handle(`Bin ${bin.id} with capacity ${bin.capacity} is filled to ${bin.fill}.`)
     }
   }
   const duplicateBins = duplicates(bins, bin => bin.id)

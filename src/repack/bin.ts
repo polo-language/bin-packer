@@ -12,12 +12,17 @@ export class Bin {
   constructor(
       readonly id: string,
       readonly capacity: number,
-      readonly maxItems: number) {
+      readonly maxItems: number,
+      readonly displayMaxItems: number) {
     if (capacity < 0) {
       throw new Error(`Bin ${id} was constructed with negative capacity`)
     }
     if (maxItems < 0) {
       throw new Error(`Bin ${id} was constructed with negative maxItems`)
+    }
+    if (displayMaxItems < maxItems) {
+      throw new Error(`Bin ${id} was constructed with displayMaxItems ${displayMaxItems} < `
+          +`maxItems ${maxItems}`)
     }
     this._items = []
     this._fill = 0
@@ -227,7 +232,7 @@ export class Bin {
   }
 
   deepClone(): Bin {
-    const cloned = new Bin(this.id, this.capacity, this.maxItems)
+    const cloned = new Bin(this.id, this.capacity, this.maxItems, this.displayMaxItems)
     this._items.forEach(item => cloned.addNonMove(item.deepClone()))
     return cloned
   }
@@ -236,7 +241,7 @@ export class Bin {
     return bins.reduce((acc: number, bin: Bin) => acc + bin.capacity, 0)
   }
 
-  static slotsIn(bins: readonly Bin[]): number {
+  static totalSlots(bins: readonly Bin[]): number {
     return bins.reduce((acc: number, bin: Bin) => acc + bin.maxItems, 0)
   }
 
@@ -245,11 +250,12 @@ export class Bin {
     return {
       'ID': this.id,
       'capacity': this.capacity,
-      'maxItems': this.maxItems,
+      'maxItems': this.displayMaxItems,
+      'targetMaxItems': this.maxItems,
       'fill': this.fill,
       'itemCount': this.itemCount,
       'status': this.isOverutilized() ? 'overutilized' : (this.isOpen() ? 'open' : 'full'),
-      'freeSlots': this.freeSlots,
+      'freeSlots': this.displayMaxItems - this.itemCount,
       'freeSpace': this.freeSpace,
       'smallestItemSize': this.itemCount === 0 ? 'n/a' : this.minItemSize,
       'largestItemSize': this.itemCount === 0 ? 'n/a' : this._items[this.itemCount - 1].size,

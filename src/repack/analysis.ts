@@ -18,7 +18,7 @@ export class Analysis {
   constructor(bins: readonly Bin[]) {
     this.binCount = bins.length
     this.totalSpace = Bin.capacityOf(bins)
-    this.totalSlots = Bin.slotsIn(bins)
+    this.totalSlots = Bin.totalSlots(bins)
     this.freeSlots = newMetric(bins, bin => bin.freeSlots)
     this.freeSpace = newMetric(bins, bin => bin.freeSpace)
     const binIds = new Set(bins.map(bin => bin.id))
