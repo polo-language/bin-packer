@@ -42,7 +42,7 @@ function slotSwapSinglePass(
   const [slotBins, spaceBins, otherBins] = groupByThree(bins, bin => {
     if (0 < bin.freeSlots && bin.freeSpace < sizeThreshold) {
       return 0
-    } else if (bin.freeSlots <= 0 && sizeThreshold <= bin.freeSpace) {
+    } else if (0 < bin.maxItems && bin.freeSlots <= 0 && sizeThreshold <= bin.freeSpace) {
       return 1
     } else {
       return 2

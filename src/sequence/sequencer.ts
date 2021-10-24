@@ -41,6 +41,7 @@ export function sequence(bins: readonly Bin[], moves: readonly Move[], moveCallb
 }
 
 function mapToOriginals(moves: readonly Move[], copyMoves: Move[]): Move[] {
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   return copyMoves.map(copy => moves.find(m => m.id === copy.id)!)
 }
 
@@ -188,12 +189,6 @@ function execute(
 
 function slotFailPredicate(binMoves: BinMoves): boolean {
   return binMoves.bin.freeSlots + binMoves.outgoing.length < binMoves.incoming.length
-}
-
-function splice(from: Move[], to: Move[], fromSubset: Move[]) {
-  for (const move of fromSubset) {
-    spliceOne(from, to, move)
-  }
 }
 
 function spliceOne(from: Move[], to: Move[], fromMove: Move) {
