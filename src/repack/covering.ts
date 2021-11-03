@@ -1,11 +1,13 @@
+import { NoSolutionError } from '../index'
 import { Item } from './item'
 
 /**
  * Picks out the approximately smallest collection of items that meet the minimums.
  * Assumes items are sorted by size ascending.
+ * Returns the item indexes.
  * */
-export function selectCovering(items: readonly Item[], minSize: number, minCount: number)
-    : number[] {
+export function selectCovering(
+    items: readonly Item[], minSize: number, minCount: number, isExactCount = false): number[] {
   // Algorithm:
   // If items size < minCount or items total size < minSize throw an error.
   // Sort items increasing by size.
@@ -19,18 +21,21 @@ export function selectCovering(items: readonly Item[], minSize: number, minCount
   // If total selected size > minSize, walk items down one by one (round robbin) until minSize is
   //     undershot, then undo the last step.
   // Return the selected set.
-  if (items.length < minCount || Item.sizeOf(items) < minSize) {
-    throw new Error(`No possible covering of ${items.length} items with total size `+
-        `${Item.sizeOf(items)} for min count ${minCount} and min size ${minSize}`)
-  }
   if (minSize < 0 || minCount < 0) {
-    throw new Error(`Negative values not allowed for minimum size (${minSize}) or count `+
-        `(${minCount})`)
+    throw new Error(`Negative values not allowed for minimum size ${minSize} or count `+
+        `${minCount}`)
+  }
+  if (items.length < minCount || Item.sizeOf(items) < minSize) {
+    throw new NoSolutionError(`No possible covering of ${items.length} items with total size `+
+        `${Item.sizeOf(items)} for min count ${minCount} and min size ${minSize}`)
   }
   if (minCount === 0) {
     if (minSize === 0) {
       return []
     } else {
+      if (isExactCount) {
+        throw new Error(`Can not select exactly zero items of positive minimum size ${minSize}`)
+      }
       // Set minCount to 1 since we'll need to find at least one item anyway.
       // Recurse so updated minCount passes through above validation.
       return selectCovering(items, minSize, 1)
@@ -41,7 +46,8 @@ export function selectCovering(items: readonly Item[], minSize: number, minCount
       ensureMin(
           items,
           indexesOfLargest(items, minCount, minSize / minCount),
-          minSize),
+          minSize,
+          isExactCount),
       minSize)
 }
 
@@ -72,12 +78,18 @@ function indexesOfLargest(items: readonly Item[], count: number, targetItemMin: 
  * index out of bound error otherwise.
  * Returns indexes for convenience.
  */
-function ensureMin(items: readonly Item[], indexes: readonly number[], totalMin: number): number[] {
+function ensureMin(
+    items: readonly Item[], indexes: readonly number[], totalMin: number, isExactCount: boolean)
+    : number[] {
   const iCopy = [...indexes]
   let currentTotal = Item.sizeOf(iCopy.map(index => items[index]))
   if (currentTotal < totalMin && iCopy[iCopy.length - 1] !== items.length - 1) {
     throw new Error(`If items indexed by indexes are not yet large enough, they should have been `+
         `chosen to be the largest items available`)
+  }
+  if (isExactCount && currentTotal < totalMin) {
+    throw new NoSolutionError(`More than ${indexes.length} items are required to acheive the `
+        +`minimum total ${totalMin}`)
   }
   while (currentTotal < totalMin) {
     const deficit = totalMin - currentTotal

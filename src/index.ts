@@ -33,6 +33,14 @@ export type MoveCallback = (
     stage: string,
     action: string
 ) => void
+
+export class NoSolutionError extends Error {
+  constructor(m: string) {
+    super(m)
+    // https://github.com/Microsoft/TypeScript-wiki/blob/main/Breaking-Changes.md#extending-built-ins-like-error-array-and-map-may-no-longer-work
+    Object.setPrototypeOf(this, NoSolutionError.prototype)
+  }
+}
     
 export { nextFit, firstFit, firstFitDecreasing, bestFitDecreasing } from './pack/fit-algos'
 export { binCompletion } from './pack/bin-completion'
@@ -56,3 +64,5 @@ export {
 } from './repack/validation'
 export { Move } from './sequence/move'
 export { sequence } from './sequence/sequencer'
+export { selectCovering } from './repack/covering'
+export { Range, selectRangeCovering } from './repack/covering-max'

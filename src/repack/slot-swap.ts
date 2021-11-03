@@ -1,8 +1,8 @@
-import { MoveCallback } from '../index'
+import { MoveCallback, NoSolutionError } from '../index'
 import { groupByThree, pushFrom, SwapPair } from '../util/utils'
 import { Bin } from './bin'
 import { Item } from './item'
-import { NoSolutionError, Range, selectRangeCovering } from './covering-max'
+import { Range, selectRangeCovering } from './covering-max'
 
 /**
  * Tries to swap many items from bins with empty space for few items from bins with empty slots to
@@ -123,7 +123,7 @@ function slotSwapOne(
 
 function pairItems(binPair: SwapPair<Bin>, netItemsToMove: number, sizeThreshold: number)
     : SwapPair<Item[]> {
-  // Pair netItemsToMove + 1 items with a single item.
+  // Pair netItemsToMove + 1 'from' items with a single 'to' item.
   // Cycle through each single item in the target bin.
   // Select items that cover the size of the single target item's size, within a range that
   // prevents introducing overages, etc.

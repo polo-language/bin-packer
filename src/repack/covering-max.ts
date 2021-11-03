@@ -1,13 +1,6 @@
+import { NoSolutionError } from '../index'
 import { findIndexFromRight, modulo } from '../util/utils'
 import { Item } from './item'
-
-export class NoSolutionError extends Error {
-  constructor(m: string) {
-    super(m)
-    // https://github.com/Microsoft/TypeScript-wiki/blob/main/Breaking-Changes.md#extending-built-ins-like-error-array-and-map-may-no-longer-work
-    Object.setPrototypeOf(this, NoSolutionError.prototype)
-  }
-}
 
 /**
  * Expresses a one-dimensional range, both endpoints inclusive.
@@ -78,8 +71,8 @@ export function selectRangeCovering(
 
 /**
  * Returns the indexes of the smallest/largest count items each of whose size is larger/smaller
- * than min, or the largest/smallest items available if there there aren't count items
- * larger/smaller than min.
+ * than itemSizeTarget, or the largest/smallest items available if there there aren't count items
+ * larger/smaller than itemSizeTarget.
  * Assumes items are sorted by size, ascending.
  * 
  * Together with the min/max size checks in selectRangeCovering, ensures the total is
