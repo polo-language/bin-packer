@@ -27,7 +27,8 @@ export function repack(bins: Bin[], moveCallback?: MoveCallback): void {
  * Adds as many new items as possible without increasing overage of slot and/or space usage.
  * Modifies bins and newItems in-place.
  */
-export function packNew(bins: Bin[], newItems: Item[], moveCallback?: MoveCallback): Item[] {
+export function packNew(bins: readonly Bin[], newItems: Item[], moveCallback?: MoveCallback)
+    : Item[] {
   let nonFittingItems: Item[]
   if (0 < newItems.length) {
     nonFittingItems = fill(bins, newItems, moveCallback)
@@ -54,11 +55,11 @@ export function packNew(bins: Bin[], newItems: Item[], moveCallback?: MoveCallba
   return nonFittingItems
 }
 
-function minSize(items: Item[]): number {
+function minSize(items: readonly Item[]): number {
   return Math.min.apply(null, items.map(item => item.size))
 }
 
-export function unMove(bins: Bin[], moveCallback?: MoveCallback): void {
+export function unMove(bins: readonly Bin[], moveCallback?: MoveCallback): void {
   unshiftMoves(bins, moveCallback)
   unswapMoves(bins, moveCallback)
 }
