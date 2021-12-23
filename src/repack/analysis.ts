@@ -1,5 +1,6 @@
 import { Bin }  from '../repack/bin'
 import { Item }  from '../repack/item'
+import { stdDev } from '../util/utils'
 
 export class Analysis {
   readonly binCount: number
@@ -68,6 +69,8 @@ export interface Metric {
   readonly min: number
   readonly avg: number
   readonly max: number
+  readonly range: number
+  readonly stdDev: number
 }
 
 function newMetric<T>(t: readonly T[], numeric: (t: T) => number): Metric {
@@ -76,16 +79,22 @@ function newMetric<T>(t: readonly T[], numeric: (t: T) => number): Metric {
       total: 0,
       min: 0,
       avg: 0,
-      max: 0
+      max: 0,
+      range: 0,
+      stdDev: 0,
     }
   } else {
     const values = t.map(numeric)
     const total = values.reduce((acc, val) => acc + val)
+    const min = Math.min.apply(undefined, values)
+    const max = Math.max.apply(undefined, values)
     return {
       total: total,
-      min: Math.min(...values),
+      min: min,
       avg: total / values.length,
-      max: Math.max(...values)
+      max: max,
+      range: max - min,
+      stdDev: stdDev(values),
     }
   }
 }

@@ -112,3 +112,19 @@ export function findIndexFromRight<T>(arr: readonly T[], condition: (t: T) => bo
   }
   return -1
 }
+
+export function stdDev(array: readonly number[]): number {
+  if (array.length === 0) {
+    return 0
+  }
+  const mean = avg(array)
+  return Math.sqrt(sumNumeric(array.map(x => Math.pow(x - mean, 2))) / array.length)
+}
+
+export function avg(array: readonly number[]): number {
+  return array.length === 0 ? 0 : sumNumeric(array) / array.length
+}
+
+export function sumNumeric(array: readonly number[]): number {
+  return array.length === 0 ? 0 : array.reduce((a, b) => a + b)
+}
