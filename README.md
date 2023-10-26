@@ -1,6 +1,7 @@
 # bin-packer
 
 Packs objects into bins of a specified capacity.
+
 Repacking algorithms have been moved to [bin-repacker](https://github.com/polo-language/bin-repacker).
 
 ## Install
